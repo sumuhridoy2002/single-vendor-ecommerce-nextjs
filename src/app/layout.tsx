@@ -1,5 +1,7 @@
+import { CategoryBar } from "@/components/global/category-bar";
 import Navbar from "@/components/global/navbar";
 import Provider from "@/components/global/Provider";
+import DefaultLayout from "@/layouts/DefaultLayout";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import 'swiper/css';
@@ -34,7 +36,8 @@ export default function RootLayout({
       >
         <Provider>
           <Navbar />
-          {children}
+          <CategoryBar />
+          <DefaultLayout>{children}</DefaultLayout>
         </Provider>
       </body>
     </html>
