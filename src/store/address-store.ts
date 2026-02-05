@@ -25,12 +25,14 @@ interface AddressState {
   modalOpen: boolean;
   formOpen: boolean;
   editingAddressId: string | null;
+  selectedAddressId: string | null;
   addresses: Address[];
   openAddressModal: () => void;
   closeAddressModal: () => void;
   openAddForm: () => void;
   openEditForm: (id: string) => void;
   closeForm: () => void;
+  setSelectedAddress: (id: string) => void;
   saveAddress: (data: AddressFormData) => void;
   setDefaultAddress: (id: string) => void;
   deleteAddress: (id: string) => void;
@@ -47,10 +49,20 @@ export const useAddressStore = create<AddressState>((set) => ({
   modalOpen: false,
   formOpen: false,
   editingAddressId: null,
+  selectedAddressId: null,
   addresses: [],
 
   openAddressModal: () =>
-    set({ modalOpen: true, formOpen: false, editingAddressId: null }),
+    set((state) => {
+      const firstId = state.addresses[0]?.id ?? null;
+      const defaultId = state.addresses.find((a) => a.isDefault)?.id ?? firstId;
+      const selected = state.selectedAddressId && state.addresses.some((a) => a.id === state.selectedAddressId)
+        ? state.selectedAddressId
+        : defaultId;
+      return { modalOpen: true, formOpen: false, editingAddressId: null, selectedAddressId: selected };
+    }),
+
+  setSelectedAddress: (id) => set({ selectedAddressId: id }),
 
   closeAddressModal: () =>
     set({ modalOpen: false, formOpen: false, editingAddressId: null }),
@@ -108,6 +120,10 @@ export const useAddressStore = create<AddressState>((set) => ({
         wasDefault && filtered.length > 0
           ? ensureSingleDefault(filtered, filtered[0].id)
           : filtered;
-      return { addresses: next };
+      const nextSelected =
+        state.selectedAddressId === id
+          ? (next.find((a) => a.isDefault)?.id ?? next[0]?.id ?? null)
+          : state.selectedAddressId;
+      return { addresses: next, selectedAddressId: nextSelected };
     }),
 }));

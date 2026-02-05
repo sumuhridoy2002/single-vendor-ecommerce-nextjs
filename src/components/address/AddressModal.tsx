@@ -32,6 +32,8 @@ import {
   ArrowLeft,
   Briefcase,
   Building2,
+  Circle,
+  CircleDot,
   Home,
   MoreVertical,
 } from "lucide-react";
@@ -89,11 +91,13 @@ export function AddressModal() {
     modalOpen,
     formOpen,
     editingAddressId,
+    selectedAddressId,
     addresses,
     closeAddressModal,
     openAddForm,
     openEditForm,
     closeForm,
+    setSelectedAddress,
     saveAddress,
     setDefaultAddress,
     deleteAddress,
@@ -162,7 +166,7 @@ export function AddressModal() {
     <Dialog open={modalOpen} onOpenChange={handleClose}>
       <DialogContent
         showCloseButton={false}
-        className="overflow-hidden rounded-xl"
+        className="overflow-hidden rounded-xl w-full"
       >
         <div className="relative">
           {formOpen ? (
@@ -344,6 +348,8 @@ export function AddressModal() {
                     <AddressCard
                       key={addr.id}
                       address={addr}
+                      selected={selectedAddressId === addr.id}
+                      onSelect={() => setSelectedAddress(addr.id)}
                       onEdit={() => openEditForm(addr.id)}
                       onSetDefault={() => setDefaultAddress(addr.id)}
                       onDelete={() => {
@@ -371,27 +377,55 @@ export function AddressModal() {
 
 function AddressCard({
   address,
+  selected,
+  onSelect,
   onEdit,
   onSetDefault,
   onDelete,
 }: {
   address: Address;
+  selected: boolean;
+  onSelect: () => void;
   onEdit: () => void;
   onSetDefault: () => void;
   onDelete: () => void;
 }) {
+  const addressLine = [
+    address.address,
+    address.deliveryArea ? `, ${address.deliveryArea}` : "",
+  ].join("");
+
   return (
-    <div className="rounded-lg border bg-muted/30 p-4 flex gap-3">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={cn(
+        "rounded-lg border p-4 flex gap-3 cursor-pointer transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        selected ? "border-teal-600 bg-teal-50/50 dark:bg-teal-950/20" : "bg-muted/30"
+      )}
+      aria-pressed={selected}
+      aria-label={`Select ${AddressTypeLabel(address.addressType)}`}
+    >
       <div className="shrink-0 pt-0.5">
         <AddressTypeIcon type={address.addressType} />
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <span className="font-medium">{AddressTypeLabel(address.addressType)}</span>
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            <span className="font-medium truncate">
+              {AddressTypeLabel(address.addressType)}
+              {address.isDefault && " (Shipping Address)"}
+            </span>
             {address.isDefault && (
-              <Badge className="ml-2 bg-green-600 hover:bg-green-600">
-                Default (Shipping Address)
+              <Badge className="bg-green-600 hover:bg-green-600 shrink-0">
+                Default
               </Badge>
             )}
           </div>
@@ -402,6 +436,7 @@ function AddressCard({
                 size="icon"
                 className="size-8 shrink-0"
                 aria-label="Address options"
+                onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="size-4" />
               </Button>
@@ -436,14 +471,22 @@ function AddressCard({
             </PopoverContent>
           </Popover>
         </div>
-        <p className="text-sm text-muted-foreground mt-1 truncate">
+        <p className="text-sm text-muted-foreground mt-1 truncate" title={address.fullName}>
           {address.fullName}
         </p>
-        <p className="text-sm text-muted-foreground truncate">{address.phone}</p>
-        <p className="text-sm text-muted-foreground truncate mt-0.5">
-          {address.address}
-          {address.deliveryArea ? `, ${address.deliveryArea}` : ""}
+        <p className="text-sm text-muted-foreground truncate" title={address.phone}>
+          {address.phone}
         </p>
+        <p className="text-sm text-muted-foreground truncate mt-0.5" title={addressLine}>
+          {addressLine}
+        </p>
+      </div>
+      <div className="shrink-0 flex items-center" aria-hidden>
+        {selected ? (
+          <CircleDot className="size-6 text-teal-600" />
+        ) : (
+          <Circle className="size-6 text-muted-foreground" strokeWidth={1.5} />
+        )}
       </div>
     </div>
   );
