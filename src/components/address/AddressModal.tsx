@@ -36,6 +36,7 @@ import {
   CircleDot,
   Home,
   MoreVertical,
+  X,
 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -187,9 +188,11 @@ export function AddressModal() {
                 </DialogTitle>
               </DialogHeader>
               <DialogClose
-                className="absolute right-0 top-0 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                className="absolute top-4 right-4 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:outline-none flex items-center justify-center size-8 outline-none focus:ring-0"
                 aria-label="Close"
-              />
+              >
+                <X className="size-5" />
+              </DialogClose>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
@@ -335,9 +338,11 @@ export function AddressModal() {
                 <DialogTitle className="text-xl">Address</DialogTitle>
               </DialogHeader>
               <DialogClose
-                className="absolute right-0 top-0 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                className="absolute top-4 right-4 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:outline-none flex items-center justify-center size-8 outline-none focus:ring-0"
                 aria-label="Close"
-              />
+              >
+                <X className="size-5" />
+              </DialogClose>
               <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto">
                 {addresses.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-4 text-center">

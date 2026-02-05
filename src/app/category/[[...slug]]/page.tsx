@@ -4,6 +4,10 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Fragment, use } from "react"
 
+import { CategoryHero } from "@/components/category/CategoryHero"
+import { SubcategoryCards } from "@/components/category/SubcategoryCards"
+import { CategoryProductSection } from "@/components/common/CategoryProductSection"
+import { ProductCard } from "@/components/common/ProductCard"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,10 +16,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { CategoryHero } from "@/components/category/CategoryHero"
-import { SubcategoryCards } from "@/components/category/SubcategoryCards"
-import { CategoryProductSection } from "@/components/common/CategoryProductSection"
-import { ProductCard } from "@/components/common/ProductCard"
 import type { ResolvedCategory } from "@/hooks/data/useCategoryTree"
 import {
   getCategoryBySlugPath,
@@ -26,12 +26,12 @@ import { useProductsByCategory } from "@/hooks/data/useProducts"
 import type { CategoryTreeNode } from "@/types/product"
 
 const SECTION_BG_CLASSES = [
-  "bg-info-light/60 dark:bg-info-dark/20",
-  "bg-danger-light/60 dark:bg-danger-dark/20",
-  "bg-warning-light/60 dark:bg-warning-dark/20",
-  "bg-success-light/60 dark:bg-success-dark/20",
-  "bg-primary-light/60 dark:bg-primary-dark/20",
-  "bg-muted-light/60 dark:bg-muted-dark/20",
+  "bg-info-light/10 dark:bg-info-dark/20",
+  "bg-danger-light/10 dark:bg-danger-dark/20",
+  "bg-warning-light/10 dark:bg-warning-dark/20",
+  "bg-success-light/10 dark:bg-success-dark/20",
+  "bg-primary-light/10 dark:bg-primary-dark/20",
+  "bg-muted-light/10 dark:bg-muted-dark/20",
 ]
 
 /** Subcategory page: title, sort dropdown, and grid of all products. */
@@ -166,7 +166,7 @@ export default function CategoryPage({
 
   // Main category page: hero, subcategory cards, product sections
   return (
-    <div className="w-full space-y-8">
+    <div className="w-full space-y-8 p-10">
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumb.map((item, i) => (

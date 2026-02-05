@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -8,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { ChevronRightIcon } from "lucide-react";
+import { ChevronRightIcon, X } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -168,9 +168,11 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
           {/* Right column - Form */}
           <div className="bg-background flex flex-col p-6 md:p-8 relative">
             <DialogClose
-              className="absolute top-4 right-4 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:ring-2 focus:ring-offset-2 focus:outline-none"
+              className="absolute top-4 right-4 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:outline-none flex items-center justify-center size-8 outline-none focus:ring-0"
               aria-label="Close"
-            />
+            >
+              <X className="size-5" />
+            </DialogClose>
             <div className="pr-8">
               <DialogHeader className="text-left">
                 <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
