@@ -1,18 +1,16 @@
+import { CategoryBar } from "@/components/global/category-bar";
+import Navbar from "@/components/global/navbar";
 import Provider from "@/components/global/Provider";
+import DefaultLayout from "@/layouts/DefaultLayout";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -29,10 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} antialiased font-sans`}
       >
         <Provider>
-          {children}
+          <Navbar />
+          <CategoryBar />
+          <DefaultLayout>{children}</DefaultLayout>
         </Provider>
       </body>
     </html>

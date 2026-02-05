@@ -1,10 +1,19 @@
+import { AppSidebar } from "@/components/app-sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
-const DefaultLayout = () => {
+interface DefaultLayoutProps {
+  children: React.ReactNode
+}
+
+const DefaultLayout = ({ children }: DefaultLayoutProps) => {
   return (
-    <div>
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="flex min-w-0 flex-1 flex-col">
+        {children}
+      </main>
+    </SidebarProvider>
+  )
+}
 
-    </div>
-  );
-};
-
-export default DefaultLayout;
+export default DefaultLayout
