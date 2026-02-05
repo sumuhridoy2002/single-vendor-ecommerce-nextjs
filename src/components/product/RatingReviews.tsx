@@ -60,9 +60,9 @@ function RatingStars({ rating }: { rating: number }) {
           className={cn(
             "size-4",
             i < full
-              ? "fill-amber-400 text-amber-400"
+              ? "fill-warning text-warning"
               : i === full && hasHalf
-                ? "fill-amber-400/50 text-amber-400"
+                ? "fill-warning/50 text-warning"
                 : "text-muted-foreground/40"
           )}
         />
@@ -110,11 +110,11 @@ export function RatingReviews({
             >
               <div className="flex w-16 shrink-0 items-center gap-0.5">
                 <span className="text-muted-foreground">{stars}</span>
-                <Star className="size-4 fill-amber-400 text-amber-400" />
+                <Star className="size-4 fill-warning text-warning" />
               </div>
               <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-amber-400"
+                  className="h-full rounded-full bg-warning"
                   style={{ width: `${(count / maxCount) * 100}%` }}
                 />
               </div>
@@ -137,7 +137,7 @@ export function RatingReviews({
         </Button>
         {STAR_COUNTS.map((s) => (
           <Button key={s} variant="outline" size="sm" className="gap-1">
-            <Star className="size-4 fill-amber-400 text-amber-400" />
+            <Star className="size-4 fill-warning text-warning" />
             {s}
           </Button>
         ))}

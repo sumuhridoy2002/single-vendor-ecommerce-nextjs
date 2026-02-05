@@ -60,7 +60,7 @@ export function CategoryBar() {
         <SheetTrigger asChild>
           <Button
             variant="ghost"
-            className="shrink-0 gap-2 text-teal-600 hover:bg-teal-50 hover:text-teal-700"
+            className="shrink-0 gap-2 text-primary hover:bg-primary-light hover:text-primary-dark"
           >
             <LayoutGrid className="size-5" />
             <span className="hidden font-medium sm:inline">Shop By Category</span>
@@ -102,7 +102,7 @@ export function CategoryBar() {
                 className={cn(
                   "whitespace-nowrap text-sm font-medium transition-colors",
                   isActive
-                    ? "text-teal-600 border-b-2 border-teal-600 pb-0.5"
+                    ? "text-primary border-b-2 border-primary pb-0.5"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
@@ -122,7 +122,7 @@ export function CategoryBar() {
       <a href="tel:" className="shrink-0">
         <Button
           variant="ghost"
-          className="gap-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+          className="gap-2 rounded-full bg-danger-light text-danger hover:bg-danger-light/80 hover:text-danger-dark"
         >
           <Phone className="size-4" />
           <span className="hidden font-medium sm:inline">Call for Order</span>

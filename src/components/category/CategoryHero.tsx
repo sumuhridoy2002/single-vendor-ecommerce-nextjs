@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import Image from "next/image"
 import Link from "next/link"
 
 const PLACEHOLDER_BANNER = "https://placehold.co/1200x400?text=Category"
@@ -47,9 +48,10 @@ export function CategoryHero({
           )}
         </div>
         <div className="relative aspect-2/1 md:aspect-auto md:min-h-[200px] lg:min-h-[280px]">
-          <img
+          <Image
             src={image}
-            alt=""
+            alt={title}
+            fill
             className="absolute inset-0 h-full w-full object-cover object-center"
           />
         </div>

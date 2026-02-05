@@ -53,9 +53,9 @@ function RatingStars({
             className={cn(
               "size-4",
               i < full
-                ? "fill-amber-400 text-amber-400"
+                ? "fill-warning text-warning"
                 : i === full && hasHalf
-                  ? "fill-amber-400/50 text-amber-400"
+                  ? "fill-warning/50 text-warning"
                   : "text-muted-foreground/40"
             )}
           />
@@ -159,8 +159,8 @@ export function ProductInfo({
       )}
 
       {inStock && (
-        <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-500">
-          <span className="size-2 rounded-full bg-green-500" aria-hidden />
+        <div className="flex items-center gap-2 text-sm text-success">
+          <span className="size-2 rounded-full bg-success" aria-hidden />
           In Stock
         </div>
       )}
@@ -200,7 +200,7 @@ export function ProductInfo({
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button
-          className="flex-1 gap-2 bg-teal-600 hover:bg-teal-700"
+          className="flex-1 gap-2 bg-primary hover:bg-primary-dark"
           onClick={() => onAddToCart?.(product)}
         >
           <ShoppingCart className="size-4" />

@@ -1,10 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { Navigation } from "swiper/modules"
-import { Swiper, SwiperSlide } from "swiper/react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useRef, useState } from "react"
+import type { Swiper as SwiperType } from "swiper"
 
-import { ProductCard } from "@/components/common/ProductCard"
+import { ProductSlider } from "@/components/common/ProductSlider"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
 
@@ -23,52 +25,69 @@ export function CategoryProductSection({
   className,
   sectionBgClassName,
 }: CategoryProductSectionProps) {
+  const swiperRef = useRef<SwiperType | null>(null)
+  const [isBeginning, setIsBeginning] = useState(true)
+  const [isEnd, setIsEnd] = useState(false)
+
   if (products.length === 0) return null
 
   return (
     <section
       className={cn(
-        "min-w-0 rounded-xl px-4 py-6 md:px-6 md:py-8",
+        "min-w-0 px-4 py-6 md:px-6 md:py-8",
         sectionBgClassName,
         className
       )}
     >
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-2">
         <h2 className="text-lg font-semibold text-foreground md:text-xl">
           {title}
         </h2>
-        {viewAllHref && (
-          <Link
-            href={viewAllHref}
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            View All
-          </Link>
-        )}
+        <div className="flex items-center gap-1">
+          {viewAllHref && (
+            <Link
+              href={viewAllHref}
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              View All
+            </Link>
+          )}
+          <div className="flex items-center gap-0.5">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              className="size-8 rounded-full"
+              aria-label="Previous products"
+              disabled={isBeginning}
+              onClick={() => swiperRef.current?.slidePrev()}
+            >
+              <ChevronLeft className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              className="size-8 rounded-full"
+              aria-label="Next products"
+              disabled={isEnd}
+              onClick={() => swiperRef.current?.slideNext()}
+            >
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
       </div>
-      <div
-        className="min-w-0 w-full overflow-hidden"
-        style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}
-      >
-        <Swiper
-          modules={[Navigation]}
-          navigation
-          spaceBetween={12}
-          slidesPerView={2}
-          breakpoints={{
-            640: { slidesPerView: 3, spaceBetween: 16 },
-            768: { slidesPerView: 4, spaceBetween: 16 },
-            1024: { slidesPerView: 5, spaceBetween: 20 },
-          }}
-          className="category-products-swiper"
-        >
-          {products.map((product) => (
-            <SwiperSlide key={product.id}>
-              <ProductCard product={product} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
+      <ProductSlider
+        products={products}
+        onSwiper={(swiper) => {
+          swiperRef.current = swiper
+          setIsBeginning(swiper.isBeginning)
+          setIsEnd(swiper.isEnd)
+        }}
+        onSlideChange={(swiper) => {
+          setIsBeginning(swiper.isBeginning)
+          setIsEnd(swiper.isEnd)
+        }}
+      />
     </section>
   )
 }

@@ -74,7 +74,7 @@ const ADDRESS_TYPE_OPTIONS: {
 function AddressTypeIcon({ type }: { type: AddressType }) {
   const opt = ADDRESS_TYPE_OPTIONS.find((o) => o.value === type);
   const Icon = opt?.icon ?? Home;
-  return <Icon className="size-5 text-teal-600" aria-hidden />;
+  return <Icon className="size-5 text-primary" aria-hidden />;
 }
 
 function AddressTypeLabel(type: AddressType): string {
@@ -286,7 +286,7 @@ export function AddressModal() {
                                   className={cn(
                                     "flex items-center gap-2",
                                     field.value === opt.value &&
-                                    "bg-teal-600 hover:bg-teal-700"
+                                    "bg-primary hover:bg-primary-dark"
                                   )}
                                   onClick={() =>
                                     form.setValue("addressType", opt.value)
@@ -322,7 +322,7 @@ export function AddressModal() {
                   />
                   <Button
                     type="submit"
-                    className="w-full bg-teal-600 hover:bg-teal-700 mt-2"
+                    className="w-full bg-primary hover:bg-primary-dark mt-2"
                   >
                     Save
                   </Button>
@@ -362,7 +362,7 @@ export function AddressModal() {
               </div>
               <Button
                 type="button"
-                className="w-full bg-teal-600 hover:bg-teal-700 mt-4"
+                className="w-full bg-primary hover:bg-primary-dark mt-4"
                 onClick={openAddForm}
               >
                 Add New Address
@@ -408,7 +408,7 @@ function AddressCard({
       }}
       className={cn(
         "rounded-lg border p-4 flex gap-3 cursor-pointer transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        selected ? "border-teal-600 bg-teal-50/50 dark:bg-teal-950/20" : "bg-muted/30"
+        selected ? "border-primary bg-primary-light/50 dark:bg-primary-dark/20" : "bg-muted/30"
       )}
       aria-pressed={selected}
       aria-label={`Select ${AddressTypeLabel(address.addressType)}`}
@@ -424,7 +424,7 @@ function AddressCard({
               {address.isDefault && " (Shipping Address)"}
             </span>
             {address.isDefault && (
-              <Badge className="bg-green-600 hover:bg-green-600 shrink-0">
+              <Badge className="bg-success hover:bg-success shrink-0">
                 Default
               </Badge>
             )}
@@ -446,7 +446,7 @@ function AddressCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="justify-start text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                  className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
                   onClick={onEdit}
                 >
                   Edit
@@ -454,7 +454,7 @@ function AddressCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="justify-start text-teal-600 hover:text-teal-700 hover:bg-teal-50"
+                  className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
                   onClick={onSetDefault}
                 >
                   Make Default
@@ -483,7 +483,7 @@ function AddressCard({
       </div>
       <div className="shrink-0 flex items-center" aria-hidden>
         {selected ? (
-          <CircleDot className="size-6 text-teal-600" />
+          <CircleDot className="size-6 text-primary" />
         ) : (
           <Circle className="size-6 text-muted-foreground" strokeWidth={1.5} />
         )}

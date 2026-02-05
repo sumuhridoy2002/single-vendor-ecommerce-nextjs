@@ -235,7 +235,7 @@ function CategoryIcon({ icon: Icon }: { icon: LucideIcon }) {
 
 const categoryRowClass = cn(
   "h-auto border-b border-sidebar-border rounded-none py-3 px-3",
-  "data-[active=true]:bg-teal-50 data-[active=true]:text-teal-800 dark:data-[active=true]:bg-teal-950/50 dark:data-[active=true]:text-teal-200"
+  "data-[active=true]:bg-primary-light data-[active=true]:text-primary-dark dark:data-[active=true]:bg-primary-dark/50 dark:data-[active=true]:text-primary-light"
 )
 
 export function AppSidebar() {
@@ -252,7 +252,7 @@ export function AppSidebar() {
   }, [])
 
   return (
-    <Sidebar collapsible="none" className="border-r border-sidebar-border">
+    <Sidebar collapsible="none" className="border-r border-sidebar-border sticky top-[70px] overflow-y-auto">
       <SidebarHeader className="border-b border-sidebar-border p-0">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -261,7 +261,7 @@ export function AppSidebar() {
                 href={flashSaleItem.href}
                 className="flex w-full items-center gap-2"
               >
-                <flashSaleItem.icon className="size-5 shrink-0 text-amber-500" />
+                <flashSaleItem.icon className="size-5 shrink-0 text-warning" />
                 <span className="font-semibold text-destructive">
                   {flashSaleItem.label}
                 </span>
@@ -301,7 +301,7 @@ export function AppSidebar() {
                           "flex w-full items-center gap-0 text-left text-sm outline-hidden",
                           categoryRowClass,
                           isMainActive &&
-                          "bg-teal-50 text-teal-800 dark:bg-teal-950/50 dark:text-teal-200"
+                          "bg-primary-light text-primary-dark dark:bg-primary-dark/50 dark:text-primary-light"
                         )}
                       >
                         <Link

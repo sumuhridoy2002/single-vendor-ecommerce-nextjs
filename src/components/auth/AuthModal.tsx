@@ -157,7 +157,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   key={i}
                   className={cn(
                     "rounded-full transition-all inline-block",
-                    i === 0 ? "w-6 h-2 bg-teal-600" : "w-2 h-2 bg-muted-foreground/30"
+                    i === 0 ? "w-6 h-2 bg-primary" : "w-2 h-2 bg-muted-foreground/30"
                   )}
                   aria-hidden
                 />
@@ -229,7 +229,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <Button
                 type="submit"
                 disabled={sendLoading}
-                className="w-full bg-teal-600 hover:bg-teal-700 text-white h-10"
+                className="w-full bg-primary hover:bg-primary-dark text-white h-10"
               >
                 {sendLoading ? "Sending…" : "Send"}
               </Button>

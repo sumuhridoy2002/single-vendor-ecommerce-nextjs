@@ -41,28 +41,26 @@ export function ProductGallery({ product, className }: ProductGalleryProps) {
 
       {/* Thumbnails: vertical on desktop, horizontal on mobile */}
       {images.length > 1 && (
-        <div className="flex gap-2">
-          <div className="flex flex-1 flex-row gap-2 overflow-x-auto lg:flex-col lg:max-w-[72px]">
-            {images.map((src, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSelectedIndex(i)}
-                className={cn(
-                  "relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 transition-colors lg:h-14 lg:w-14",
-                  selectedIndex === i
-                    ? "border-primary"
-                    : "border-transparent hover:border-muted-foreground/30"
-                )}
-              >
-                <img
-                  src={src}
-                  alt=""
-                  className="size-full object-cover"
-                />
-              </button>
-            ))}
-          </div>
+        <div className="flex gap-2 overflow-x-auto">
+          {images.map((src, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setSelectedIndex(i)}
+              className={cn(
+                "relative h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 transition-colors lg:h-14 lg:w-14",
+                selectedIndex === i
+                  ? "border-primary"
+                  : "border-transparent hover:border-muted-foreground/30"
+              )}
+            >
+              <img
+                src={src}
+                alt=""
+                className="size-full object-cover"
+              />
+            </button>
+          ))}
         </div>
       )}
     </div>

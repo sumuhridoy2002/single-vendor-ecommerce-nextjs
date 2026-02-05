@@ -2,8 +2,16 @@
 
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { use } from "react"
+import { Fragment, use } from "react"
 
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { CategoryHero } from "@/components/category/CategoryHero"
 import { SubcategoryCards } from "@/components/category/SubcategoryCards"
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
@@ -18,12 +26,12 @@ import { useProductsByCategory } from "@/hooks/data/useProducts"
 import type { CategoryTreeNode } from "@/types/product"
 
 const SECTION_BG_CLASSES = [
-  "bg-sky-50/60 dark:bg-sky-950/20",
-  "bg-pink-50/60 dark:bg-pink-950/20",
-  "bg-amber-50/60 dark:bg-amber-950/20",
-  "bg-emerald-50/60 dark:bg-emerald-950/20",
-  "bg-violet-50/60 dark:bg-violet-950/20",
-  "bg-rose-50/60 dark:bg-rose-950/20",
+  "bg-info-light/60 dark:bg-info-dark/20",
+  "bg-danger-light/60 dark:bg-danger-dark/20",
+  "bg-warning-light/60 dark:bg-warning-dark/20",
+  "bg-success-light/60 dark:bg-success-dark/20",
+  "bg-primary-light/60 dark:bg-primary-dark/20",
+  "bg-muted-light/60 dark:bg-muted-dark/20",
 ]
 
 /** Subcategory page: title, sort dropdown, and grid of all products. */
@@ -133,32 +141,24 @@ export default function CategoryPage({
   if (resolved.type === "sub" && sub) {
     return (
       <div className="w-full space-y-6">
-        <nav
-          aria-label="Breadcrumb"
-          className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground"
-        >
-          {breadcrumb.map((item, i) => (
-            <span key={item.href} className="flex items-center gap-1">
-              {i > 0 && (
-                <span className="text-muted-foreground/60" aria-hidden>
-                  /
-                </span>
-              )}
-              {i === breadcrumb.length - 1 ? (
-                <span className="text-foreground" aria-current="page">
-                  {item.title}
-                </span>
-              ) : (
-                <Link
-                  href={item.href}
-                  className="hover:text-foreground hover:underline"
-                >
-                  {item.title}
-                </Link>
-              )}
-            </span>
-          ))}
-        </nav>
+        <Breadcrumb>
+          <BreadcrumbList>
+            {breadcrumb.map((item, i) => (
+              <Fragment key={item.href}>
+                {i > 0 && <BreadcrumbSeparator />}
+                <BreadcrumbItem>
+                  {i === breadcrumb.length - 1 ? (
+                    <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link href={item.href}>{item.title}</Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+              </Fragment>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
         <SubcategoryProductGrid sub={sub} />
       </div>
     )
@@ -167,32 +167,24 @@ export default function CategoryPage({
   // Main category page: hero, subcategory cards, product sections
   return (
     <div className="w-full space-y-8">
-      <nav
-        aria-label="Breadcrumb"
-        className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground"
-      >
-        {breadcrumb.map((item, i) => (
-          <span key={item.href} className="flex items-center gap-1">
-            {i > 0 && (
-              <span className="text-muted-foreground/60" aria-hidden>
-                /
-              </span>
-            )}
-            {i === breadcrumb.length - 1 ? (
-              <span className="text-foreground" aria-current="page">
-                {item.title}
-              </span>
-            ) : (
-              <Link
-                href={item.href}
-                className="hover:text-foreground hover:underline"
-              >
-                {item.title}
-              </Link>
-            )}
-          </span>
-        ))}
-      </nav>
+      <Breadcrumb>
+        <BreadcrumbList>
+          {breadcrumb.map((item, i) => (
+            <Fragment key={item.href}>
+              {i > 0 && <BreadcrumbSeparator />}
+              <BreadcrumbItem>
+                {i === breadcrumb.length - 1 ? (
+                  <BreadcrumbPage>{item.title}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={item.href}>{item.title}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          ))}
+        </BreadcrumbList>
+      </Breadcrumb>
 
       <CategoryHero title={main.title} />
 

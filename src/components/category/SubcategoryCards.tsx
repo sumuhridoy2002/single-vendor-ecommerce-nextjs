@@ -7,12 +7,12 @@ import { cn } from "@/lib/utils"
 import type { CategoryTreeNode } from "@/types/product"
 
 const CARD_BG_CLASSES = [
-  "bg-pink-50/80 dark:bg-pink-950/30",
-  "bg-sky-50/80 dark:bg-sky-950/30",
-  "bg-amber-50/80 dark:bg-amber-950/30",
-  "bg-emerald-50/80 dark:bg-emerald-950/30",
-  "bg-violet-50/80 dark:bg-violet-950/30",
-  "bg-rose-50/80 dark:bg-rose-950/30",
+  "bg-danger-light/80 dark:bg-danger-dark/30",
+  "bg-info-light/80 dark:bg-info-dark/30",
+  "bg-warning-light/80 dark:bg-warning-dark/30",
+  "bg-success-light/80 dark:bg-success-dark/30",
+  "bg-primary-light/80 dark:bg-primary-dark/30",
+  "bg-muted-light/80 dark:bg-muted-dark/30",
 ]
 
 export interface SubcategoryCardsProps {

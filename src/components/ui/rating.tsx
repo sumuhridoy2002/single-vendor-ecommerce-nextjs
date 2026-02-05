@@ -130,7 +130,7 @@ function Rating({
           >
             <Star
               data-slot="rating-star-filled"
-              className={cn(starVariants({ size }), 'text-yellow-400 fill-yellow-400')}
+              className={cn(starVariants({ size }), 'text-warning fill-warning')}
             />
           </div>
         </div>,

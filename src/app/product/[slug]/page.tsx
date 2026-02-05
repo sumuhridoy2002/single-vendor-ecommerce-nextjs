@@ -1,6 +1,5 @@
 "use client"
 
-import { Disclaimer } from "@/components/product/Disclaimer"
 import { ProductGallery } from "@/components/product/ProductGallery"
 import { ProductInfo } from "@/components/product/ProductInfo"
 import { ProductTabs } from "@/components/product/ProductTabs"
@@ -14,16 +13,23 @@ import {
   useProductBySlug,
   useProducts,
 } from "@/hooks/data/useProducts"
-import { ChevronRight } from "lucide-react"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { use } from "react"
 
 const SECTION_BG_CLASSES = [
-  "bg-pink-50/60 dark:bg-pink-950/20",
-  "bg-sky-50/60 dark:bg-sky-950/20",
-  "bg-amber-50/60 dark:bg-amber-950/20",
-  "bg-rose-50/60 dark:bg-rose-950/20",
+  "bg-danger-light/10 dark:bg-danger-dark/20",
+  "bg-info-light/10 dark:bg-info-dark/20",
+  "bg-warning-light/10 dark:bg-warning-dark/20",
+  "bg-muted-light/10 dark:bg-muted-dark/20",
 ]
 
 export default function ProductPage({
@@ -57,29 +63,29 @@ export default function ProductPage({
   return (
     <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6">
       {/* Breadcrumbs */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex flex-wrap items-center gap-1 text-sm text-muted-foreground"
-      >
-        <Link href="/" className="hover:text-foreground hover:underline">
-          Home
-        </Link>
-        <ChevronRight className="size-4 shrink-0" aria-hidden />
-        {category && (
-          <>
-            <Link
-              href={categoryHref}
-              className="hover:text-foreground hover:underline"
-            >
-              {category.title}
-            </Link>
-            <ChevronRight className="size-4 shrink-0" aria-hidden />
-          </>
-        )}
-        <span className="truncate text-foreground" aria-current="page">
-          {product.name}
-        </span>
-      </nav>
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">Home</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          {category && (
+            <>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link href={categoryHref}>{category.title}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+            </>
+          )}
+          <BreadcrumbItem>
+            <BreadcrumbPage className="truncate">{product.name}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Hero: Gallery + Info */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -101,28 +107,21 @@ export default function ProductPage({
           title="Similar Products"
           products={similarProducts}
           viewAllHref={categoryHref}
-          sectionBgClassName={SECTION_BG_CLASSES[0]}
         />
         <RelatedProductsCarousel
           title={product.brand ? `More From ${product.brand}` : "More in this category"}
           products={moreFromBrand}
           viewAllHref={product.brandHref ?? categoryHref}
-          sectionBgClassName={SECTION_BG_CLASSES[1]}
         />
         <RelatedProductsCarousel
           title="Frequently Bought Together"
           products={frequentlyBought}
-          sectionBgClassName={SECTION_BG_CLASSES[2]}
         />
         <RelatedProductsCarousel
           title="Previously Viewed Items"
           products={previouslyViewed}
-          sectionBgClassName={SECTION_BG_CLASSES[3]}
         />
       </div>
-
-      {/* Disclaimer */}
-      <Disclaimer />
     </div>
   )
 }

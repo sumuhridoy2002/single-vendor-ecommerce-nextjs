@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useAddressStore } from "@/store/address-store";
-import { MapPin, Plus, Search, ShoppingCart, User } from "lucide-react";
+import { MapPin, Search, ShoppingCart, User } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -23,19 +24,16 @@ const Navbar = () => {
   const openAddressModal = useAddressStore((s) => s.openAddressModal);
 
   return (
-    <nav className="flex items-center justify-between gap-6 border-b border-border bg-background px-4 py-3">
+    <nav className="flex items-center justify-between gap-6 border-b border-border bg-background px-4 py-3 sticky top-0 z-50">
       {/* Logo */}
-      <Link href="/" className="flex shrink-0 flex-col">
-        <span className="flex items-center gap-0.5 text-xl font-semibold tracking-tight text-teal-600">
-          ar
-          <span className="flex size-6 items-center justify-center rounded-full bg-teal-600 text-white">
-            <Plus className="size-3.5 rotate-45 stroke-[2.5]" />
-          </span>
-          gga
-        </span>
-        <span className="text-xs font-medium text-teal-500">
-          For better health
-        </span>
+      <Link href="/">
+        <Image
+          src="/assets/images/logo.png"
+          alt="Logo"
+          width={250}
+          height={250}
+          className="w-auto h-10"
+        />
       </Link>
 
       {/* Delivery */}
@@ -91,7 +89,7 @@ const Navbar = () => {
         <Button
           type="submit"
           aria-label="Search"
-          className="h-10 shrink-0 rounded-r-lg rounded-l-none bg-teal-600 px-4 hover:bg-teal-700"
+          className="h-10 shrink-0 rounded-r-lg rounded-l-none bg-primary px-4 hover:bg-primary-dark"
         >
           <Search className="size-5 text-white" />
         </Button>

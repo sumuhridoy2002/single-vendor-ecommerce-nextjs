@@ -5,12 +5,12 @@ import { useCategory } from "@/hooks/data/useCategory"
 import { useProducts } from "@/hooks/data/useProducts"
 
 const SECTION_BG_CLASSES = [
-  "bg-sky-50/60 dark:bg-sky-950/20",
-  "bg-pink-50/60 dark:bg-pink-950/20",
-  "bg-amber-50/60 dark:bg-amber-950/20",
-  "bg-emerald-50/60 dark:bg-emerald-950/20",
-  "bg-violet-50/60 dark:bg-violet-950/20",
-  "bg-rose-50/60 dark:bg-rose-950/20",
+  "bg-info-light/10 dark:bg-info-dark/20",
+  "bg-danger-light/10 dark:bg-danger-dark/20",
+  "bg-warning-light/10 dark:bg-warning-dark/20",
+  "bg-success-light/10 dark:bg-success-dark/20",
+  "bg-primary-light/10 dark:bg-primary-dark/20",
+  "bg-muted-light/10 dark:bg-muted-dark/20",
 ]
 
 export default function Home() {
