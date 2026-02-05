@@ -3,6 +3,8 @@
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
 import { useCategory } from "@/hooks/data/useCategory"
 import { useProducts } from "@/hooks/data/useProducts"
+import { useCartStore } from "@/store/cart-store"
+import type { Product } from "@/types/product"
 
 const SECTION_BG_CLASSES = [
   "bg-info-light/10 dark:bg-info-dark/20",
@@ -16,6 +18,12 @@ const SECTION_BG_CLASSES = [
 export default function Home() {
   const categories = useCategory()
   const products = useProducts()
+  const addItem = useCartStore((s) => s.addItem)
+  const openCart = useCartStore((s) => s.openCart)
+  const handleAddToCart = (product: Product) => {
+    addItem(product)
+    openCart()
+  }
 
   const productsByCategoryId = products.reduce<Record<string, typeof products>>(
     (acc, product) => {
@@ -36,6 +44,7 @@ export default function Home() {
           products={productsByCategoryId[category.id] ?? []}
           viewAllHref={category.viewAllHref}
           sectionBgClassName={SECTION_BG_CLASSES[index % SECTION_BG_CLASSES.length]}
+          onAddToCart={handleAddToCart}
         />
       ))}
     </div>
