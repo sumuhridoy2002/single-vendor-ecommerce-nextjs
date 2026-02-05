@@ -1,5 +1,6 @@
 "use client";
 
+import { AddressModal } from "@/components/address/AddressModal";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useAddressStore } from "@/store/address-store";
 import { MapPin, Plus, Search, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
 const Navbar = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const openAddressModal = useAddressStore((s) => s.openAddressModal);
 
   return (
     <nav className="flex items-center justify-between gap-6 border-b border-border bg-background px-4 py-3">
@@ -36,24 +39,24 @@ const Navbar = () => {
       </Link>
 
       {/* Delivery */}
-      <div className="hidden shrink-0 flex-col sm:flex">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={openAddressModal}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openAddressModal();
+          }
+        }}
+        className="hidden shrink-0 flex-col sm:flex text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+        aria-label="Delivery address"
+      >
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="size-3.5" />
           Delivery to
         </span>
-        <Select defaultValue="bd">
-          <SelectTrigger
-            size="sm"
-            className="h-auto border-0 bg-transparent p-0 shadow-none focus:ring-0 [&>svg]:size-3.5"
-          >
-            <SelectValue placeholder="Country" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="bd">Bangladesh</SelectItem>
-            <SelectItem value="in">India</SelectItem>
-            <SelectItem value="pk">Pakistan</SelectItem>
-          </SelectContent>
-        </Select>
+        <span className="text-sm font-medium">Bangladesh</span>
       </div>
 
       {/* Search bar */}
@@ -113,6 +116,7 @@ const Navbar = () => {
           </div>
         </button>
         <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+        <AddressModal />
         <Link
           href="/cart"
           className="relative flex size-10 items-center justify-center rounded-full bg-muted"
