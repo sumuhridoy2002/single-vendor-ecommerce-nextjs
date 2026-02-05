@@ -1,8 +1,5 @@
 "use client"
 
-import { Heart, ShoppingCart, Star } from "lucide-react"
-import Link from "next/link"
-
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -14,6 +11,10 @@ import {
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
+import { Heart, ShoppingCart, Star } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { useState } from "react"
 
 export interface ProductCardProps {
   product: Product
@@ -57,12 +58,17 @@ function RatingStars({ rating, reviewCount }: { rating: number; reviewCount?: nu
   )
 }
 
+const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png"
+
 export function ProductCard({
   product,
   onAddToCart,
   onWishlist,
   className,
 }: ProductCardProps) {
+  const [imageError, setImageError] = useState(false)
+  const imageSrc = imageError ? PLACEHOLDER_IMAGE : product.image
+
   const hasDiscount =
     product.originalPrice != null &&
     product.originalPrice > product.price
@@ -83,10 +89,12 @@ export function ProductCard({
       <CardHeader className="relative p-0">
         <Link href={`/product/${product.slug}`} className="block">
           <AspectRatio ratio={1}>
-            <img
-              src={product.image}
+            <Image
+              src={imageSrc}
               alt={product.name}
+              fill
               className="size-full object-cover"
+              onError={() => setImageError(true)}
             />
           </AspectRatio>
         </Link>
