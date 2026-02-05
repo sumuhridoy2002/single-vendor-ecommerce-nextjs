@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthModal } from "@/components/auth/AuthModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,8 +14,11 @@ import {
 import { cn } from "@/lib/utils";
 import { MapPin, Plus, Search, ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 const Navbar = () => {
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
   return (
     <nav className="flex items-center justify-between gap-6 border-b border-border bg-background px-4 py-3">
       {/* Logo */}
@@ -92,9 +96,10 @@ const Navbar = () => {
 
       {/* User & Cart */}
       <div className="flex shrink-0 items-center gap-4">
-        <Link
-          href="/account"
-          className="hidden items-center gap-2 md:flex"
+        <button
+          type="button"
+          onClick={() => setAuthModalOpen(true)}
+          className="hidden items-center gap-2 md:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
           aria-label="Account & Orders"
         >
           <span className="flex size-10 items-center justify-center rounded-full bg-muted">
@@ -106,7 +111,8 @@ const Navbar = () => {
               Account & Orders
             </span>
           </div>
-        </Link>
+        </button>
+        <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
         <Link
           href="/cart"
           className="relative flex size-10 items-center justify-center rounded-full bg-muted"

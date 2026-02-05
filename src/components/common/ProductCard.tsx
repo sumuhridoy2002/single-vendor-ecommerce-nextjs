@@ -11,10 +11,11 @@ import {
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
-import { Heart, ShoppingCart, Star } from "lucide-react"
+import { Heart, ShoppingCart } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
+import { Rating } from "../ui/rating"
 
 export interface ProductCardProps {
   product: Product
@@ -26,36 +27,9 @@ export interface ProductCardProps {
 function formatPrice(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "INR",
+    currency: "BDT",
     maximumFractionDigits: 0,
   }).format(amount)
-}
-
-function RatingStars({ rating, reviewCount }: { rating: number; reviewCount?: number }) {
-  const full = Math.floor(rating)
-  const hasHalf = rating % 1 >= 0.5
-  return (
-    <div className="flex items-center gap-1 text-muted-foreground">
-      <div className="flex items-center gap-0.5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={cn(
-              "size-3.5",
-              i < full
-                ? "fill-amber-400 text-amber-400"
-                : i === full && hasHalf
-                  ? "fill-amber-400/50 text-amber-400"
-                  : "text-muted-foreground/40"
-            )}
-          />
-        ))}
-      </div>
-      {reviewCount != null && (
-        <span className="text-xs">({reviewCount})</span>
-      )}
-    </div>
-  )
 }
 
 const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png"
@@ -120,6 +94,22 @@ export function ProductCard({
         >
           {product.name}
         </Link>
+        {product.unit && (
+          <span className="text-xs text-muted-foreground">{product.unit}</span>
+        )}
+        {product.rating != null && (
+          <div className="flex items-center gap-2">
+            {/* <RatingStars rating={product.rating} reviewCount={product.reviewCount} /> */}
+            <Rating rating={product.rating} size="sm" />
+            {product.reviewCount != null && (
+              <span className="text-xs text-muted-foreground">
+                ({product.reviewCount})
+              </span>
+            )}
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="flex items-center justify-between gap-2 border-t px-4 py-3">
         <div className="flex items-baseline gap-2">
           <span className="text-base font-semibold text-foreground">
             {formatPrice(product.price)}
@@ -130,14 +120,6 @@ export function ProductCard({
             </span>
           )}
         </div>
-        {product.rating != null && (
-          <RatingStars rating={product.rating} reviewCount={product.reviewCount} />
-        )}
-      </CardContent>
-      <CardFooter className="flex items-center justify-between gap-2 border-t px-4 py-3">
-        {product.unit && (
-          <span className="text-xs text-muted-foreground">{product.unit}</span>
-        )}
         <div className="ml-auto flex items-center gap-1">
           <Button
             variant="ghost"

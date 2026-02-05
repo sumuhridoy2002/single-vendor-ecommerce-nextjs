@@ -28,7 +28,7 @@ export interface ProductInfoProps {
 function formatPrice(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
-    currency: "INR",
+    currency: "BDT",
     maximumFractionDigits: 2,
   }).format(amount)
 }
@@ -221,7 +221,7 @@ export function ProductInfo({
           <div className="flex items-center gap-2 text-sm">
             <Truck className="size-5 text-sky-600 dark:text-sky-400" />
             <span>
-              Free Shipping for orders over ₹500. Delivers in {product.deliveryText}.
+              Free Shipping for orders over ৳500. Delivers in {product.deliveryText}.
             </span>
           </div>
         </div>
