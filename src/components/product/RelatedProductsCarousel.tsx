@@ -16,6 +16,7 @@ export interface RelatedProductsCarouselProps {
   viewAllHref?: string
   className?: string
   sectionBgClassName?: string
+  onAddToCart?: (product: Product) => void
 }
 
 export function RelatedProductsCarousel({
@@ -24,6 +25,7 @@ export function RelatedProductsCarousel({
   viewAllHref,
   className,
   sectionBgClassName,
+  onAddToCart,
 }: RelatedProductsCarouselProps) {
   const swiperRef = useRef<SwiperType | null>(null)
   const [isBeginning, setIsBeginning] = useState(true)
@@ -78,6 +80,7 @@ export function RelatedProductsCarousel({
       </div>
       <ProductSlider
         products={products}
+        onAddToCart={onAddToCart}
         onSwiper={(swiper) => {
           swiperRef.current = swiper
           setIsBeginning(swiper.isBeginning)

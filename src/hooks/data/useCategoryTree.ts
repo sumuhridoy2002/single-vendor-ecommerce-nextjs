@@ -202,3 +202,15 @@ export function getCategoryIdsForMain(main: CategoryTreeNode): string[] {
   main.children?.forEach((c) => ids.push(c.id))
   return ids
 }
+
+/** Flat map of category id → title (main + all children) for filter labels. */
+export function getCategoryIdToTitleMap(): Record<string, string> {
+  const map: Record<string, string> = {}
+  for (const main of CATEGORY_TREE) {
+    map[main.id] = main.title
+    main.children?.forEach((c) => {
+      map[c.id] = c.title
+    })
+  }
+  return map
+}

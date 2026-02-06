@@ -16,6 +16,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useCartStore } from "@/store/cart-store"
 import type { ResolvedCategory } from "@/hooks/data/useCategoryTree"
 import {
   getCategoryBySlugPath,
@@ -35,7 +36,13 @@ const SECTION_BG_CLASSES = [
 ]
 
 /** Subcategory page: title, sort dropdown, and grid of all products. */
-function SubcategoryProductGrid({ sub }: { sub: CategoryTreeNode }) {
+function SubcategoryProductGrid({
+  sub,
+  onAddToCart,
+}: {
+  sub: CategoryTreeNode
+  onAddToCart?: (product: import("@/types/product").Product) => void
+}) {
   const products = useProductsByCategory(sub.id)
 
   return (
@@ -68,7 +75,11 @@ function SubcategoryProductGrid({ sub }: { sub: CategoryTreeNode }) {
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onAddToCart={onAddToCart}
+            />
           ))}
         </div>
       )}
@@ -80,9 +91,11 @@ function SubcategoryProductGrid({ sub }: { sub: CategoryTreeNode }) {
 function CategoryProductsHighlight({
   resolved,
   sectionBgClassName,
+  onAddToCart,
 }: {
   resolved: ResolvedCategory
   sectionBgClassName: string
+  onAddToCart?: (product: import("@/types/product").Product) => void
 }) {
   const { main, type, sub } = resolved
   const categoryIds = type === "sub" && sub ? sub.id : getCategoryIdsForMain(main)
@@ -99,6 +112,7 @@ function CategoryProductsHighlight({
       products={products}
       viewAllHref={viewAllHref}
       sectionBgClassName={sectionBgClassName}
+      onAddToCart={onAddToCart}
     />
   )
 }
@@ -107,10 +121,12 @@ function CategorySectionBySub({
   sub,
   mainSlug,
   sectionBgClassName,
+  onAddToCart,
 }: {
   sub: CategoryTreeNode
   mainSlug: string
   sectionBgClassName: string
+  onAddToCart?: (product: import("@/types/product").Product) => void
 }) {
   const products = useProductsByCategory(sub.id)
   return (
@@ -119,6 +135,7 @@ function CategorySectionBySub({
       products={products}
       viewAllHref={`/category/${mainSlug}/${sub.slug}`}
       sectionBgClassName={sectionBgClassName}
+      onAddToCart={onAddToCart}
     />
   )
 }
@@ -129,6 +146,13 @@ export default function CategoryPage({
   params: Promise<{ slug?: string[] }>
 }) {
   const { slug } = use(params)
+  const addItem = useCartStore((s) => s.addItem)
+  const openCart = useCartStore((s) => s.openCart)
+  const handleAddToCart = (product: import("@/types/product").Product) => {
+    addItem(product)
+    openCart()
+  }
+
   if (!slug || slug.length === 0) notFound()
 
   const resolved = getCategoryBySlugPath(slug)
@@ -159,7 +183,7 @@ export default function CategoryPage({
             ))}
           </BreadcrumbList>
         </Breadcrumb>
-        <SubcategoryProductGrid sub={sub} />
+        <SubcategoryProductGrid sub={sub} onAddToCart={handleAddToCart} />
       </div>
     )
   }
@@ -196,6 +220,7 @@ export default function CategoryPage({
         <CategoryProductsHighlight
           resolved={resolved}
           sectionBgClassName={SECTION_BG_CLASSES[0]}
+          onAddToCart={handleAddToCart}
         />
         {siblings.map((subNode, index) => (
           <CategorySectionBySub
@@ -205,6 +230,7 @@ export default function CategoryPage({
             sectionBgClassName={
               SECTION_BG_CLASSES[index % SECTION_BG_CLASSES.length]
             }
+            onAddToCart={handleAddToCart}
           />
         ))}
       </div>

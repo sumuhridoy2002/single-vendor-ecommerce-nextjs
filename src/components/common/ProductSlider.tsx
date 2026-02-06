@@ -22,6 +22,7 @@ export interface ProductSliderProps {
   className?: string
   onSwiper?: (swiper: SwiperType) => void
   onSlideChange?: (swiper: SwiperType) => void
+  onAddToCart?: (product: Product) => void
 }
 
 export function ProductSlider({
@@ -32,6 +33,7 @@ export function ProductSlider({
   className,
   onSwiper,
   onSlideChange,
+  onAddToCart,
 }: ProductSliderProps) {
   if (products.length === 0) return null
 
@@ -55,7 +57,7 @@ export function ProductSlider({
       >
         {products.map((product) => (
           <SwiperSlide key={product.id}>
-            <ProductCard product={product} />
+            <ProductCard product={product} onAddToCart={onAddToCart} />
           </SwiperSlide>
         ))}
       </Swiper>

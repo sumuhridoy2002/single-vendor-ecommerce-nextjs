@@ -21,16 +21,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { useCartStore } from "@/store/cart-store"
+import type { Product } from "@/types/product"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { use } from "react"
-
-const SECTION_BG_CLASSES = [
-  "bg-danger-light/10 dark:bg-danger-dark/20",
-  "bg-info-light/10 dark:bg-info-dark/20",
-  "bg-warning-light/10 dark:bg-warning-dark/20",
-  "bg-muted-light/10 dark:bg-muted-dark/20",
-]
 
 export default function ProductPage({
   params,
@@ -41,6 +36,12 @@ export default function ProductPage({
   const product = useProductBySlug(slug)
   const categories = useCategory()
   const allProducts = useProducts()
+  const addItem = useCartStore((s) => s.addItem)
+  const openCart = useCartStore((s) => s.openCart)
+  const handleAddToCart = (p: Product) => {
+    addItem(p)
+    openCart()
+  }
 
   if (!product) notFound()
 
@@ -90,7 +91,7 @@ export default function ProductPage({
       {/* Hero: Gallery + Info */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <ProductGallery product={product} />
-        <ProductInfo product={product} />
+        <ProductInfo product={product} onAddToCart={handleAddToCart} />
       </div>
 
       {/* Product Details & Specification tabs */}
@@ -107,19 +108,23 @@ export default function ProductPage({
           title="Similar Products"
           products={similarProducts}
           viewAllHref={categoryHref}
+          onAddToCart={handleAddToCart}
         />
         <RelatedProductsCarousel
           title={product.brand ? `More From ${product.brand}` : "More in this category"}
           products={moreFromBrand}
           viewAllHref={product.brandHref ?? categoryHref}
+          onAddToCart={handleAddToCart}
         />
         <RelatedProductsCarousel
           title="Frequently Bought Together"
           products={frequentlyBought}
+          onAddToCart={handleAddToCart}
         />
         <RelatedProductsCarousel
           title="Previously Viewed Items"
           products={previouslyViewed}
+          onAddToCart={handleAddToCart}
         />
       </div>
     </div>
