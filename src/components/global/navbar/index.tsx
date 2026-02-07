@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 import { CartSheet } from "@/components/cart/CartSheet";
 import { addToSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 
 const Navbar = () => {
+  const { isAuthenticated, user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [searchCategory, setSearchCategory] = useState("all");
@@ -194,22 +196,42 @@ const Navbar = () => {
 
       {/* User & Cart */}
       <div className="flex shrink-0 items-center gap-4">
-        <button
-          type="button"
-          onClick={() => setAuthModalOpen(true)}
-          className="hidden items-center gap-2 md:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
-          aria-label="Account & Orders"
-        >
-          <span className="flex size-10 items-center justify-center rounded-full bg-muted">
-            <User className="size-5 text-muted-foreground" />
-          </span>
-          <div className="flex flex-col text-left">
-            <span className="text-sm font-medium">Hello, User</span>
-            <span className="text-xs text-muted-foreground">
-              Account & Orders
+        {isAuthenticated && user ? (
+          <Link
+            href="/account"
+            className="hidden items-center gap-2 md:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+            aria-label="Account & Orders"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-muted">
+              <User className="size-5 text-muted-foreground" />
             </span>
-          </div>
-        </button>
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-medium">
+                Hello, {user.name ?? user.email ?? "User"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Account & Orders
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAuthModalOpen(true)}
+            className="hidden items-center gap-2 md:flex focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+            aria-label="Account & Orders"
+          >
+            <span className="flex size-10 items-center justify-center rounded-full bg-muted">
+              <User className="size-5 text-muted-foreground" />
+            </span>
+            <div className="flex flex-col text-left">
+              <span className="text-sm font-medium">Hello, User</span>
+              <span className="text-xs text-muted-foreground">
+                Account & Orders
+              </span>
+            </div>
+          </button>
+        )}
         <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
         <AddressModal />
         <button

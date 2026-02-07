@@ -1,5 +1,6 @@
 "use client"
 
+import { AuthProvider } from "@/contexts/AuthContext";
 import { SessionProvider } from "next-auth/react";
 import {
   QueryClient,
@@ -15,8 +16,10 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
   return (
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
-        {children}
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </QueryClientProvider>
     </SessionProvider>
   );

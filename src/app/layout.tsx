@@ -1,7 +1,6 @@
 import { CategoryBar } from "@/components/global/category-bar";
 import Navbar from "@/components/global/navbar";
 import Provider from "@/components/global/Provider";
-import DefaultLayout from "@/layouts/DefaultLayout";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import 'swiper/css';
@@ -32,7 +31,7 @@ export default function RootLayout({
         <Provider>
           <Navbar />
           <CategoryBar />
-          <DefaultLayout>{children}</DefaultLayout>
+          {children}
         </Provider>
       </body>
     </html>
