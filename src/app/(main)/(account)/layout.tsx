@@ -1,13 +1,5 @@
+import { AccountBreadcrumb } from "@/components/account/AccountBreadcrumb";
 import { AccountSidebar } from "@/components/account/AccountSidebar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import Link from "next/link";
 
 export default function AccountLayout({
   children,
@@ -16,19 +8,7 @@ export default function AccountLayout({
 }) {
   return (
     <div className="w-full min-h-0 flex-1 max-w-7xl mx-auto py-5">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/">Home</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Account</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+      <AccountBreadcrumb />
 
       <div className="flex flex-1 min-h-0 mt-5 border border-border rounded-xl">
         <AccountSidebar />
