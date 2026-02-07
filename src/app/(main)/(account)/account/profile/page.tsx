@@ -1,10 +1,15 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -12,15 +17,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { Camera, Check } from "lucide-react";
+import { CalendarIcon, Camera, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+
+function formatDateOfBirth(date: Date | undefined): string {
+  if (!date) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const [gender, setGender] = useState<string>("");
-  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState<Date | undefined>(undefined);
   const [mobile, setMobile] = useState("");
 
   const displayName = user?.name ?? "";
@@ -101,12 +116,30 @@ export default function ProfilePage() {
         {/* Date of Birth */}
         <div className="space-y-2">
           <Label htmlFor="dob">Date of Birth</Label>
-          <Input
-            id="dob"
-            type="date"
-            value={dateOfBirth}
-            onChange={(e) => setDateOfBirth(e.target.value)}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="dob"
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !dateOfBirth && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 size-4" />
+                {dateOfBirth ? formatDateOfBirth(dateOfBirth) : "mm/dd/yyyy"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dateOfBirth}
+                onSelect={setDateOfBirth}
+                initialFocus
+                defaultMonth={dateOfBirth}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Email */}
