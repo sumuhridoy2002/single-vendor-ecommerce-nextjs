@@ -237,8 +237,11 @@
   background: #b4b4b4;
 }
 
-/* Firefox */
 .scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #b4b4b4 #f1f1f1;
+}
+
+.scrollbar-hidden {
+  scrollbar-width: none;
 }
