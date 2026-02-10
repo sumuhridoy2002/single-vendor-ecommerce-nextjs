@@ -2,6 +2,8 @@
 
 import { AddressModal } from "@/components/address/AddressModal";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { CartSheet } from "@/components/cart/CartSheet";
+import LogoSvg from "@/components/svg/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,13 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
-import { CartSheet } from "@/components/cart/CartSheet";
 import { addToSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { cn } from "@/lib/utils";
 import { useAddressStore } from "@/store/address-store";
-import { useCartStore, useCartItemCount } from "@/store/cart-store";
+import { useCartItemCount, useCartStore } from "@/store/cart-store";
 import { MapPin, Search, ShoppingCart, User } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
@@ -80,13 +80,7 @@ const Navbar = () => {
     <nav className="flex items-center justify-between gap-6 border-b border-border bg-background px-4 py-3 sticky top-0 z-50">
       {/* Logo */}
       <Link href="/">
-        <Image
-          src="/assets/images/logo.png"
-          alt="Logo"
-          width={250}
-          height={250}
-          className="w-auto h-10"
-        />
+        <LogoSvg />
       </Link>
 
       {/* Delivery */}

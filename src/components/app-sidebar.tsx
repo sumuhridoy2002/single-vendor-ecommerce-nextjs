@@ -259,8 +259,8 @@ export function AppSidebar() {
   }, [])
 
   return (
-    <Sidebar collapsible="none" className="border-r border-sidebar-border sticky top-[70px] overflow-y-auto">
-      <SidebarHeader className="border-b border-sidebar-border p-0">
+    <Sidebar collapsible="none" className="border-r border-sidebar-border sticky top-[70px]">
+      <SidebarHeader className="border-b border-sidebar-border p-0 w-full overflow-x-hidden">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg" className="h-auto py-3 px-3">
@@ -282,7 +282,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="overflow-x-hidden overflow-y-auto max-h-[calc(100vh-177px)] scrollbar">
         <SidebarGroup className="p-0">
           <SidebarGroupContent className="p-0">
             <SidebarMenu>
