@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { ChevronRightIcon, X } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { toast } from "sonner";
 
@@ -80,12 +82,17 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
+  const { login } = useAuth();
+  const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("+88");
   const [showReferral, setShowReferral] = useState(false);
   const [referralCode, setReferralCode] = useState("");
   const [sendLoading, setSendLoading] = useState(false);
+  const [demoEmail, setDemoEmail] = useState("demo@example.com");
+  const [demoPassword, setDemoPassword] = useState("password");
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const title = mode === "login" ? "Login" : "Sign up";
   const subDescription =
@@ -123,6 +130,25 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   const handleSocialSignIn = (provider: "google" | "facebook") => {
     signIn(provider, { callbackUrl: typeof window !== "undefined" ? window.location.href : "/" });
+  };
+
+  const handleDemoLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!demoEmail.trim()) {
+      toast.error("Please enter email");
+      return;
+    }
+    setDemoLoading(true);
+    try {
+      await login(demoEmail.trim(), demoPassword || "password");
+      onOpenChange(false);
+      router.push("/account");
+      toast.success("Logged in successfully");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setDemoLoading(false);
+    }
   };
 
   return (
@@ -234,6 +260,44 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 className="w-full bg-primary hover:bg-primary-dark text-white h-10"
               >
                 {sendLoading ? "Sending…" : "Send"}
+              </Button>
+            </form>
+
+            <div className="flex items-center gap-3 my-4">
+              <Separator className="flex-1" />
+              <span className="text-xs text-muted-foreground">or</span>
+              <Separator className="flex-1" />
+            </div>
+
+            <form onSubmit={handleDemoLogin} className="space-y-3">
+              <p className="text-xs text-muted-foreground">Demo login (any email works):</p>
+              <div className="space-y-2">
+                <Label htmlFor="demo-email" className="sr-only">Email</Label>
+                <Input
+                  id="demo-email"
+                  type="email"
+                  placeholder="Email"
+                  value={demoEmail}
+                  onChange={(e) => setDemoEmail(e.target.value)}
+                  className="h-9"
+                />
+                <Label htmlFor="demo-password" className="sr-only">Password</Label>
+                <Input
+                  id="demo-password"
+                  type="password"
+                  placeholder="Password"
+                  value={demoPassword}
+                  onChange={(e) => setDemoPassword(e.target.value)}
+                  className="h-9"
+                />
+              </div>
+              <Button
+                type="submit"
+                variant="secondary"
+                className="w-full h-9"
+                disabled={demoLoading}
+              >
+                {demoLoading ? "Logging in…" : "Demo login & go to Account"}
               </Button>
             </form>
 

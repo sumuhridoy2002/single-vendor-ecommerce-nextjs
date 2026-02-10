@@ -1,10 +1,14 @@
 "use client"
 
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
+import { HomeCategoryGrid } from "@/components/common/HomeCategoryGrid"
+import { categories } from "@/data/categories"
 import { useCategory } from "@/hooks/data/useCategory"
 import { useProducts } from "@/hooks/data/useProducts"
 import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
+
+const HOME_CATEGORY_GRID_COUNT = 8
 
 const SECTION_BG_CLASSES = [
   "bg-info-light/10 dark:bg-info-dark/20",
@@ -16,7 +20,7 @@ const SECTION_BG_CLASSES = [
 ]
 
 export default function Home() {
-  const categories = useCategory()
+  const productCategories = useCategory()
   const products = useProducts()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
@@ -35,9 +39,18 @@ export default function Home() {
     {}
   )
 
+  const homeCategories = categories
+    .slice(0, HOME_CATEGORY_GRID_COUNT)
+    .map(({ label, href, icon }) => ({ label, href, icon }))
+
   return (
     <div className="w-full">
-      {categories.map((category, index) => (
+      <HomeCategoryGrid
+        title="All You Need"
+        categories={homeCategories}
+        sectionBgClassName="bg-muted/30 dark:bg-muted/20"
+      />
+      {productCategories.map((category, index) => (
         <CategoryProductSection
           key={category.id}
           title={category.title}

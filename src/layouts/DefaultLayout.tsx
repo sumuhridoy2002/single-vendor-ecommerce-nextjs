@@ -8,7 +8,12 @@ interface DefaultLayoutProps {
 const DefaultLayout = ({ children }: DefaultLayoutProps) => {
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <div
+        className="hidden shrink-0 md:block md:self-stretch"
+        style={{ width: "var(--sidebar-width, 16rem)" }}
+      >
+        <AppSidebar />
+      </div>
       <main className="flex min-w-0 flex-1 flex-col">
         {children}
       </main>

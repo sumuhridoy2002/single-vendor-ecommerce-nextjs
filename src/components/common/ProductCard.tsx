@@ -56,11 +56,11 @@ export function ProductCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden transition-shadow hover:shadow-md",
+        "flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md",
         className
       )}
     >
-      <CardHeader className="relative p-0">
+      <CardHeader className="relative shrink-0 p-0">
         <Link href={`/product/${product.slug}`} className="block">
           <AspectRatio ratio={1}>
             <Image
@@ -87,29 +87,36 @@ export function ProductCard({
           </div>
         )}
       </CardHeader>
-      <CardContent className="flex flex-col gap-1.5 px-4 py-3">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-1.5 px-4 py-3">
         <Link
           href={`/product/${product.slug}`}
           className="line-clamp-2 text-sm font-medium leading-tight text-foreground hover:underline"
         >
           {product.name}
         </Link>
-        {product.unit && (
-          <span className="text-xs text-muted-foreground">{product.unit}</span>
-        )}
-        {product.rating != null && (
-          <div className="flex items-center gap-2">
-            {/* <RatingStars rating={product.rating} reviewCount={product.reviewCount} /> */}
-            <Rating rating={product.rating} size="sm" />
-            {product.reviewCount != null && (
-              <span className="text-xs text-muted-foreground">
-                ({product.reviewCount})
-              </span>
-            )}
-          </div>
-        )}
+        <div className="min-h-5">
+          {product.unit ? (
+            <span className="text-xs text-muted-foreground">{product.unit}</span>
+          ) : (
+            <span className="invisible text-xs">&#8203;</span>
+          )}
+        </div>
+        <div className="flex min-h-5 items-center gap-2">
+          {product.rating != null ? (
+            <>
+              <Rating rating={product.rating} size="sm" />
+              {product.reviewCount != null && (
+                <span className="text-xs text-muted-foreground">
+                  ({product.reviewCount})
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="invisible text-xs">&#8203;</span>
+          )}
+        </div>
       </CardContent>
-      <CardFooter className="flex items-center justify-between gap-2 border-t px-4 py-3">
+      <CardFooter className="shrink-0 flex items-center justify-between gap-2 border-t px-4 py-3">
         <div className="flex items-baseline gap-2">
           <span className="text-base font-semibold text-foreground">
             {formatPrice(product.price)}
