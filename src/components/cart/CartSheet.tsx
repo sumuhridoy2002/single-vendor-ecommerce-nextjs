@@ -182,12 +182,8 @@ export function CartSheet() {
   const setRecurringPurchase = useCartStore((s) => s.setRecurringPurchase);
   const clearCart = useCartStore((s) => s.clearCart);
 
-  const addresses = useAddressStore((s) => s.addresses);
-  const selectedAddressId = useAddressStore((s) => s.selectedAddressId);
+  const selectedAddress = useAddressStore((s) => s.selectedAddress);
   const openAddressModal = useAddressStore((s) => s.openAddressModal);
-  const selectedAddress = selectedAddressId
-    ? addresses.find((a) => a.id === selectedAddressId)
-    : null;
 
   const handleOpenChange = (open: boolean) => {
     if (!open) closeCart();

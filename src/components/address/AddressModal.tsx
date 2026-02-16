@@ -92,7 +92,7 @@ export function AddressModal() {
     modalOpen,
     formOpen,
     editingAddressId,
-    selectedAddressId,
+    selectedAddress,
     addresses,
     closeAddressModal,
     openAddForm,
@@ -353,7 +353,7 @@ export function AddressModal() {
                     <AddressCard
                       key={addr.id}
                       address={addr}
-                      selected={selectedAddressId === addr.id}
+                      selected={selectedAddress?.id === addr.id}
                       onSelect={() => setSelectedAddress(addr.id)}
                       onEdit={() => openEditForm(addr.id)}
                       onSetDefault={() => setDefaultAddress(addr.id)}

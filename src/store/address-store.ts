@@ -25,7 +25,7 @@ interface AddressState {
   modalOpen: boolean;
   formOpen: boolean;
   editingAddressId: string | null;
-  selectedAddressId: string | null;
+  selectedAddress: Address | null;
   addresses: Address[];
   openAddressModal: () => void;
   closeAddressModal: () => void;
@@ -49,20 +49,26 @@ export const useAddressStore = create<AddressState>((set) => ({
   modalOpen: false,
   formOpen: false,
   editingAddressId: null,
-  selectedAddressId: null,
+  selectedAddress: null,
   addresses: [],
 
   openAddressModal: () =>
     set((state) => {
-      const firstId = state.addresses[0]?.id ?? null;
-      const defaultId = state.addresses.find((a) => a.isDefault)?.id ?? firstId;
-      const selected = state.selectedAddressId && state.addresses.some((a) => a.id === state.selectedAddressId)
-        ? state.selectedAddressId
-        : defaultId;
-      return { modalOpen: true, formOpen: false, editingAddressId: null, selectedAddressId: selected };
+      const defaultAddr =
+        state.addresses.find((a) => a.isDefault) ?? state.addresses[0] ?? null;
+      const selected =
+        state.selectedAddress &&
+        state.addresses.some((a) => a.id === state.selectedAddress?.id)
+          ? state.selectedAddress
+          : defaultAddr;
+      return { modalOpen: true, formOpen: false, editingAddressId: null, selectedAddress: selected };
     }),
 
-  setSelectedAddress: (id) => set({ selectedAddressId: id }),
+  setSelectedAddress: (id) =>
+    set((state) => {
+      const address = state.addresses.find((a) => a.id === id) ?? null;
+      return { selectedAddress: address };
+    }),
 
   closeAddressModal: () =>
     set({ modalOpen: false, formOpen: false, editingAddressId: null }),
@@ -121,9 +127,9 @@ export const useAddressStore = create<AddressState>((set) => ({
           ? ensureSingleDefault(filtered, filtered[0].id)
           : filtered;
       const nextSelected =
-        state.selectedAddressId === id
-          ? (next.find((a) => a.isDefault)?.id ?? next[0]?.id ?? null)
-          : state.selectedAddressId;
-      return { addresses: next, selectedAddressId: nextSelected };
+        state.selectedAddress?.id === id
+          ? (next.find((a) => a.isDefault) ?? next[0] ?? null)
+          : state.selectedAddress;
+      return { addresses: next, selectedAddress: nextSelected };
     }),
 }));

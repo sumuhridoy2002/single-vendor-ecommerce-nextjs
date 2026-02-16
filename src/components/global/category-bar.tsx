@@ -10,13 +10,14 @@ import {
 } from "@/components/ui/sheet";
 import { useCategory } from "@/hooks/data/useCategory";
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, LayoutGrid, Phone } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { MdPhoneInTalk } from "react-icons/md";
+import { RiLayoutMasonryFill } from "react-icons/ri";
 
 const CLICK_SCROLL_PX = 120;
-const HOVER_SCROLL_PX_PER_FRAME = 2;
 
 const CATEGORY_LINKS = [
   { label: "Home", href: "/" },
@@ -43,8 +44,6 @@ export function CategoryBar() {
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
 
-  const rafRef = useRef<number | null>(null);
-
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -63,48 +62,6 @@ export function CategoryBar() {
     el.scrollBy({ left: -CLICK_SCROLL_PX, behavior: "smooth" });
   }, []);
 
-  const stopHoverScroll = useCallback(() => {
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-  }, []);
-
-  const startHoverScroll = useCallback(() => {
-    stopHoverScroll();
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const tick = () => {
-      if (!el) return;
-      const maxScroll = el.scrollWidth - el.clientWidth;
-      if (el.scrollLeft >= maxScroll) {
-        rafRef.current = null;
-        return;
-      }
-      el.scrollBy({ left: HOVER_SCROLL_PX_PER_FRAME, behavior: "auto" });
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  }, [stopHoverScroll]);
-
-  const startHoverScrollLeft = useCallback(() => {
-    stopHoverScroll();
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const tick = () => {
-      if (!el) return;
-      if (el.scrollLeft <= 0) {
-        rafRef.current = null;
-        return;
-      }
-      el.scrollBy({ left: -HOVER_SCROLL_PX_PER_FRAME, behavior: "auto" });
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-  }, [stopHoverScroll]);
-
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -121,9 +78,8 @@ export function CategoryBar() {
     return () => {
       el.removeEventListener("scroll", updateScrollState);
       observer.disconnect();
-      stopHoverScroll();
     };
-  }, [stopHoverScroll, updateScrollState]);
+  }, [updateScrollState]);
 
   return (
     <div className="flex w-full items-center justify-between gap-4 border-b border-border bg-background px-4 py-2.5">
@@ -134,20 +90,20 @@ export function CategoryBar() {
             variant="ghost"
             className="shrink-0 gap-2 text-primary hover:bg-primary-light hover:text-primary-dark"
           >
-            <LayoutGrid className="size-5" />
-            <span className="hidden font-medium sm:inline">Shop By Category</span>
+            <RiLayoutMasonryFill className="size-5" />
+            <span className="hidden font-medium sm:inline text-base">Shop By Category</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[280px] sm:w-[320px]">
           <SheetHeader>
-            <SheetTitle>Shop By Category</SheetTitle>
+            <SheetTitle className="text-base">Shop By Category</SheetTitle>
           </SheetHeader>
           <nav className="mt-6 flex flex-col gap-1">
             {categories.map((cat) => (
               <Link
                 key={cat.id}
                 href={cat.viewAllHref ?? `/category/${cat.slug}`}
-                className="rounded-md px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                className="rounded-md px-3 py-2 text-base text-foreground transition-colors hover:bg-muted"
               >
                 {cat.title}
               </Link>
@@ -173,7 +129,7 @@ export function CategoryBar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "whitespace-nowrap text-sm font-medium transition-colors",
+                    "whitespace-nowrap text-base transition-colors",
                     isActive
                       ? "text-primary border-b-2 border-primary pb-0.5"
                       : "text-muted-foreground hover:text-foreground"
@@ -191,8 +147,6 @@ export function CategoryBar() {
               className="absolute left-0 top-1/2 -translate-y-1/2 shrink-0 cursor-pointer rounded text-muted-foreground bg-linear-to-l from-white/10 via-white to-white z-10 pl-2 py-1 hover:text-foreground transition-colors"
               aria-label="Scroll categories left"
               onClick={scrollLeft}
-              onMouseEnter={startHoverScrollLeft}
-              onMouseLeave={stopHoverScroll}
             >
               <ChevronLeft className="size-5" />
             </button>
@@ -204,8 +158,6 @@ export function CategoryBar() {
               className="absolute right-0 top-1/2 -translate-y-1/2 shrink-0 cursor-pointer rounded text-muted-foreground bg-linear-to-r from-white/10 via-white to-white z-10 pl-2 py-1 hover:text-foreground transition-colors"
               aria-label="Scroll categories right"
               onClick={scrollRight}
-              onMouseEnter={startHoverScroll}
-              onMouseLeave={stopHoverScroll}
             >
               <ChevronRight className="size-5" />
             </button>
@@ -217,10 +169,10 @@ export function CategoryBar() {
       <a href="tel:" className="shrink-0">
         <Button
           variant="ghost"
-          className="gap-2 rounded-full bg-danger-light text-danger hover:bg-danger-light/80 hover:text-danger-dark"
+          className="gap-2 rounded-lg bg-danger-light/40 text-danger/80 hover:bg-danger-light/80 hover:text-danger-dark"
         >
-          <Phone className="size-4" />
-          <span className="hidden font-medium sm:inline">Call for Order</span>
+          <MdPhoneInTalk className="size-6" />
+          <span className="hidden font-medium sm:inline text-base">Call for Order</span>
         </Button>
       </a>
     </div>

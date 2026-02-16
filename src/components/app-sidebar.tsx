@@ -141,7 +141,7 @@ export function AppSidebar() {
                               className="flex flex-1 min-w-0 items-center gap-2 transition-colors 
                           hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             >
-                              <span className="truncate font-medium">{item.label}</span>
+                              <span className="truncate text-base font-medium">{item.label}</span>
                             </Link>
                           </span>
                           <span className="flex shrink-0 items-center justify-center">
@@ -165,7 +165,7 @@ export function AppSidebar() {
                                 className="flex items-center gap-2"
                               >
                                 <CategoryIcon icon={item.icon} />
-                                <span className="truncate">All {item.label}</span>
+                                <span className="truncate text-base font-medium">All {item.label}</span>
                                 <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground" />
                               </Link>
                             </SidebarMenuSubButton>
@@ -188,7 +188,7 @@ export function AppSidebar() {
                                     className="flex items-center gap-2"
                                   >
                                     <CategoryIcon icon={sub.icon} />
-                                    <span className="truncate">{sub.label}</span>
+                                    <span className="truncate text-base font-medium">{sub.label}</span>
                                     <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground" />
                                   </Link>
                                 </SidebarMenuSubButton>
@@ -208,7 +208,7 @@ export function AppSidebar() {
                     >
                       <Link href={categoryPath} className="flex items-center gap-2">
                         <CategoryIcon icon={item.icon} />
-                        <span className="flex-1 truncate">{item.label}</span>
+                        <span className="flex-1 truncate text-base font-medium">{item.label}</span>
                         <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                       </Link>
                     </SidebarMenuButton>

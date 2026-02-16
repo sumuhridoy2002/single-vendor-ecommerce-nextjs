@@ -207,6 +207,49 @@
   box-sizing: border-box;
 }
 
+/* Hero banner slider: full width */
+.hero-banner-slider {
+  width: 100%;
+  max-width: 100%;
+}
+
+.hero-banner-swiper {
+  width: 100% !important;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.hero-banner-swiper .swiper-wrapper {
+  box-sizing: border-box;
+}
+
+.hero-banner-swiper .swiper-pagination {
+  bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.hero-banner-bullet {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  transition: background 0.2s, transform 0.2s;
+  cursor: pointer;
+}
+
+.hero-banner-bullet:hover {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.hero-banner-bullet-active {
+  background: #fff;
+  transform: scale(1.25);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

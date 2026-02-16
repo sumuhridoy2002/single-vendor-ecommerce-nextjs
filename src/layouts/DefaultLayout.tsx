@@ -10,7 +10,7 @@ const DefaultLayout = ({ children }: DefaultLayoutProps) => {
     <SidebarProvider>
       <div
         className="hidden shrink-0 md:block md:self-stretch"
-        style={{ width: "var(--sidebar-width, 16rem)" }}
+        style={{ width: "var(--sidebar-width, 20rem)" }}
       >
         <AppSidebar />
       </div>
