@@ -65,7 +65,7 @@ const Navbar = () => {
     <nav className="flex flex-col gap-2 border-b border-border bg-background px-4 py-3 sticky top-0 z-50 md:flex-row md:items-center md:justify-between md:gap-6">
       {/* Row 1: Logo + Delivery + (mobile: Wallet, Messenger, Cart | desktop: Search, User, Cart) */}
       <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:contents">
-        <div className="flex flex-col lg:flex-row lg:items-end gap-2 lg:gap-20">
+        <div className="flex flex-col lg:flex-row lg:items-end gap-2 lg:gap-20 pr-10">
           <Link href="/" className="shrink-0">
             <LogoSvg />
           </Link>
