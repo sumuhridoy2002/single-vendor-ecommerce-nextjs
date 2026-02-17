@@ -1,7 +1,7 @@
 "use client"
 
-import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import Link from "next/link"
 import { useRef, useState } from "react"
 import type { Swiper as SwiperType } from "swiper"
 
@@ -36,7 +36,7 @@ export function CategoryProductSection({
   return (
     <section
       className={cn(
-        "min-w-0 px-4 py-6 md:px-6 md:py-8",
+        "min-w-0 container py-6 md:py-8",
         sectionBgClassName,
         className
       )}

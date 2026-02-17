@@ -57,7 +57,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl">
+    <div className="container max-w-2xl py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">View Profile</h1>
 
       <form onSubmit={handleUpdateProfile} className="space-y-6">

@@ -137,7 +137,7 @@ function SearchPageContent() {
   }
 
   return (
-    <div className="container flex gap-6 py-6 px-10">
+    <div className="container flex gap-6 py-6">
       <div className="hidden w-56 shrink-0 lg:block">
         <SearchFiltersSidebar searchResultSet={searchResultSet} />
       </div>

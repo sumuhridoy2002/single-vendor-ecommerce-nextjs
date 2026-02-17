@@ -250,6 +250,13 @@
   transform: scale(1.25);
 }
 
+/* Single container for page content: max-width, centered, horizontal padding */
+.container {
+  width: 100%;
+  @apply px-4 md:px-6 2xl:px-20;
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

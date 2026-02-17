@@ -21,7 +21,7 @@ export function NavbarDelivery({ onOpenAddressModal }: NavbarDeliveryProps) {
           onOpenAddressModal();
         }
       }}
-      className="flex shrink-0 min-w-0 flex-row lg:flex-col gap-2 lg:gap-0 text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
+      className="flex shrink-0 min-w-0 flex-row lg:flex-col gap-2 lg:gap-0 text-left cursor-pointer focus:outline-none focus:ring-0 rounded-lg"
       aria-label="Delivery address"
     >
       <span className={cn(

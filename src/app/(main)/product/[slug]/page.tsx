@@ -62,7 +62,7 @@ export default function ProductPage({
   const previouslyViewed = getPreviouslyViewed(slug, allProducts, 6)
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6">
+    <div className="container space-y-8 py-6">
       {/* Breadcrumbs */}
       <Breadcrumb>
         <BreadcrumbList>
