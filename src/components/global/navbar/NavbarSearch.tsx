@@ -52,42 +52,44 @@ export function NavbarSearch({
   const searchForm = (
     <form
       role="search"
-      className="w-full flex min-w-0 flex-1 items-center overflow-hidden rounded-lg border border-border bg-muted/30"
+      className="w-full flex min-w-0 flex-1 items-center overflow-hidden"
       onSubmit={onSubmit}
     >
-      <Select value={searchCategory} onValueChange={setSearchCategory}>
-        <SelectTrigger
-          className={cn(
-            "w-[72px] shrink-0 rounded-none border-0 border-r bg-muted/50 shadow-none focus:ring-0",
-            "h-10 rounded-l-lg border-r border-border"
-          )}
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All</SelectItem>
-          <SelectItem value="medicine">Medicine</SelectItem>
-          <SelectItem value="healthcare">Healthcare</SelectItem>
-        </SelectContent>
-      </Select>
-      <div className="relative flex-1 flex min-h-10">
-        <PlaceholdersAndVanishInput
-          placeholders={[
-            "Search products",
-            "Search by category",
-            "Search medicine...",
-          ]}
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-          onSubmit={onSubmit}
-          onFocus={onSearchFocus}
-          embedded
-        />
+      <div className="flex-1 flex items-center gap-2 border border-border bg-muted/30 rounded-l-lg h-12">
+        <Select value={searchCategory} onValueChange={setSearchCategory}>
+          <SelectTrigger
+            className={cn(
+              "w-[72px] shrink-0 rounded-none border-0 border-r bg-muted/50 shadow-none focus:ring-0 min-h-12 rounded-l-lg outline-0 focus-within:ring-0 focus:outline-0",
+              ""
+            )}
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="medicine">Medicine</SelectItem>
+            <SelectItem value="healthcare">Healthcare</SelectItem>
+          </SelectContent>
+        </Select>
+        <div className="relative flex-1 flex min-h-12">
+          <PlaceholdersAndVanishInput
+            placeholders={[
+              "Search products",
+              "Search by category",
+              "Search medicine...",
+            ]}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onSubmit={onSubmit}
+            onFocus={onSearchFocus}
+            embedded
+          />
+        </div>
       </div>
       <Button
         type="submit"
         aria-label="Search"
-        className="h-10 shrink-0 rounded-r-lg rounded-l-none bg-primary px-4 hover:bg-primary-dark"
+        className="h-12 shrink-0 rounded-r-lg rounded-l-none bg-primary px-6 hover:bg-primary-dark"
       >
         <Search className="size-5 text-white" />
       </Button>

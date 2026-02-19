@@ -97,7 +97,7 @@ function OrderCard({
 
 export default function OrdersPage() {
   return (
-    <div className="p-6 md:p-8">
+    <div className="container py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">My Orders</h1>
 
       <Tabs defaultValue="all" className="w-full">

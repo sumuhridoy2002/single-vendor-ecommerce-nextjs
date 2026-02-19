@@ -19,7 +19,7 @@ const BANNER_IMAGES = [
 
 export function HeroBannerSlider() {
   return (
-    <section className="hero-banner-slider w-full min-w-0 overflow-hidden px-4 py-4 md:px-6 md:py-6">
+    <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-4 md:pb-6">
       <Swiper
         modules={[Autoplay, Pagination]}
         spaceBetween={0}

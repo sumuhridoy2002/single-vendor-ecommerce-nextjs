@@ -14,7 +14,7 @@ const DefaultLayout = ({ children }: DefaultLayoutProps) => {
       >
         <AppSidebar />
       </div>
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex min-w-0 flex-1 flex-col py-6 md:py-8">
         {children}
       </main>
     </SidebarProvider>
