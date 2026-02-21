@@ -2,6 +2,8 @@
 
 import { OfferCard } from "@/components/common/OfferCard"
 import { useOffers } from "@/hooks/data/useOffers"
+import { Navigation } from "swiper/modules"
+import { Swiper, SwiperSlide } from "swiper/react"
 
 export function EspeciallyForYouSection() {
   const { offers, isLoading, error } = useOffers()
@@ -28,15 +30,33 @@ export function EspeciallyForYouSection() {
     return null
   }
 
+  const breakpoints = {
+    0: { slidesPerView: 2, spaceBetween: 12 },
+    768: { slidesPerView: 2, spaceBetween: 16 },
+    1024: { slidesPerView: 3, spaceBetween: 20 },
+    1280: { slidesPerView: 4, spaceBetween: 20 },
+    1536: { slidesPerView: 6, spaceBetween: 20 },
+  }
+
   return (
     <section className="py-6 md:py-8 px-4 2xl:px-0 max-w-7xl mx-auto">
       <h2 className="mb-8 font-semibold text-foreground text-lg md:text-3xl text-center">
         Especially For You
       </h2>
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-5">
-        {offers.map((offer) => (
-          <OfferCard key={offer.id} offer={offer} />
-        ))}
+      <div className="min-w-0 w-full overflow-hidden">
+        <Swiper
+          modules={[Navigation]}
+          spaceBetween={20}
+          slidesPerView={2}
+          breakpoints={breakpoints}
+          className="especially-for-you-swiper"
+        >
+          {offers.map((offer) => (
+            <SwiperSlide key={offer.id}>
+              <OfferCard offer={offer} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </div>
     </section>
   )

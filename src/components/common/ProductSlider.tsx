@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
 
 const DEFAULT_BREAKPOINTS = {
-  640: { slidesPerView: 3, spaceBetween: 16 },
-  768: { slidesPerView: 4, spaceBetween: 16 },
-  1024: { slidesPerView: 5, spaceBetween: 20 },
+  768: { slidesPerView: 3.4, spaceBetween: 16 },
+  1180: { slidesPerView: 4, spaceBetween: 16 },
+  1441: { slidesPerView: 5, spaceBetween: 20 },
 } as const
 
 export interface ProductSliderProps {
@@ -27,8 +27,8 @@ export interface ProductSliderProps {
 
 export function ProductSlider({
   products,
-  spaceBetween = 12,
-  slidesPerView = 2,
+  spaceBetween = 10,
+  slidesPerView = 2.3,
   breakpoints = DEFAULT_BREAKPOINTS,
   className,
   onSwiper,

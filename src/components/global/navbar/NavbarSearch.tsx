@@ -6,14 +6,6 @@ import {
   Popover,
   PopoverAnchor,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { RecentSearchesPopover } from "./RecentSearchesPopover";
 
@@ -56,7 +48,7 @@ export function NavbarSearch({
       onSubmit={onSubmit}
     >
       <div className="flex-1 flex items-center gap-2 border border-border bg-muted/30 rounded-l-lg h-12">
-        <Select value={searchCategory} onValueChange={setSearchCategory}>
+        {/* <Select value={searchCategory} onValueChange={setSearchCategory}>
           <SelectTrigger
             className={cn(
               "w-[72px] shrink-0 rounded-none border-0 border-r bg-muted/50 shadow-none focus:ring-0 min-h-12 rounded-l-lg outline-0 focus-within:ring-0 focus:outline-0",
@@ -70,7 +62,7 @@ export function NavbarSearch({
             <SelectItem value="medicine">Medicine</SelectItem>
             <SelectItem value="healthcare">Healthcare</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
         <div className="relative flex-1 flex min-h-12">
           <PlaceholdersAndVanishInput
             placeholders={[

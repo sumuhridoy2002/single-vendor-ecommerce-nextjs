@@ -50,7 +50,11 @@ const LEGAL_ITEMS = [
   { label: "FAQ", href: "/account/faq", icon: HelpCircle },
 ] as const;
 
-export function AccountSidebar() {
+interface AccountSidebarProps {
+  variant?: "default" | "sheet";
+}
+
+export function AccountSidebar({ variant = "default" }: AccountSidebarProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -72,8 +76,10 @@ export function AccountSidebar() {
   return (
     <aside
       className={cn(
-        "w-64 shrink-0 border-r border-border flex flex-col",
-        "min-h-0 overflow-y-auto"
+        "flex flex-col min-h-0 overflow-y-auto",
+        variant === "sheet"
+          ? "w-full border-0"
+          : "w-64 shrink-0 border-r border-border"
       )}
     >
       {/* User card */}

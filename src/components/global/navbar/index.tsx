@@ -11,6 +11,8 @@ import { useAddressStore } from "@/store/address-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
 import { NavbarDelivery } from "./NavbarDelivery";
 import { NavbarDesktopActions } from "./NavbarDesktopActions";
 import { NavbarMobileActions } from "./NavbarMobileActions";
@@ -66,9 +68,17 @@ const Navbar = () => {
       {/* Row 1: Logo + Delivery + (mobile: Wallet, Messenger, Cart | desktop: Search, User, Cart) */}
       <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:contents">
         <div className="flex flex-col lg:flex-row lg:items-end gap-2 lg:gap-20">
-          <Link href="/" className="shrink-0">
-            <LogoSvg />
-          </Link>
+          <div className="flex items-center gap-2">
+            <SidebarTrigger
+              className="size-9 shrink-0 md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="size-5" />
+            </SidebarTrigger>
+            <Link href="/" className="shrink-0">
+              <LogoSvg />
+            </Link>
+          </div>
 
           <NavbarDelivery onOpenAddressModal={openAddressModal} />
         </div>
