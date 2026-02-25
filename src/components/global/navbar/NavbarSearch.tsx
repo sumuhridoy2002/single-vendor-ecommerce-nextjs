@@ -19,6 +19,7 @@ type NavbarSearchProps = {
   recentSearches: string[];
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onRecentSelect: (query: string) => void;
+  onClearRecentSearches?: () => void;
   onSearchFocus: () => void;
   variant: "desktop" | "mobile";
   isMobile: boolean;
@@ -34,6 +35,7 @@ export function NavbarSearch({
   recentSearches,
   onSubmit,
   onRecentSelect,
+  onClearRecentSearches,
   onSearchFocus,
   variant,
   isMobile,
@@ -106,6 +108,7 @@ export function NavbarSearch({
           recentSearches={recentSearches}
           searchValue={searchValue}
           onSelect={onRecentSelect}
+          onClear={onClearRecentSearches}
           onOpenAutoFocus={(e) => e.preventDefault()}
         />
       )}

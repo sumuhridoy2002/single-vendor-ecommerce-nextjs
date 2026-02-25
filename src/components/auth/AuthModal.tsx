@@ -117,7 +117,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="max-w-[calc(100%-2rem)] w-full p-0 gap-0 overflow-hidden sm:max-w-4xl rounded-xl"
+        className="max-w-[calc(100%-2rem)] w-full p-0 gap-0 overflow-x-hidden sm:max-w-4xl rounded-xl"
       >
         <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] min-h-[480px]">
           {/* Left column - Promo (static, no carousel) */}

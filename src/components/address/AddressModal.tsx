@@ -216,7 +216,7 @@ export function AddressModal() {
     <Dialog open={modalOpen} onOpenChange={handleClose}>
       <DialogContent
         showCloseButton={false}
-        className="overflow-hidden overflow-x-hidden rounded-xl w-full max-w-[min(100vw-2rem,28rem)]"
+        className="rounded-xl w-full max-w-[min(100vw-2rem,28rem)]"
       >
         <div className="relative">
           {formOpen ? (
