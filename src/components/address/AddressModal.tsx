@@ -18,12 +18,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { NestedSelect, type NestedSelectOption } from "@/components/ui/nested-select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { NestedSelect, type NestedSelectOption } from "@/components/ui/nested-select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAddressStore, type Address, type AddressType } from "@/store/address-store";
@@ -32,8 +32,6 @@ import {
   ArrowLeft,
   Briefcase,
   Building2,
-  Circle,
-  CircleDot,
   Home,
   MoreVertical,
   X,
@@ -205,6 +203,7 @@ export function AddressModal() {
       isDefault: data.isDefault,
     });
     toast.success(editingAddressId ? "Address updated" : "Address saved");
+    closeAddressModal();
   };
 
   const handleClose = (open: boolean) => {
@@ -217,7 +216,7 @@ export function AddressModal() {
     <Dialog open={modalOpen} onOpenChange={handleClose}>
       <DialogContent
         showCloseButton={false}
-        className="overflow-hidden rounded-xl w-full"
+        className="overflow-hidden overflow-x-hidden rounded-xl w-full max-w-[min(100vw-2rem,28rem)]"
       >
         <div className="relative">
           {formOpen ? (
@@ -392,7 +391,7 @@ export function AddressModal() {
                   <X className="size-5" />
                 </DialogClose>
               </DialogHeader>
-              <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto">
+              <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto overflow-x-hidden min-w-0">
                 {addresses.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-4 text-center">
                     No addresses yet. Add one to get started.
@@ -461,8 +460,8 @@ function AddressCard({
         }
       }}
       className={cn(
-        "rounded-lg border p-4 flex gap-3 cursor-pointer transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        selected ? "border-primary bg-primary-light/50 dark:bg-primary-dark/20" : "bg-muted/30"
+        "relative rounded-lg border p-4 flex gap-3 cursor-pointer transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-w-0",
+        selected ? "border-primary bg-primary-light/10 dark:bg-primary-dark/20" : "bg-muted/30"
       )}
       aria-pressed={selected}
       aria-label={`Select ${AddressTypeLabel(address.addressType)}`}
@@ -470,77 +469,86 @@ function AddressCard({
       <div className="shrink-0 pt-0.5">
         <AddressTypeIcon type={address.addressType} />
       </div>
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="flex items-start justify-between gap-2 min-w-0">
-          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-            <span className="font-medium truncate">
-              {AddressTypeLabel(address.addressType)}
-              {address.isDefault && " (Shipping Address)"}
-            </span>
-            {address.isDefault && (
-              <Badge className="bg-success hover:bg-success shrink-0">
-                Default
-              </Badge>
-            )}
+      <div className="flex justify-between items-center">
+        <div className="min-w-0 flex-1 overflow-hidden pr-4">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+              <span className="font-medium truncate">
+                {AddressTypeLabel(address.addressType)}
+                {address.isDefault && " (Shipping Address)"}
+              </span>
+              {address.isDefault && (
+                <Badge className="bg-success hover:bg-success shrink-0">
+                  Default
+                </Badge>
+              )}
+            </div>
+            <div className="absolute right-3 top-3">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    aria-label="Address options"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="size-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-48 p-2">
+                  <div className="flex flex-col gap-0.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
+                      onClick={onEdit}
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
+                      onClick={onSetDefault}
+                    >
+                      Make Default
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={onDelete}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 shrink-0"
-                aria-label="Address options"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="size-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-48 p-2">
-              <div className="flex flex-col gap-0.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
-                  onClick={onEdit}
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
-                  onClick={onSetDefault}
-                >
-                  Make Default
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={onDelete}
-                >
-                  Delete
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
+          <p className="text-sm text-muted-foreground mt-1 min-w-0 truncate" title={address.fullName}>
+            {address.fullName}
+          </p>
+          <p className="text-sm text-muted-foreground min-w-0 truncate" title={address.phone}>
+            {address.phone}
+          </p>
+          <p className="text-sm text-muted-foreground mt-0.5 min-w-0 wrap-break-word line-clamp-2" title={addressLine}>
+            {addressLine}
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground mt-1 truncate" title={address.fullName}>
-          {address.fullName}
-        </p>
-        <p className="text-sm text-muted-foreground truncate" title={address.phone}>
-          {address.phone}
-        </p>
-        <p className="text-sm text-muted-foreground truncate mt-0.5" title={addressLine}>
-          {addressLine}
-        </p>
-      </div>
-      <div className="shrink-0 flex items-center" aria-hidden>
-        {selected ? (
-          <CircleDot className="size-6 text-primary" />
-        ) : (
-          <Circle className="size-6 text-muted-foreground" strokeWidth={1.5} />
-        )}
+        <div className="shrink-0 flex items-center justify-center size-6" aria-hidden>
+          <span
+            className={cn(
+              "flex items-center justify-center rounded-full border-2 transition-colors",
+              selected
+                ? "border-primary size-6 bg-transparent"
+                : "border-muted-foreground size-6 bg-transparent"
+            )}
+          >
+            {selected && <span className="size-2.5 rounded-full bg-primary" />}
+          </span>
+        </div>
       </div>
     </div>
   );
