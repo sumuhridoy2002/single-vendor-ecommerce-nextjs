@@ -1,6 +1,6 @@
 import type { Product } from "@/types/product"
 
-const PLACEHOLDER_IMAGE = "https://placehold.co/400x400?text=Product"
+const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png"
 
 const MOCK_PRODUCTS: Product[] = [
   {

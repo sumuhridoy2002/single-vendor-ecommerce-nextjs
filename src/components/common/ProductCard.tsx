@@ -1,7 +1,6 @@
 "use client"
 
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,7 +10,7 @@ import {
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
-import { Heart, ShoppingCart } from "lucide-react"
+import { Rocket, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
@@ -24,12 +23,8 @@ export interface ProductCardProps {
   className?: string
 }
 
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(amount)
+function formatPriceSymbol(amount: number): string {
+  return `৳ ${amount.toFixed(amount % 1 === 0 ? 0 : 2)}`
 }
 
 const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png"
@@ -37,7 +32,6 @@ const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png"
 export function ProductCard({
   product,
   onAddToCart,
-  onWishlist,
   className,
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false)
@@ -56,7 +50,7 @@ export function ProductCard({
   return (
     <Card
       className={cn(
-        "flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md",
+        "flex h-full flex-col overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md",
         className
       )}
     >
@@ -72,36 +66,39 @@ export function ProductCard({
             />
           </AspectRatio>
         </Link>
-        <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-          {product.badge && product.badge !== "sale" && (
-            <Badge variant="secondary" className="text-xs capitalize">
-              {product.badge}
-            </Badge>
-          )}
-        </div>
+        {/* Discount badge - top-left, tag style with lightning */}
         {discountLabel && (
-          <div className="absolute right-2 top-2">
-            <Badge variant="destructive" className="text-xs">
-              {discountLabel}
-            </Badge>
+          <div className="absolute left-0 top-0 flex items-center gap-0.5 rounded-tr-md rounded-br-md bg-red-500 px-2 py-1 text-xs font-bold uppercase tracking-tight text-white shadow-sm">
+            <Zap className="size-3.5 shrink-0" strokeWidth={2.5} />
+            <span>{discountLabel}</span>
           </div>
         )}
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-1.5 px-4 py-3">
+
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-2.5">
+        {/* Delivery badge */}
+        {product.deliveryText && (
+          <div className="flex items-center gap-1 self-start rounded-md bg-slate-700 px-2 py-1 text-xs font-medium uppercase tracking-tight text-white">
+            <Rocket className="size-3.5 shrink-0" />
+            <span>{product.deliveryText}</span>
+          </div>
+        )}
+
+        {/* Product title - bold, truncated */}
         <Link
           href={`/product/${product.slug}`}
-          className="line-clamp-2 text-sm font-medium leading-tight text-foreground hover:underline"
+          className="line-clamp-2 text-sm lg:text-base font-bold leading-tight text-foreground hover:underline h-10"
         >
           {product.name}
         </Link>
-        <div className="min-h-5">
-          {product.unit ? (
-            <span className="text-xs text-muted-foreground">{product.unit}</span>
-          ) : (
-            <span className="invisible text-xs">&#8203;</span>
-          )}
-        </div>
-        <div className="flex min-h-5 items-center gap-2">
+        {/* Variant / unit line - centered with asterisks */}
+        {/* {product.unit && (
+          <p className="text-xs text-muted-foreground">
+            {product.unit}
+          </p>
+        )} */}
+        {/* Star rating with review count */}
+        <div className="flex min-h-5 items-center gap-1.5">
           {product.rating != null ? (
             <>
               <Rating rating={product.rating} size="sm" />
@@ -116,35 +113,26 @@ export function ProductCard({
           )}
         </div>
       </CardContent>
-      <CardFooter className="shrink-0 flex items-center justify-between gap-2 border-t px-4 py-3">
-        <div className="flex items-baseline gap-2">
-          <span className="text-base font-semibold text-foreground">
-            {formatPrice(product.price)}
-          </span>
+
+      <CardFooter className="shrink-0 flex items-end justify-between gap-2 border-border/50 px-3 pt-1 pb-2.5">
+        <div className="flex flex-col gap-0.5 h-10 items-start justify-end">
           {hasDiscount && product.originalPrice != null && (
             <span className="text-xs text-muted-foreground line-through">
-              {formatPrice(product.originalPrice)}
+              {formatPriceSymbol(product.originalPrice)}
             </span>
           )}
+          <span className="text-base font-bold text-foreground">
+            {formatPriceSymbol(product.price)}
+          </span>
         </div>
-        <div className="ml-auto flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Add to wishlist"
-            onClick={() => onWishlist?.(product)}
-          >
-            <Heart className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Add to cart"
-            onClick={() => onAddToCart?.(product)}
-          >
-            <ShoppingCart className="size-4" />
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          className="shrink-0 rounded-md border-2 border-primary bg-primary-light/20 font-bold uppercase text-primary hover:bg-primary-light hover:text-primary-dark"
+          aria-label="Add to cart"
+          onClick={() => onAddToCart?.(product)}
+        >
+          ADD
+        </Button>
       </CardFooter>
     </Card>
   )

@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
 
-const PLACEHOLDER_BANNER = "https://placehold.co/1200x400?text=Category"
+const PLACEHOLDER_BANNER = "/assets/images/placeholder-image.png"
 
 export interface CategoryHeroProps {
   title: string

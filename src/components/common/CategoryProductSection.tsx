@@ -36,7 +36,7 @@ export function CategoryProductSection({
   return (
     <section
       className={cn(
-        "min-w-0 container py-6 md:py-8",
+        "w-full min-w-full container py-6 md:py-8",
         sectionBgClassName,
         className
       )}

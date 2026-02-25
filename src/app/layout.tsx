@@ -1,6 +1,8 @@
 import { CategoryBar } from "@/components/global/category-bar";
+import { MobileBottomNavWithAccountSheet } from "@/components/global/MobileBottomNavWithAccountSheet";
 import Navbar from "@/components/global/navbar";
 import Provider from "@/components/global/Provider";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import 'swiper/css';
@@ -29,9 +31,14 @@ export default function RootLayout({
         className={`${inter.variable} antialiased font-sans`}
       >
         <Provider>
-          <Navbar />
-          <CategoryBar />
-          {children}
+          <SidebarProvider>
+            <div className="flex min-h-svh w-full flex-col">
+              <Navbar />
+              <CategoryBar />
+              <div className="flex min-h-0 flex-1 pb-16 md:pb-0">{children}</div>
+              <MobileBottomNavWithAccountSheet />
+            </div>
+          </SidebarProvider>
         </Provider>
       </body>
     </html>

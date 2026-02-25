@@ -9,8 +9,6 @@ import {
   BellRing,
   ChevronRight,
   FileCheck,
-  FileText,
-  FlaskConical,
   Heart,
   HelpCircle,
   Leaf,
@@ -22,7 +20,7 @@ import {
   Shield,
   Star,
   Tag,
-  Users,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,8 +28,6 @@ import { usePathname, useRouter } from "next/navigation";
 const NAV_ITEMS = [
   { label: "Notification", href: "/account/notifications", icon: Bell },
   { label: "Orders", href: "/account/orders", icon: Package },
-  { label: "My Lab Test", href: "/account/lab-test", icon: FlaskConical },
-  { label: "Prescriptions", href: "/account/prescriptions", icon: FileText },
   { label: "Notified Products", href: "/account/notified-products", icon: BellRing },
   { label: "Suggest Products", href: "/account/suggest-products", icon: Pill },
   { label: "Wishlist", href: "/account/wishlist", icon: Heart },
@@ -39,8 +35,6 @@ const NAV_ITEMS = [
   { label: "Transaction History", href: "/account/transactions", icon: Banknote },
   { label: "Special Offers", href: "/account/offers", icon: Tag },
   { label: "Refer and Earn", href: "/account/refer", icon: Users },
-  { label: "Health Tips", href: "/account/health-tips", icon: Leaf },
-  { label: "Rate us", href: "/account/rate-us", icon: Star },
 ] as const;
 
 const LEGAL_ITEMS = [
@@ -50,7 +44,11 @@ const LEGAL_ITEMS = [
   { label: "FAQ", href: "/account/faq", icon: HelpCircle },
 ] as const;
 
-export function AccountSidebar() {
+interface AccountSidebarProps {
+  variant?: "default" | "sheet";
+}
+
+export function AccountSidebar({ variant = "default" }: AccountSidebarProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -72,8 +70,10 @@ export function AccountSidebar() {
   return (
     <aside
       className={cn(
-        "w-64 shrink-0 border-r border-border flex flex-col",
-        "min-h-0 overflow-y-auto"
+        "flex flex-col min-h-0 overflow-y-auto",
+        variant === "sheet"
+          ? "w-full border-0"
+          : "w-64 shrink-0 border-r border-border"
       )}
     >
       {/* User card */}

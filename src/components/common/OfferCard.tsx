@@ -81,14 +81,12 @@ export function OfferCard({ offer }: OfferCardProps) {
           {offer.title}
         </p>
         <p className="text-[22px] font-bold leading-tight pb-1">{offer.subtitle}</p>
-        {offer.extra && (
-          <p className="flex items-center gap-1.5 text-lg font-medium">
-            {offer.icon === "headset" && (
-              <FaPhone className="h-3.5 w-3.5 text-rose-400" />
-            )}
-            {offer.extra}
-          </p>
-        )}
+        <p className="flex items-center gap-1.5 text-lg font-medium h-7">
+          {offer.icon === "headset" && (
+            <FaPhone className="h-3.5 w-3.5 text-rose-400" />
+          )}
+          {offer.extra}
+        </p>
       </div>
       <button
         className={cn(

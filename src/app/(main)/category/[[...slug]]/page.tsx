@@ -46,7 +46,7 @@ export default function CategoryPage({
   // Subcategory page: breadcrumb + page title + sort + grid of all products
   if (resolved.type === "sub" && sub) {
     return (
-      <div className="w-full space-y-6">
+      <div className="container w-full space-y-6">
         <Breadcrumb>
           <BreadcrumbList>
             {breadcrumb.map((item, i) => (
@@ -72,7 +72,7 @@ export default function CategoryPage({
 
   // Main category page: hero, subcategory cards, product sections
   return (
-    <div className="container w-full space-y-8 py-10">
+    <div className="container w-full space-y-8">
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumb.map((item, i) => (
