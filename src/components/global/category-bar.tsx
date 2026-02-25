@@ -1,13 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { useCategory } from "@/hooks/data/useCategory";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -82,35 +75,13 @@ export function CategoryBar() {
   }, [updateScrollState]);
 
   return (
-    <div className="flex w-full items-center justify-between gap-4 border-b border-border bg-background px-4 py-2.5">
-      {/* Shop By Category */}
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            className="shrink-0 gap-2 text-primary hover:bg-primary-light hover:text-primary-dark"
-          >
-            <RiLayoutMasonryFill className="size-5" />
-            <span className="hidden font-medium sm:inline text-base">Shop By Category</span>
-          </Button>
-        </SheetTrigger>
-        <SheetContent side="left" className="w-[280px] sm:w-[320px]">
-          <SheetHeader>
-            <SheetTitle className="text-base">Shop By Category</SheetTitle>
-          </SheetHeader>
-          <nav className="mt-6 flex flex-col gap-1">
-            {categories.map((cat) => (
-              <Link
-                key={cat.id}
-                href={cat.viewAllHref ?? `/category/${cat.slug}`}
-                className="rounded-md px-3 py-2 text-base text-foreground transition-colors hover:bg-muted"
-              >
-                {cat.title}
-              </Link>
-            ))}
-          </nav>
-        </SheetContent>
-      </Sheet>
+    <div className="hidden lg:flex w-full items-center justify-between gap-4 border-b border-border bg-background px-4 py-2.5">
+      <span
+        className="flex shrink-0 gap-2 text-primary"
+      >
+        <RiLayoutMasonryFill className="size-5" />
+        <span className="hidden font-medium sm:inline text-base">Shop By Category</span>
+      </span>
 
       {/* Horizontal category links */}
       <div className="min-w-0 relative flex-1">

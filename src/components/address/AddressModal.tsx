@@ -23,7 +23,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { SelectMenu } from "@/components/ui/select-menu";
+import { NestedSelect, type NestedSelectOption } from "@/components/ui/nested-select";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useAddressStore, type Address, type AddressType } from "@/store/address-store";
@@ -43,13 +43,63 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-const DELIVERY_AREAS = [
-  { value: "dhaka", label: "Dhaka City" },
-  { value: "chittagong", label: "Chittagong" },
-  { value: "sylhet", label: "Sylhet" },
+/** Hierarchical delivery areas (Division > District > Area) for NestedSelect */
+const DELIVERY_AREAS_TREE: NestedSelectOption[] = [
+  {
+    value: "barishal",
+    label: "Barishal",
+    children: [
+      {
+        value: "barguna",
+        label: "Barguna",
+        children: [
+          { value: "amtali", label: "Amtali" },
+          { value: "ayala-patakata", label: "Ayala Patakata (Barguna Sadar)" },
+          { value: "badarkhali", label: "Badarkhali (Barguna Sadar)" },
+          { value: "bamna", label: "Bamna" },
+          { value: "betagi", label: "Betagi" },
+          { value: "patharghata", label: "Patharghata" },
+        ],
+      },
+      {
+        value: "barishal-sadar",
+        label: "Barishal Sadar",
+        children: [
+          { value: "barishal-sadar-1", label: "Barishal Sadar 1" },
+          { value: "barishal-sadar-2", label: "Barishal Sadar 2" },
+        ],
+      },
+    ],
+  },
+  {
+    value: "chittagong-div",
+    label: "Chittagong",
+    children: [
+      { value: "chittagong-city", label: "Chittagong City" },
+      { value: "cox-bazar", label: "Cox's Bazar" },
+      { value: "comilla", label: "Comilla" },
+    ],
+  },
+  {
+    value: "dhaka-div",
+    label: "Dhaka",
+    children: [
+      { value: "dhaka-city", label: "Dhaka City" },
+      { value: "gazipur", label: "Gazipur" },
+      { value: "narayanganj", label: "Narayanganj" },
+    ],
+  },
+  {
+    value: "sylhet-div",
+    label: "Sylhet",
+    children: [
+      { value: "sylhet-city", label: "Sylhet City" },
+      { value: "moulvibazar", label: "Moulvibazar" },
+    ],
+  },
   { value: "outside_dhaka", label: "Outside Dhaka" },
   { value: "other", label: "Other" },
-] as const;
+];
 
 const addressFormSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -172,27 +222,29 @@ export function AddressModal() {
         <div className="relative">
           {formOpen ? (
             <>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute left-0 top-0 -ml-2"
-                onClick={closeForm}
-                aria-label="Back to address list"
-              >
-                <ArrowLeft className="size-4" />
-              </Button>
-              <DialogHeader className="pr-8 pb-2">
-                <DialogTitle className="text-xl">
-                  {editingAddressId ? "Edit Shipping Address" : "Add Shipping Address"}
-                </DialogTitle>
+              <DialogHeader className="pb-2 flex flex-row justify-between items-center w-full">
+                <div className="flex gap-4 items-center">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-auto px-0"
+                    onClick={closeForm}
+                    aria-label="Back to address list"
+                  >
+                    <ArrowLeft className="size-5" />
+                  </Button>
+                  <DialogTitle className="text-xl">
+                    {editingAddressId ? "Edit Shipping Address" : "Add Shipping Address"}
+                  </DialogTitle>
+                </div>
+                <DialogClose
+                  className="rounded-md opacity-70 hover:opacity-100 transition-opacity focus:outline-none flex items-center justify-center size-8 outline-none focus:ring-0 shrink-0 cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="size-5" />
+                </DialogClose>
               </DialogHeader>
-              <DialogClose
-                className="absolute top-4 right-4 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:outline-none flex items-center justify-center size-8 outline-none focus:ring-0"
-                aria-label="Close"
-              >
-                <X className="size-5" />
-              </DialogClose>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
@@ -235,15 +287,12 @@ export function AddressModal() {
                       <FormItem>
                         <FormLabel>Select Delivery Area *</FormLabel>
                         <FormControl>
-                          <SelectMenu
-                            items={DELIVERY_AREAS.map((a) => ({
-                              value: a.value,
-                              label: a.label,
-                            }))}
+                          <NestedSelect
+                            options={DELIVERY_AREAS_TREE}
                             value={field.value}
                             onValueChange={field.onChange}
                             placeholder="Select delivery area"
-                            searchPlaceholder="Search area"
+                            searchPlaceholder="Search…"
                             emptyMessage="No area found."
                           />
                         </FormControl>
@@ -334,15 +383,15 @@ export function AddressModal() {
             </>
           ) : (
             <>
-              <DialogHeader className="pr-8">
+              <DialogHeader className="flex flex-row justify-between items-center w-full">
                 <DialogTitle className="text-xl">Address</DialogTitle>
+                <DialogClose
+                  className="rounded-md opacity-70 hover:opacity-100 transition-opacity focus:outline-none flex items-center justify-center size-8 outline-none focus:ring-0 shrink-0 cursor-pointer"
+                  aria-label="Close"
+                >
+                  <X className="size-5" />
+                </DialogClose>
               </DialogHeader>
-              <DialogClose
-                className="absolute top-4 right-4 rounded-md opacity-70 hover:opacity-100 transition-opacity focus:outline-none flex items-center justify-center size-8 outline-none focus:ring-0"
-                aria-label="Close"
-              >
-                <X className="size-5" />
-              </DialogClose>
               <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto">
                 {addresses.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-4 text-center">

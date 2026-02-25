@@ -2,6 +2,7 @@
 
 import { ProductCard } from "@/components/common/ProductCard";
 import { SearchFiltersSidebar } from "@/components/search/SearchFiltersSidebar";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -9,11 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { getCategoryIdsForMain, useCategoryTree } from "@/hooks/data/useCategoryTree";
 import { useProducts } from "@/hooks/data/useProducts";
 import { useCartStore } from "@/store/cart-store";
 import type { Product } from "@/types/product";
-import { LayoutGrid, List } from "lucide-react";
+import { Filter } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 
@@ -113,8 +120,6 @@ function SearchPageContent() {
     return sortProducts(result, sortParam);
   }, [searchResultSet, priceMinParam, priceMaxParam, discountParam, categoryFilterIds, sortParam]);
 
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
   const handleAddToCart = (product: Product) => {
@@ -128,6 +133,8 @@ function SearchPageContent() {
     router.push(`/search?${next.toString()}`, { scroll: false });
   };
 
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+
   if (!q.trim()) {
     return (
       <div className="container py-12 text-center text-muted-foreground">
@@ -137,7 +144,7 @@ function SearchPageContent() {
   }
 
   return (
-    <div className="container flex gap-6 py-6">
+    <div className="container w-full min-w-full flex gap-6">
       <div className="hidden w-56 shrink-0 lg:block">
         <SearchFiltersSidebar searchResultSet={searchResultSet} />
       </div>
@@ -148,6 +155,25 @@ function SearchPageContent() {
             ({filteredProducts.length}+ items)
           </p>
           <div className="flex items-center gap-4">
+            <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="lg:hidden gap-1.5"
+                  aria-label="Open filters"
+                >
+                  <Filter className="size-4" />
+                  Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[min(20rem,100vw-2rem)] py-4 flex flex-col">
+                <SheetTitle className="sr-only">Filters</SheetTitle>
+                <div className="flex-1 overflow-hidden flex flex-col min-h-0 px-4">
+                  <SearchFiltersSidebar searchResultSet={searchResultSet} embedded className="flex flex-col flex-1 min-h-0 border-0" />
+                </div>
+              </SheetContent>
+            </Sheet>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Sort:</span>
               <Select value={sortParam} onValueChange={setSort}>
@@ -163,25 +189,6 @@ function SearchPageContent() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-1">
-              <span className="text-sm text-muted-foreground">View:</span>
-              <button
-                type="button"
-                aria-label="Grid view"
-                onClick={() => setViewMode("grid")}
-                className={`rounded p-1.5 ${viewMode === "grid" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`}
-              >
-                <LayoutGrid className="size-4" />
-              </button>
-              <button
-                type="button"
-                aria-label="List view"
-                onClick={() => setViewMode("list")}
-                className={`rounded p-1.5 ${viewMode === "list" ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"}`}
-              >
-                <List className="size-4" />
-              </button>
-            </div>
           </div>
         </div>
         {filteredProducts.length === 0 ? (
@@ -189,13 +196,7 @@ function SearchPageContent() {
             No products match your filters. Try adjusting the filters or search term.
           </p>
         ) : (
-          <div
-            className={
-              viewMode === "grid"
-                ? "grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-                : "grid grid-cols-1 gap-3"
-            }
-          >
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -214,7 +215,7 @@ export default function SearchPage() {
   return (
     <Suspense
       fallback={
-        <div className="container flex gap-6 py-6">
+        <div className="container w-full flex gap-6">
           <div className="hidden w-56 shrink-0 lg:block" />
           <div className="min-w-0 flex-1 py-12 text-center text-muted-foreground">
             Loading search results...

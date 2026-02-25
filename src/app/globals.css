@@ -295,3 +295,27 @@
 .scrollbar-hidden {
   scrollbar-width: none;
 }
+
+
+/* Chrome, Edge, Safari */
+.scrollbar-filter::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-filter::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scrollbar-filter::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.scrollbar-filter::-webkit-scrollbar-thumb:hover {
+  background: #b4b4b4;
+}
+
+.scrollbar-filter {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-dark) #f1f1f1;
+}

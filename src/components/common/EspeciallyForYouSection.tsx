@@ -31,10 +31,10 @@ export function EspeciallyForYouSection() {
   }
 
   const breakpoints = {
-    0: { slidesPerView: 2, spaceBetween: 12 },
-    768: { slidesPerView: 2, spaceBetween: 16 },
-    1024: { slidesPerView: 3, spaceBetween: 20 },
-    1280: { slidesPerView: 4, spaceBetween: 20 },
+    0: { slidesPerView: 2.2, spaceBetween: 12 },
+    768: { slidesPerView: 2.5, spaceBetween: 16 },
+    1024: { slidesPerView: 3.5, spaceBetween: 20 },
+    1280: { slidesPerView: 4.8, spaceBetween: 20 },
     1536: { slidesPerView: 6, spaceBetween: 20 },
   }
 
