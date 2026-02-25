@@ -6,7 +6,7 @@ import { CartSheet } from "@/components/cart/CartSheet";
 import LogoSvg from "@/components/svg/logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { addToSearchHistory, getSearchHistory } from "@/lib/search-history";
+import { addToSearchHistory, clearSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { useAddressStore } from "@/store/address-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,12 @@ const Navbar = () => {
   const refreshHistory = useCallback(() => {
     setRecentSearches(getSearchHistory());
   }, []);
+
+  const handleClearRecentSearches = useCallback(() => {
+    clearSearchHistory();
+    refreshHistory();
+    setShowRecentSearches(false);
+  }, [refreshHistory]);
 
   const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -97,6 +103,7 @@ const Navbar = () => {
             recentSearches={recentSearches}
             onSubmit={handleSearchSubmit}
             onRecentSelect={handleRecentSelect}
+            onClearRecentSearches={handleClearRecentSearches}
             onSearchFocus={handleSearchFocus}
             variant="desktop"
             isMobile={isMobile}
@@ -121,6 +128,7 @@ const Navbar = () => {
         recentSearches={recentSearches}
         onSubmit={handleSearchSubmit}
         onRecentSelect={handleRecentSelect}
+        onClearRecentSearches={handleClearRecentSearches}
         onSearchFocus={handleSearchFocus}
         variant="mobile"
         isMobile={isMobile}
