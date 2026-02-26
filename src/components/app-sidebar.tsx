@@ -1,9 +1,9 @@
 "use client"
 
-import { ChevronDown, ChevronRight, Zap, type LucideIcon } from "lucide-react"
+import { ChevronDown, ChevronRight, Folder, Zap, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useCallback, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 
 import {
   Collapsible,
@@ -24,8 +24,35 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { categories } from "@/data/categories"
+import { useCategoryTree } from "@/hooks/data/useCategoryTree"
+import type { CategoryTreeNode } from "@/types/product"
 import { cn } from "@/lib/utils"
+
+/** Sidebar category item shape (derived from API tree). */
+type SidebarCategory = {
+  label: string
+  href: string
+  icon: LucideIcon
+  subcategories?: { label: string; href: string; icon: LucideIcon }[]
+}
+
+function mapTreeToSidebarCategories(tree: CategoryTreeNode[]): SidebarCategory[] {
+  return tree.map((main) => {
+    const hasChildren = Array.isArray(main.children) && main.children.length > 0
+    return {
+      label: main.title,
+      href: `/${main.slug}`,
+      icon: Folder,
+      subcategories: hasChildren
+        ? main.children!.map((sub) => ({
+            label: sub.title,
+            href: `/${main.slug}/${sub.slug}`,
+            icon: Folder,
+          }))
+        : undefined,
+    }
+  })
+}
 
 const flashSaleItem = {
   label: "FLASH SALE",
@@ -49,22 +76,12 @@ const categoryRowClass = cn(
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const [openSections, setOpenSections] = useState<Set<string>>(() => new Set())
-  const [closedSections, setClosedSections] = useState<Set<string>>(() => new Set())
+  const tree = useCategoryTree()
+  const categories = useMemo(() => mapTreeToSidebarCategories(tree), [tree])
+  const [openSection, setOpenSection] = useState<string | null>(null)
 
   const toggleSection = useCallback((href: string, open: boolean) => {
-    setOpenSections((prev) => {
-      const next = new Set(prev)
-      if (open) next.add(href)
-      else next.delete(href)
-      return next
-    })
-    setClosedSections((prev) => {
-      const next = new Set(prev)
-      if (open) next.delete(href)
-      else next.add(href)
-      return next
-    })
+    setOpenSection(open ? href : null)
   }, [])
 
   return (
@@ -98,18 +115,22 @@ export function AppSidebar() {
         <SidebarGroup className="p-0">
           <SidebarGroupContent className="p-0">
             <SidebarMenu>
-              {categories.map((item) => {
+              {categories.length === 0 ? (
+                <SidebarMenuItem>
+                  <div className="py-3 px-3 text-sm text-muted-foreground">
+                    Loading categories…
+                  </div>
+                </SidebarMenuItem>
+              ) : (
+                categories.map((item) => {
+                const hasChildren =
+                  Array.isArray(item.subcategories) && item.subcategories.length > 0
                 const categoryPath = `/category${item.href}`
                 const isMainActive = pathname === categoryPath
-                const isExpandedByPath =
-                  (item.subcategories?.length ?? 0) > 0 &&
-                  pathname.startsWith(categoryPath)
-                const isOpen =
-                  (isExpandedByPath && !closedSections.has(item.href)) ||
-                  (!isExpandedByPath && openSections.has(item.href))
+                const isOpen = openSection === item.href
 
-                return item.subcategories?.length ? (
-                  <SidebarMenuItem key={item.label}>
+                return hasChildren ? (
+                  <SidebarMenuItem key={item.href}>
                     <Collapsible
                       open={isOpen}
                       onOpenChange={(open) => toggleSection(item.href, open)}
@@ -166,15 +187,14 @@ export function AppSidebar() {
                               >
                                 <CategoryIcon icon={item.icon} />
                                 <span className="truncate text-base font-medium">All {item.label}</span>
-                                <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground" />
                               </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
-                          {item.subcategories.map((sub) => {
+                          {item.subcategories!.map((sub) => {
                             const subPath = `/category${sub.href}`
                             const isSubActive = pathname === subPath
                             return (
-                              <SidebarMenuSubItem key={sub.label}>
+                              <SidebarMenuSubItem key={sub.href}>
                                 <SidebarMenuSubButton
                                   asChild
                                   isActive={isSubActive}
@@ -189,7 +209,6 @@ export function AppSidebar() {
                                   >
                                     <CategoryIcon icon={sub.icon} />
                                     <span className="truncate text-base font-medium">{sub.label}</span>
-                                    <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground" />
                                   </Link>
                                 </SidebarMenuSubButton>
                               </SidebarMenuSubItem>
@@ -200,7 +219,7 @@ export function AppSidebar() {
                     </Collapsible>
                   </SidebarMenuItem>
                 ) : (
-                  <SidebarMenuItem key={item.label}>
+                  <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
                       isActive={isMainActive}
@@ -209,12 +228,12 @@ export function AppSidebar() {
                       <Link href={categoryPath} className="flex items-center gap-2">
                         <CategoryIcon icon={item.icon} />
                         <span className="flex-1 truncate text-base font-medium">{item.label}</span>
-                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )
-              })}
+              })
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

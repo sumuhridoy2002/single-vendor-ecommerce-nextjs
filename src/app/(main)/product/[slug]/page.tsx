@@ -5,7 +5,7 @@ import { ProductInfo } from "@/components/product/ProductInfo"
 import { ProductTabs } from "@/components/product/ProductTabs"
 import { RatingReviews } from "@/components/product/RatingReviews"
 import { RelatedProductsCarousel } from "@/components/product/RelatedProductsCarousel"
-import { useCategory } from "@/hooks/data/useCategory"
+import { useCategoryTree, getCategoryHrefById, getCategoryIdToTitleMap } from "@/hooks/data/useCategoryTree"
 import {
   getFrequentlyBoughtTogether,
   getPreviouslyViewed,
@@ -34,7 +34,7 @@ export default function ProductPage({
 }) {
   const { slug } = use(params)
   const product = useProductBySlug(slug)
-  const categories = useCategory()
+  const tree = useCategoryTree()
   const allProducts = useProducts()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
@@ -45,8 +45,8 @@ export default function ProductPage({
 
   if (!product) notFound()
 
-  const category = categories.find((c) => c.id === product.categoryId)
-  const categoryHref = category?.viewAllHref ?? `/category/${product.categoryId}`
+  const categoryHref = getCategoryHrefById(tree, product.categoryId)
+  const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
 
   const similarProducts = getSimilarProducts(product, allProducts, 8)
   const moreFromBrand = product.brand
@@ -72,11 +72,11 @@ export default function ProductPage({
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          {category && (
+          {categoryTitle && (
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href={categoryHref}>{category.title}</Link>
+                  <Link href={categoryHref}>{categoryTitle}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />

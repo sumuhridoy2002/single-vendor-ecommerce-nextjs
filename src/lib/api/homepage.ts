@@ -1,0 +1,57 @@
+import type {
+  HomepageApiResponse,
+  HomepageDataApi,
+  HomepageProductApi,
+} from "@/types/homepage";
+import type { Product } from "@/types/product";
+import { getBaseUrl } from "./client";
+
+/** Map API product to app Product type for sliders/cart. */
+export function mapHomepageProductToProduct(api: HomepageProductApi): Product {
+  const price =
+    api.flash_sale?.is_active === true
+      ? api.flash_sale.flash_final_price
+      : api.final_price;
+  const originalPrice =
+    api.base_price > price ? api.base_price : undefined;
+  const discountPercent =
+    originalPrice != null && originalPrice > 0
+      ? Math.round(((originalPrice - price) / originalPrice) * 100)
+      : undefined;
+  let badge: Product["badge"] | undefined;
+  if (api.flash_sale?.is_active) badge = "sale";
+  else if (discountPercent != null && discountPercent > 0) badge = "sale";
+
+  return {
+    id: String(api.id),
+    name: api.title,
+    slug: api.slug,
+    image: api.thumbnail,
+    price,
+    originalPrice,
+    discountPercent,
+    badge,
+    rating: undefined,
+    reviewCount: api.reviews_count,
+    categoryId: api.category ? String(api.category.id) : "",
+    inStock: api.is_in_stock,
+  };
+}
+
+export async function fetchHomepage(): Promise<HomepageDataApi> {
+  const baseUrl = getBaseUrl();
+  const res = await fetch(`${baseUrl}/products/homepage`, {
+    headers: { Accept: "application/json" },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Homepage fetch failed: ${res.status}`);
+  }
+
+  const json = (await res.json()) as HomepageApiResponse;
+  if (json.status !== 200 || !json.data) {
+    throw new Error(json.message ?? "Failed to load homepage");
+  }
+
+  return json.data;
+}

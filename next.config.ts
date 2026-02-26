@@ -8,6 +8,16 @@ const nextConfig: NextConfig = {
         hostname: "placehold.co",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "admin.beautycareskin.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "ui-avatars.com",
+        pathname: "/**",
+      },
     ],
   },
 };
