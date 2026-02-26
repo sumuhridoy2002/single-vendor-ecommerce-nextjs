@@ -1,8 +1,10 @@
 import { CategoryBar } from "@/components/global/category-bar";
+import { DynamicHeadSync } from "@/components/global/DynamicHeadSync";
 import { MobileBottomNavWithAccountSheet } from "@/components/global/MobileBottomNavWithAccountSheet";
 import Navbar from "@/components/global/navbar";
 import Provider from "@/components/global/Provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { fetchSettingsSafe } from "@/lib/api/settings";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import 'swiper/css';
@@ -15,10 +17,29 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "স্কিন কেয়ার ও বিউটি প্রোডাক্টের বিশ্বস্ত ঠিকানা| Beauty Care BD",
-  description: "BeautyCare.com.bd - বাংলাদেশের বিশ্বস্ত অনলাইন বিউটি শপ। এখানে পাবেন ১০০% অরিজিনাল স্কিন কেয়ার, হেয়ার কেয়ার, মেকআপ ও বডি কেয়ার প্রোডাক্ট একদম হাতের নাগালে।",
+const DEFAULT_METADATA: Metadata = {
+  title: "স্কিন কেয়ার ও বিউটি প্রোডাক্টের বিশ্বস্ত ঠিকানা | Beauty Care BD",
+  description:
+    "BeautyCare.com.bd - বাংলাদেশের বিশ্বস্ত অনলাইন বিউটি শপ। এখানে পাবেন ১০০% অরিজিনাল স্কিন কেয়ার, হেয়ার কেয়ার, মেকআপ ও বডি কেয়ার প্রোডাক্ট একদম হাতের নাগালে।",
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const res = await fetchSettingsSafe();
+  if (!res?.data) return DEFAULT_METADATA;
+
+  const { site_name, site_tagline, site_description, favicon } = res.data;
+
+  return {
+    title: {
+      default: `${site_name} | ${site_tagline}`,
+      template: `%s | ${site_name}`,
+    },
+    description: site_description,
+    icons: {
+      icon: favicon,
+    },
+  };
+}
 
 export default function RootLayout({
   children,
@@ -31,6 +52,7 @@ export default function RootLayout({
         className={`${inter.variable} antialiased font-sans`}
       >
         <Provider>
+          <DynamicHeadSync />
           <SidebarProvider>
             <div className="flex min-h-svh w-full flex-col">
               <Navbar />
