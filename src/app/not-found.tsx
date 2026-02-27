@@ -4,31 +4,6 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <div className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden px-4">
-      {/* Soft background elements */}
-      <style>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translate(0, 0); }
-          33% { transform: translate(12px, -60px); }
-          66% { transform: translate(-8px, 50px); }
-        }
-        @keyframes float-slow-alt {
-          0%, 100% { transform: translate(0, 0); }
-          50% { transform: translate(-20px, -100px); }
-        }
-        @keyframes float-slow-mid {
-          0%, 100% { transform: translate(-50%, 0); }
-          50% { transform: translate(calc(-50% + 280px), 20px); }
-        }
-        .animate-float-slow { animation: float-slow 12s ease-in-out infinite; }
-        .animate-float-slow-alt { animation: float-slow-alt 14s ease-in-out infinite; }
-        .animate-float-slow-mid { animation: float-slow-mid 10s ease-in-out infinite; }
-      `}</style>
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-32 -top-32 size-48 sm:size-64 md:size-80 lg:size-96 rounded-full bg-primary/50 blur-3xl animate-float-slow" />
-        <div className="absolute -bottom-32 -right-32 size-64 sm:size-80 md:size-96 lg:size-[28rem] rounded-full bg-primary/20 blur-3xl animate-float-slow-alt" />
-        <div className="absolute left-1/2 top-1/3 size-64 sm:size-80 md:size-96 lg:size-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/50 blur-3xl animate-float-slow-mid" />
-      </div>
-
       {/* Subtle grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.03]"
@@ -68,9 +43,6 @@ export default function NotFound() {
           </Button>
         </div>
       </div>
-
-      {/* Decorative line */}
-      <div className="absolute bottom-8 left-1/2 h-px w-24 -translate-x-1/2 bg-linear-to-r from-transparent via-neutral-300 to-transparent" />
     </div>
   );
 }

@@ -5,14 +5,13 @@ import { ProductInfo } from "@/components/product/ProductInfo"
 import { ProductTabs } from "@/components/product/ProductTabs"
 import { RatingReviews } from "@/components/product/RatingReviews"
 import { RelatedProductsCarousel } from "@/components/product/RelatedProductsCarousel"
-import { useCategoryTree, getCategoryHrefById, getCategoryIdToTitleMap } from "@/hooks/data/useCategoryTree"
 import {
-  getFrequentlyBoughtTogether,
-  getPreviouslyViewed,
-  getSimilarProducts,
-  useProductBySlug,
-  useProducts,
-} from "@/hooks/data/useProducts"
+  getCategoryHrefById,
+  getCategoryIdToTitleMap,
+  useCategoryTree,
+} from "@/hooks/data/useCategoryTree"
+import { useProductDetails } from "@/hooks/data/useProductDetails"
+import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -25,17 +24,19 @@ import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { use } from "react"
 
-export default function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}) {
-  const { slug } = use(params)
-  const product = useProductBySlug(slug)
+export interface ProductPageContentProps {
+  id: string
+  initialProduct?: Product | null
+}
+
+export function ProductPageContent({
+  id,
+  initialProduct,
+}: ProductPageContentProps) {
+  const { product, isLoading, error } = useProductDetails(id, initialProduct)
+  const { products: relatedProducts } = useRelatedProducts(id)
   const tree = useCategoryTree()
-  const allProducts = useProducts()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
   const handleAddToCart = (p: Product) => {
@@ -43,27 +44,28 @@ export default function ProductPage({
     openCart()
   }
 
-  if (!product) notFound()
+  if (error) notFound()
+  if (isLoading || !product) {
+    return (
+      <div className="container space-y-8 py-6">
+        <div className="h-6 w-64 animate-pulse rounded bg-muted" />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <div className="aspect-square animate-pulse rounded-lg bg-muted" />
+          <div className="space-y-4">
+            <div className="h-8 w-3/4 animate-pulse rounded bg-muted" />
+            <div className="h-6 w-1/2 animate-pulse rounded bg-muted" />
+            <div className="h-10 w-24 animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const categoryHref = getCategoryHrefById(tree, product.categoryId)
   const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
 
-  const similarProducts = getSimilarProducts(product, allProducts, 8)
-  const moreFromBrand = product.brand
-    ? allProducts
-      .filter(
-        (p) =>
-          p.brand === product.brand &&
-          p.id !== product.id
-      )
-      .slice(0, 8)
-    : similarProducts.slice(0, 8)
-  const frequentlyBought = getFrequentlyBoughtTogether(product, allProducts, 6)
-  const previouslyViewed = getPreviouslyViewed(slug, allProducts, 6)
-
   return (
     <div className="container space-y-8 py-6">
-      {/* Breadcrumbs */}
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -88,44 +90,26 @@ export default function ProductPage({
         </BreadcrumbList>
       </Breadcrumb>
 
-      {/* Hero: Gallery + Info */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <ProductGallery product={product} />
         <ProductInfo product={product} onAddToCart={handleAddToCart} />
       </div>
 
-      {/* Product Details & Specification tabs */}
       <section className="rounded-xl border bg-card p-6">
         <ProductTabs product={product} />
       </section>
 
-      {/* Rating & Reviews */}
       <RatingReviews product={product} />
 
-      {/* Related sections */}
       <div className="space-y-0">
-        <RelatedProductsCarousel
-          title="Similar Products"
-          products={similarProducts}
-          viewAllHref={categoryHref}
-          onAddToCart={handleAddToCart}
-        />
-        <RelatedProductsCarousel
-          title={product.brand ? `More From ${product.brand}` : "More in this category"}
-          products={moreFromBrand}
-          viewAllHref={product.brandHref ?? categoryHref}
-          onAddToCart={handleAddToCart}
-        />
-        <RelatedProductsCarousel
-          title="Frequently Bought Together"
-          products={frequentlyBought}
-          onAddToCart={handleAddToCart}
-        />
-        <RelatedProductsCarousel
-          title="Previously Viewed Items"
-          products={previouslyViewed}
-          onAddToCart={handleAddToCart}
-        />
+        {relatedProducts.length > 0 && (
+          <RelatedProductsCarousel
+            title="Related Products"
+            products={relatedProducts}
+            viewAllHref={categoryHref}
+            onAddToCart={handleAddToCart}
+          />
+        )}
       </div>
     </div>
   )

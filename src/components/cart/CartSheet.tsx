@@ -79,7 +79,7 @@ function CartLineItem({ item }: { item: CartItemType }) {
   return (
     <div className="flex gap-3 rounded-lg border bg-card p-3">
       <Link
-        href={`/product/${product.slug}`}
+        href={`/product/${product.id}`}
         className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted"
       >
         <Image
@@ -100,7 +100,7 @@ function CartLineItem({ item }: { item: CartItemType }) {
       </Link>
       <div className="min-w-0 flex-1">
         <Link
-          href={`/product/${product.slug}`}
+          href={`/product/${product.id}`}
           className="line-clamp-2 text-sm font-medium text-foreground hover:underline"
         >
           {product.name}
