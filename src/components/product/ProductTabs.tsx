@@ -4,16 +4,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
 
+/** Decode HTML entities so escaped API content (e.g. &lt; &gt; &amp;) renders as real HTML. Works in SSR and client. */
+function decodeHtmlEntities(html: string): string {
+  return html
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+}
+
 export interface ProductTabsProps {
   product: Product
   className?: string
 }
 
 export function ProductTabs({ product, className }: ProductTabsProps) {
-  const description =
-    product.description ??
-    "No detailed description available for this product."
+  const longDesc = product.longDescription ?? product.description
+  const raw =
+    longDesc ?? "No detailed description available for this product."
   const specification = product.specification ?? {}
+  const isEscapedHtml = raw.includes("&lt;") || raw.includes("&gt;")
+  const isRawHtml = raw.includes("<") && raw.includes(">")
+  const contentToRender =
+    isEscapedHtml ? decodeHtmlEntities(raw) : raw
+  const useHtml = isRawHtml || isEscapedHtml
 
   return (
     <Tabs defaultValue="details" className={cn("w-full", className)}>
@@ -27,7 +42,16 @@ export function ProductTabs({ product, className }: ProductTabsProps) {
       </TabsList>
       <TabsContent value="details" className="mt-4">
         <div className="prose prose-sm dark:prose-invert max-w-none">
-          <p className="text-muted-foreground whitespace-pre-line">{description}</p>
+          {useHtml ? (
+            <div
+              className="text-muted-foreground [&_a]:text-primary [&_a]:underline [&_h3]:mt-4 [&_h3]:text-base [&_ul]:list-disc [&_ul]:pl-6"
+              dangerouslySetInnerHTML={{ __html: contentToRender }}
+            />
+          ) : (
+            <p className="text-muted-foreground whitespace-pre-line">
+              {contentToRender}
+            </p>
+          )}
           <p className="mt-4">
             <a
               href="/return-policy"

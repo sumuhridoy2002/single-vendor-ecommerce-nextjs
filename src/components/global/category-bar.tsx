@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useCategory } from "@/hooks/data/useCategory";
+import { useCategoryTree } from "@/hooks/data/useCategoryTree";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -12,30 +12,22 @@ import { RiLayoutMasonryFill } from "react-icons/ri";
 
 const CLICK_SCROLL_PX = 120;
 
-const CATEGORY_LINKS = [
+const STATIC_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Medicine", href: "/category/medicine" },
-  { label: "Healthcare", href: "/category/healthcare" },
-  { label: "Lab Test", href: "/category/lab-test" },
-  { label: "Beauty", href: "/category/beauty" },
-  { label: "Sexual Wellness", href: "/category/sexual-wellness" },
-  { label: "Baby & Mom Care", href: "/category/baby-mom-care" },
-  { label: "Herbal Home Care", href: "/category/herbal-home-care" },
-  { label: "Supplement", href: "/category/supplement" },
-  { label: "Food and Nutrition", href: "/category/food-nutrition" },
-  { label: "Pet Care", href: "/category/pet-care" },
-  { label: "Veterinary", href: "/category/veterinary" },
-  { label: "Homeopathy", href: "/category/homeopathy" },
   { label: "Blogs", href: "/blogs" },
-  { label: "Up", href: "/up" },
 ];
 
 export function CategoryBar() {
   const pathname = usePathname();
-  const categories = useCategory();
+  const tree = useCategoryTree();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
+
+  const categoryLinks = [
+    ...STATIC_LINKS,
+    ...tree.map((c) => ({ label: c.title, href: `/category/${c.slug}` })),
+  ];
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;
@@ -90,7 +82,7 @@ export function CategoryBar() {
           className="flex min-w-0 items-center gap-1 overflow-x-auto pr-5 mt-1 pb-1 scrollbar-hidden"
         >
           <div className="flex items-center gap-4 px-2">
-            {CATEGORY_LINKS.map((item) => {
+            {categoryLinks.map((item) => {
               const isActive =
                 item.href === "/"
                   ? pathname === "/"

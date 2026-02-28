@@ -17,13 +17,14 @@ const CARD_BG_CLASSES = [
 
 export interface SubcategoryCardsProps {
   subcategories: CategoryTreeNode[]
-  mainSlug: string
+  /** Full path prefix for building links (e.g. "skin-care" or "skin-care/face-care"). */
+  parentPathSlug: string
   className?: string
 }
 
 export function SubcategoryCards({
   subcategories,
-  mainSlug,
+  parentPathSlug,
   className,
 }: SubcategoryCardsProps) {
   if (subcategories.length === 0) return null
@@ -35,7 +36,7 @@ export function SubcategoryCards({
       </h2>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
         {subcategories.map((sub, index) => {
-          const href = `/category/${mainSlug}/${sub.slug}`
+          const href = `/category/${parentPathSlug}/${sub.slug}`
           const bgClass =
             CARD_BG_CLASSES[index % CARD_BG_CLASSES.length]
           return (

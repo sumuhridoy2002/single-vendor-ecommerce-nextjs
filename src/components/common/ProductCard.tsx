@@ -55,7 +55,7 @@ export function ProductCard({
       )}
     >
       <CardHeader className="relative shrink-0 p-0">
-        <Link href={`/product/${product.slug}`} className="block">
+        <Link href={`/product/${product.id}`} className="block">
           <AspectRatio ratio={1}>
             <Image
               src={imageSrc}
@@ -86,7 +86,7 @@ export function ProductCard({
 
         {/* Product title - bold, truncated */}
         <Link
-          href={`/product/${product.slug}`}
+          href={`/product/${product.id}`}
           className="line-clamp-2 text-sm lg:text-base font-bold leading-tight text-foreground hover:underline h-10"
         >
           {product.name}

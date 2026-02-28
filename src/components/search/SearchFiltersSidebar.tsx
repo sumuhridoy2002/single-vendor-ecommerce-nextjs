@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getCategoryIdToTitleMap } from "@/hooks/data/useCategoryTree";
+import { getCategoryIdToTitleMap, useCategoryTree } from "@/hooks/data/useCategoryTree";
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -45,6 +45,11 @@ export interface SearchFiltersSidebarProps {
 export function SearchFiltersSidebar({ searchResultSet, className, embedded, basePath = "/search" }: SearchFiltersSidebarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const tree = useCategoryTree();
+  const categoryIdToTitle = useMemo(
+    () => getCategoryIdToTitleMap(tree),
+    [tree]
+  );
 
   const priceMin = searchParams.get("priceMin");
   const priceMax = searchParams.get("priceMax");
@@ -52,8 +57,6 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
   const categories = searchParams.getAll("category");
 
   const sectionScrollHeight = embedded ? "max-h-[160px]" : SECTION_SCROLL_HEIGHT;
-
-  const categoryIdToTitle = useMemo(() => getCategoryIdToTitleMap(), []);
 
   const { minPrice, maxPrice } = useMemo(() => {
     if (searchResultSet.length === 0) return { minPrice: 0, maxPrice: 0 };

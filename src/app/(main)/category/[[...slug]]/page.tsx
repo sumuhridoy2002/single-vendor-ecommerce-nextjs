@@ -14,7 +14,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { getCategoryBySlugPath, getSiblingSubcategories } from "@/hooks/data/useCategoryTree"
+import { getCategoryBySlugPath, getSiblingSubcategories, useCategoryTree } from "@/hooks/data/useCategoryTree"
+import { useCategories } from "@/hooks/data/useCategories"
 import { useCartStore } from "@/store/cart-store"
 
 import { CategoryProductsHighlight } from "./components/CategoryProductsHighlight"
@@ -28,6 +29,8 @@ export default function CategoryPage({
   params: Promise<{ slug?: string[] }>
 }) {
   const { slug } = use(params)
+  const tree = useCategoryTree()
+  const { isLoading } = useCategories()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
   const handleAddToCart = (product: import("@/types/product").Product) => {
@@ -37,14 +40,24 @@ export default function CategoryPage({
 
   if (!slug || slug.length === 0) notFound()
 
-  const resolved = getCategoryBySlugPath(slug)
+  if (isLoading || tree.length === 0) {
+    return (
+      <div className="container w-full space-y-6 py-8">
+        <div className="h-6 w-48 animate-pulse rounded bg-muted" />
+        <div className="h-32 animate-pulse rounded bg-muted" />
+      </div>
+    )
+  }
+
+  const resolved = getCategoryBySlugPath(slug, tree)
   if (!resolved) notFound()
 
   const { main, sub, breadcrumb } = resolved
   const siblings = getSiblingSubcategories(resolved)
 
   // Subcategory page: breadcrumb + page title + sort + grid of all products
-  if (resolved.type === "sub" && sub) {
+  if (resolved.type === "sub") {
+    const subSiblings = resolved.current.children ?? []
     return (
       <div className="container w-full space-y-6">
         <Breadcrumb>
@@ -65,7 +78,13 @@ export default function CategoryPage({
             ))}
           </BreadcrumbList>
         </Breadcrumb>
-        <SubcategoryProductGrid sub={sub} onAddToCart={handleAddToCart} />
+        {subSiblings.length > 0 && (
+          <SubcategoryCards
+            subcategories={subSiblings}
+            parentPathSlug={resolved.path.map((p) => p.slug).join("/")}
+          />
+        )}
+        <SubcategoryProductGrid sub={resolved.current} onAddToCart={handleAddToCart} />
       </div>
     )
   }
@@ -95,7 +114,10 @@ export default function CategoryPage({
       <CategoryHero title={main.title} />
 
       {siblings.length > 0 && (
-        <SubcategoryCards subcategories={siblings} mainSlug={main.slug} />
+        <SubcategoryCards
+          subcategories={siblings}
+          parentPathSlug={resolved.path.map((p) => p.slug).join("/")}
+        />
       )}
 
       <div className="space-y-0">
@@ -108,7 +130,7 @@ export default function CategoryPage({
           <CategorySectionBySub
             key={subNode.id}
             sub={subNode}
-            mainSlug={main.slug}
+            parentPathSlug={resolved.path.map((p) => p.slug).join("/")}
             sectionBgClassName={
               SECTION_BG_CLASSES[index % SECTION_BG_CLASSES.length]
             }

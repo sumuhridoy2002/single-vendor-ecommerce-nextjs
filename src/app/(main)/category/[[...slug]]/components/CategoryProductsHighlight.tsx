@@ -16,13 +16,13 @@ export function CategoryProductsHighlight({
   sectionBgClassName: string
   onAddToCart?: (product: Product) => void
 }) {
-  const { main, type, sub } = resolved
-  const categoryIds = type === "sub" && sub ? sub.id : getCategoryIdsForMain(main)
+  const { main, type, current, path } = resolved
+  const categoryIds = type === "sub" ? current.id : getCategoryIdsForMain(main)
   const products = useProductsByCategory(categoryIds)
-  const title = type === "sub" && sub ? sub.title : `Products in ${main.title}`
+  const title = type === "sub" ? current.title : `Products in ${main.title}`
   const viewAllHref =
-    type === "sub" && sub
-      ? `/category/${main.slug}/${sub.slug}`
+    type === "sub"
+      ? `/category/${path.map((p) => p.slug).join("/")}`
       : `/category/${main.slug}`
 
   return (

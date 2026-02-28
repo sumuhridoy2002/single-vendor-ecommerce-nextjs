@@ -6,12 +6,12 @@ import type { CategoryTreeNode, Product } from "@/types/product"
 
 export function CategorySectionBySub({
   sub,
-  mainSlug,
+  parentPathSlug,
   sectionBgClassName,
   onAddToCart,
 }: {
   sub: CategoryTreeNode
-  mainSlug: string
+  parentPathSlug: string
   sectionBgClassName: string
   onAddToCart?: (product: Product) => void
 }) {
@@ -20,7 +20,7 @@ export function CategorySectionBySub({
     <CategoryProductSection
       title={sub.title}
       products={products}
-      viewAllHref={`/category/${mainSlug}/${sub.slug}`}
+      viewAllHref={`/category/${parentPathSlug}/${sub.slug}`}
       sectionBgClassName={sectionBgClassName}
       onAddToCart={onAddToCart}
     />

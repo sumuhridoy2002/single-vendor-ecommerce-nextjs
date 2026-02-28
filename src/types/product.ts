@@ -15,6 +15,8 @@ export interface Product {
   categoryId: string
   /** Product details page */
   description?: string
+  /** Full/long description (HTML) from API */
+  longDescription?: string
   images?: string[]
   brand?: string
   brandHref?: string
