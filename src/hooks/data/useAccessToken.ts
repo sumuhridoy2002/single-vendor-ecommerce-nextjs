@@ -1,20 +1,19 @@
-import { getCookie, removeCookie, setCookie } from '@/lib/cookies';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const TOKEN_KEY = 'access_token';
-const TOKEN_EXPIRY_DAYS = 1; // 1 day
 
 /**
- * Hook for managing access token
+ * Hook for managing access token (stored in localStorage)
  */
 export const useAccessToken = () => {
   const queryClient = useQueryClient();
 
   /**
-   * Get the current access token from cookies
+   * Get the current access token from localStorage
    */
   const getAccessToken = (): string | null => {
-    return getCookie(TOKEN_KEY);
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(TOKEN_KEY);
   };
 
   /**
@@ -25,17 +24,19 @@ export const useAccessToken = () => {
   };
 
   /**
-   * Set access token in cookies
+   * Set access token in localStorage
    */
   const setAccessToken = (token: string): void => {
-    setCookie(TOKEN_KEY, token, TOKEN_EXPIRY_DAYS);
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(TOKEN_KEY, token);
   };
 
   /**
-   * Remove access token from cookies
+   * Remove access token from localStorage
    */
   const removeAccessToken = (): void => {
-    removeCookie(TOKEN_KEY);
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(TOKEN_KEY);
   };
 
   /**

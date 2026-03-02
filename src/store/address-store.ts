@@ -27,12 +27,15 @@ interface AddressState {
   editingAddressId: string | null;
   selectedAddress: Address | null;
   addresses: Address[];
+  addressesLoading: boolean;
   openAddressModal: () => void;
   closeAddressModal: () => void;
   openAddForm: () => void;
   openEditForm: (id: string) => void;
   closeForm: () => void;
   setSelectedAddress: (id: string) => void;
+  setAddresses: (addresses: Address[]) => void;
+  setAddressesLoading: (loading: boolean) => void;
   saveAddress: (data: AddressFormData) => void;
   setDefaultAddress: (id: string) => void;
   deleteAddress: (id: string) => void;
@@ -51,6 +54,7 @@ export const useAddressStore = create<AddressState>((set) => ({
   editingAddressId: null,
   selectedAddress: null,
   addresses: [],
+  addressesLoading: false,
 
   openAddressModal: () =>
     set((state) => {
@@ -69,6 +73,10 @@ export const useAddressStore = create<AddressState>((set) => ({
       const address = state.addresses.find((a) => a.id === id) ?? null;
       return { selectedAddress: address };
     }),
+
+  setAddresses: (addresses) => set({ addresses }),
+
+  setAddressesLoading: (addressesLoading) => set({ addressesLoading }),
 
   closeAddressModal: () =>
     set({ modalOpen: false, formOpen: false, editingAddressId: null }),

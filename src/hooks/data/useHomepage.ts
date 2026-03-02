@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { fetchHomepage, mapHomepageProductToProduct } from "@/lib/api/homepage";
+import { globalQueryKeys } from "@/lib/query-keys";
 import { useHomepageStore } from "@/stores/homepage-store";
 import type { Product } from "@/types/product";
+import { useQuery } from "@tanstack/react-query";
 
 export interface HomepageSections {
   newArrivals: Product[];
@@ -16,42 +17,32 @@ export function useHomepage(): {
   data: HomepageSections | null;
   isLoading: boolean;
   error: Error | null;
-  refetch: () => Promise<void>;
+  refetch: () => Promise<unknown>;
 } {
   const { data: raw } = useHomepageStore();
-  const [isLoading, setIsLoading] = useState(raw == null);
-  const [error, setError] = useState<Error | null>(null);
 
-  const fetch = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const payload = await fetchHomepage();
-      useHomepageStore.getState().setData(payload);
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)));
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const { data: queryData, refetch, isLoading, error } = useQuery({
+    queryKey: globalQueryKeys.productsHomepage,
+    queryFn: fetchHomepage,
+    enabled: false,
+  });
 
-  useEffect(() => {
-    if (raw != null) {
-      setIsLoading(false);
-      return;
-    }
-    fetch();
-  }, [raw, fetch]);
-
+  // Use store first, then query cache (e.g. after rehydration) so we don't show loading when we have cached data
+  const source = raw ?? queryData ?? null;
   const data: HomepageSections | null =
-    raw == null
+    source == null
       ? null
       : {
-          newArrivals: raw.new_arrivals.map(mapHomepageProductToProduct),
-          popular: raw.popular.map(mapHomepageProductToProduct),
-          discounted: raw.discounted.map(mapHomepageProductToProduct),
-          flashSale: raw.flash_sale.map(mapHomepageProductToProduct),
+          newArrivals: source.new_arrivals.map(mapHomepageProductToProduct),
+          popular: source.popular.map(mapHomepageProductToProduct),
+          discounted: source.discounted.map(mapHomepageProductToProduct),
+          flashSale: source.flash_sale.map(mapHomepageProductToProduct),
         };
 
-  return { data, isLoading, error, refetch: fetch };
+  return {
+    data,
+    isLoading,
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    refetch,
+  };
 }

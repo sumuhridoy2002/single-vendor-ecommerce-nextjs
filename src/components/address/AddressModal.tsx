@@ -25,14 +25,25 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import {
+  apiAddressToStore,
+  formToCreatePayload,
+  getCityAreaFromTree,
+} from "@/lib/api/address-mappers";
+import { addAddress, getAddresses, setDefaultAddress as setDefaultAddressApi } from "@/lib/api/customer";
+import { globalQueryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import { useAddressStore, type Address, type AddressType } from "@/store/address-store";
+import { useAuth } from "@/contexts/AuthContext";
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   Briefcase,
   Building2,
   Home,
+  Loader2,
   MoreVertical,
   X,
 } from "lucide-react";
@@ -136,6 +147,9 @@ function AddressTypeLabel(type: AddressType): string {
 }
 
 export function AddressModal() {
+  const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
+  const whenLoggedIn = useWhenLoggedIn();
   const {
     modalOpen,
     formOpen,
@@ -144,13 +158,44 @@ export function AddressModal() {
     addresses,
     closeAddressModal,
     openAddForm,
-    openEditForm,
     closeForm,
     setSelectedAddress,
-    saveAddress,
     setDefaultAddress,
-    deleteAddress,
   } = useAddressStore();
+
+  // If address modal opened while not logged in, close it and open auth modal
+  useEffect(() => {
+    if (modalOpen && !isAuthenticated) {
+      closeAddressModal();
+      whenLoggedIn(() => {});
+    }
+  }, [modalOpen, isAuthenticated, closeAddressModal, whenLoggedIn]);
+
+  const { data: queryAddresses, isLoading: addressesLoading, error: addressesError } = useQuery({
+    queryKey: globalQueryKeys.customerAddresses,
+    queryFn: async () => {
+      const list = await getAddresses();
+      return list.map(apiAddressToStore);
+    },
+    enabled: modalOpen && isAuthenticated,
+  });
+
+  // Use store first, then query cache so we don't show loading when we have cached data on reload
+  const addressesToShow = addresses.length > 0 ? addresses : (queryAddresses ?? []);
+
+  useEffect(() => {
+    if (!modalOpen || !isAuthenticated) return;
+    queryClient.invalidateQueries({ queryKey: globalQueryKeys.customerAddresses });
+  }, [modalOpen, isAuthenticated, queryClient]);
+
+  useEffect(() => {
+    if (!modalOpen || !addressesError) return;
+    const message = addressesError instanceof Error ? addressesError.message : "Failed to load addresses";
+    toast.error(message);
+    if (message.toLowerCase().includes("log in")) {
+      closeAddressModal();
+    }
+  }, [modalOpen, addressesError, closeAddressModal]);
 
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressFormSchema),
@@ -165,7 +210,7 @@ export function AddressModal() {
   });
 
   const editingAddress = editingAddressId
-    ? addresses.find((a) => a.id === editingAddressId)
+    ? addressesToShow.find((a) => a.id === editingAddressId)
     : null;
 
   useEffect(() => {
@@ -193,22 +238,44 @@ export function AddressModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formOpen, editingAddressId, editingAddress?.id, form]);
 
-  const onSubmit = (data: AddressFormValues) => {
-    saveAddress({
-      fullName: data.fullName,
-      phone: data.phone,
-      deliveryArea: data.deliveryArea,
-      address: data.address,
-      addressType: data.addressType,
-      isDefault: data.isDefault,
-    });
-    toast.success(editingAddressId ? "Address updated" : "Address saved");
-    closeAddressModal();
+  const onSubmit = async (data: AddressFormValues) => {
+    if (editingAddressId) {
+      toast.info("Edit is not available yet.");
+      return;
+    }
+    const { city, area } = getCityAreaFromTree(DELIVERY_AREAS_TREE, data.deliveryArea);
+    const payload = formToCreatePayload(data, city, area);
+    try {
+      const added = await addAddress(payload);
+      if (data.isDefault) {
+        await setDefaultAddressApi(added.id);
+      }
+      queryClient.invalidateQueries({ queryKey: globalQueryKeys.customerAddresses });
+      closeForm();
+      toast.success("Address saved");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save address";
+      toast.error(message);
+    }
   };
 
   const handleClose = (open: boolean) => {
     if (!open) {
       closeAddressModal();
+    }
+  };
+
+  const handleSetDefault = async (id: string) => {
+    const numId = parseInt(id, 10);
+    if (Number.isNaN(numId)) return;
+    try {
+      await setDefaultAddressApi(numId);
+      queryClient.invalidateQueries({ queryKey: globalQueryKeys.customerAddresses });
+      setDefaultAddress(id);
+      setSelectedAddress(id);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to set default address";
+      toast.error(message);
     }
   };
 
@@ -392,23 +459,22 @@ export function AddressModal() {
                 </DialogClose>
               </DialogHeader>
               <div className="mt-4 space-y-3 max-h-[60vh] overflow-y-auto overflow-x-hidden min-w-0">
-                {addresses.length === 0 ? (
+                {addressesLoading ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <Loader2 className="size-8 animate-spin" aria-hidden />
+                  </div>
+                ) : addressesToShow.length === 0 ? (
                   <p className="text-sm text-muted-foreground py-4 text-center">
                     No addresses yet. Add one to get started.
                   </p>
                 ) : (
-                  addresses.map((addr) => (
+                  addressesToShow.map((addr) => (
                     <AddressCard
                       key={addr.id}
                       address={addr}
                       selected={selectedAddress?.id === addr.id}
-                      onSelect={() => setSelectedAddress(addr.id)}
-                      onEdit={() => openEditForm(addr.id)}
-                      onSetDefault={() => setDefaultAddress(addr.id)}
-                      onDelete={() => {
-                        deleteAddress(addr.id);
-                        toast.success("Address removed");
-                      }}
+                      onSelect={() => handleSetDefault(addr.id)}
+                      onSetDefault={() => handleSetDefault(addr.id)}
                     />
                   ))
                 )}
@@ -432,16 +498,12 @@ function AddressCard({
   address,
   selected,
   onSelect,
-  onEdit,
   onSetDefault,
-  onDelete,
 }: {
   address: Address;
   selected: boolean;
   onSelect: () => void;
-  onEdit: () => void;
   onSetDefault: () => void;
-  onDelete: () => void;
 }) {
   const addressLine = [
     address.address,
@@ -502,25 +564,9 @@ function AddressCard({
                       variant="ghost"
                       size="sm"
                       className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
-                      onClick={onEdit}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
                       onClick={onSetDefault}
                     >
                       Make Default
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={onDelete}
-                    >
-                      Delete
                     </Button>
                   </div>
                 </PopoverContent>

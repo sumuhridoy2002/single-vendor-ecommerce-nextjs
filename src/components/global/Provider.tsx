@@ -8,7 +8,7 @@ import {
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { Toaster } from "@/components/ui/sonner";
-import { SettingsHydrator } from "./SettingsHydrator";
+import { GlobalDataHydrator } from "./GlobalDataHydrator";
 import { useMemo } from "react";
 
 const CACHE_KEY = "GLOBAL_SETTINGS_QUERY_CACHE";
@@ -42,7 +42,7 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
         persistOptions={{ persister }}
       >
         <AuthProvider>
-          <SettingsHydrator />
+          <GlobalDataHydrator />
           {children}
           <Toaster />
         </AuthProvider>

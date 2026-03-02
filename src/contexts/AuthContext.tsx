@@ -1,43 +1,37 @@
 "use client"
 
+import { getBaseUrl } from '@/lib/api/client';
+import { globalQueryKeys } from '@/lib/query-keys';
+import { setAccountSessionCookie, removeAccountSessionCookie } from '@/lib/auth-cookie';
+import { useAddressStore } from '@/store/address-store';
 import { useAccessToken } from '@/hooks/data/useAccessToken';
 import { useRefreshToken } from '@/hooks/data/useRefreshToken';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { createContext, useCallback, useContext } from 'react';
+import React, { createContext, useCallback, useContext, useEffect } from 'react';
 
-// Types
-interface User {
-  id: string;
-  email: string;
+const AUTH_USER_KEY = 'auth_user';
+
+// Types (match backend OTP-verify response data)
+export interface User {
+  id: number;
   name?: string;
-  // Add other user properties as needed
+  phone?: string;
+  avatar?: string;
+  joined_at?: string;
+  email?: string;
+  guest_user?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   isAuthLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  sendOtp: (phone: string) => Promise<void>;
+  verifyOtp: (phone: string, otp: string) => Promise<void>;
+  loginAsGuest: () => Promise<void>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
   refetchUser: () => void;
-}
-
-interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-interface RegisterCredentials {
-  email: string;
-  password: string;
-  name?: string;
-}
-
-interface AuthResponse {
-  user: User;
-  accessToken: string;
-  refreshToken: string;
+  updateUser: (partial: Partial<User>) => void;
 }
 
 // Create context
@@ -49,153 +43,127 @@ const authKeys = {
   user: () => [...authKeys.all, 'user'] as const,
 };
 
+function getStoredUser(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(AUTH_USER_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
+function setStoredUser(user: User | null): void {
+  if (typeof window === 'undefined') return;
+  if (user === null) {
+    localStorage.removeItem(AUTH_USER_KEY);
+  } else {
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  }
+}
+
 // Auth Provider Component
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const queryClient = useQueryClient();
   const { getAccessToken, setAccessToken, removeAccessToken, hasAccessToken } = useAccessToken();
-  const { refreshAccessToken, setRefreshToken, removeRefreshToken } = useRefreshToken();
+  const { removeRefreshToken } = useRefreshToken();
 
-  // API functions using hooks
   const getCurrentUser = useCallback(async (): Promise<User | null> => {
     const accessToken = getAccessToken();
     if (!accessToken) return null;
+    // No backend /me endpoint; use persisted user from localStorage
+    return getStoredUser();
+  }, [getAccessToken]);
 
-    // Replace with your actual API endpoint
-    const response = await fetch('/api/auth/me', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      credentials: 'include',
-    });
-
-    if (response.status === 401) {
-      // Access token expired, try to refresh
-      const refreshed = await refreshAccessToken();
-      if (refreshed) {
-        // Retry with new token
-        const newAccessToken = getAccessToken();
-        if (newAccessToken) {
-          const retryResponse = await fetch('/api/auth/me', {
-            headers: {
-              Authorization: `Bearer ${newAccessToken}`,
-            },
-            credentials: 'include',
-          });
-          if (retryResponse.ok) {
-            return retryResponse.json();
-          }
-        }
-      }
-      // Refresh failed, clear tokens
-      removeAccessToken();
-      removeRefreshToken();
-      return null;
-    }
-
-    if (!response.ok) {
-      removeAccessToken();
-      removeRefreshToken();
-      return null;
-    }
-
-    return response.json();
-  }, [getAccessToken, refreshAccessToken, removeAccessToken, removeRefreshToken]);
-
-  const loginApi = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // Replace with your actual API endpoint
-    const response = await fetch('/api/auth/login', {
+  const sendOtpApi = useCallback(async (phone: string): Promise<void> => {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/customer/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Login failed');
+    const data = await response.json().catch(() => ({}));
+    if (response.status !== 200) {
+      throw new Error((data.message as string) || 'Failed to send OTP');
     }
+  }, []);
 
-    const data = await response.json();
-
-    // Store tokens using hooks
-    if (data.accessToken) {
-      setAccessToken(data.accessToken);
-    }
-    if (data.refreshToken) {
-      setRefreshToken(data.refreshToken);
-    }
-
-    return {
-      user: data.user,
-      accessToken: data.accessToken || data.token || '',
-      refreshToken: data.refreshToken || '',
-    };
-  }, [setAccessToken, setRefreshToken]);
-
-  const registerApi = useCallback(async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-    // Replace with your actual API endpoint
-    const response = await fetch('/api/auth/register', {
+  const verifyOtpApi = useCallback(async (phone: string, otp: string): Promise<User> => {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/customer/otp-verify`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(credentials),
-      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Registration failed');
+    const data = await response.json().catch(() => ({}));
+    if (response.status !== 200 || !data.token || !data.data) {
+      throw new Error((data.message as string) || 'Verification failed');
     }
 
-    const data = await response.json();
-
-    // Store tokens using hooks
-    if (data.accessToken) {
-      setAccessToken(data.accessToken);
-    }
-    if (data.refreshToken) {
-      setRefreshToken(data.refreshToken);
-    }
-
-    return {
-      user: data.user,
-      accessToken: data.accessToken || data.token || '',
-      refreshToken: data.refreshToken || '',
+    const user: User = {
+      id: data.data.id,
+      name: data.data.name,
+      phone: data.data.phone,
+      avatar: data.data.avatar,
+      joined_at: data.data.joined_at,
+      email: data.data.email,
     };
-  }, [setAccessToken, setRefreshToken]);
+
+    setAccessToken(data.token);
+    setStoredUser(user);
+    setAccountSessionCookie();
+    removeRefreshToken();
+
+    return user;
+  }, [setAccessToken, removeRefreshToken]);
+
+  const loginAsGuestApi = useCallback(async (): Promise<User> => {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/customer/login-as-guest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (response.status !== 200 || !data.token || !data.data) {
+      throw new Error((data.message as string) || 'Guest login failed');
+    }
+
+    const user: User = {
+      id: data.data.id,
+      name: data.data.name,
+      avatar: data.data.avatar,
+      joined_at: data.data.joined_at,
+      guest_user: true,
+    };
+
+    setAccessToken(data.token);
+    setStoredUser(user);
+    setAccountSessionCookie();
+    removeRefreshToken();
+
+    return user;
+  }, [setAccessToken, removeRefreshToken]);
 
   const logoutApi = useCallback(async (): Promise<void> => {
-    const accessToken = getAccessToken();
-
-    if (accessToken) {
-      // Optionally call logout endpoint
-      try {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-          credentials: 'include',
-        });
-      } catch (error) {
-        console.error('Logout API error:', error);
-      }
-    }
-
-    // Clear tokens using hooks
     removeAccessToken();
     removeRefreshToken();
-  }, [getAccessToken, removeAccessToken, removeRefreshToken]);
+    removeAccountSessionCookie();
+    setStoredUser(null);
+  }, [removeAccessToken, removeRefreshToken]);
 
-  // Check if token exists to determine if we should fetch user
   const hasToken = hasAccessToken();
 
-  // Query to fetch current user
+  // Sync account_session cookie for middleware when token exists (e.g. after refresh)
+  useEffect(() => {
+    if (hasToken) setAccountSessionCookie();
+  }, [hasToken]);
+
   const {
     data: user,
     isLoading: isAuthLoading,
@@ -204,82 +172,100 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     queryKey: authKeys.user(),
     queryFn: getCurrentUser,
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: hasToken, // Only run if token exists
+    staleTime: 5 * 60 * 1000,
+    enabled: hasToken,
   });
 
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: loginApi,
-    onSuccess: (data) => {
-      queryClient.setQueryData(authKeys.user(), data.user);
-      queryClient.invalidateQueries({ queryKey: authKeys.user() });
-    },
+  const sendOtpMutation = useMutation({
+    mutationFn: sendOtpApi,
     onError: (error) => {
-      console.error('Login error:', error);
+      console.error('Send OTP error:', error);
       throw error;
     },
   });
 
-  // Register mutation
-  const registerMutation = useMutation({
-    mutationFn: registerApi,
-    onSuccess: (data) => {
-      queryClient.setQueryData(authKeys.user(), data.user);
+  const verifyOtpMutation = useMutation({
+    mutationFn: ({ phone, otp }: { phone: string; otp: string }) => verifyOtpApi(phone, otp),
+    onSuccess: (userData) => {
+      queryClient.setQueryData(authKeys.user(), userData);
       queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
     onError: (error) => {
-      console.error('Registration error:', error);
+      console.error('Verify OTP error:', error);
       throw error;
     },
   });
 
-  // Logout mutation
+  const loginAsGuestMutation = useMutation({
+    mutationFn: loginAsGuestApi,
+    onSuccess: (userData) => {
+      queryClient.setQueryData(authKeys.user(), userData);
+      queryClient.invalidateQueries({ queryKey: authKeys.user() });
+    },
+    onError: (error) => {
+      console.error('Login as guest error:', error);
+      throw error;
+    },
+  });
+
   const logoutMutation = useMutation({
     mutationFn: logoutApi,
     onSuccess: () => {
       queryClient.setQueryData(authKeys.user(), null);
       queryClient.removeQueries({ queryKey: authKeys.all });
+      queryClient.removeQueries({ queryKey: globalQueryKeys.customerAddresses });
+      useAddressStore.getState().setAddresses([]);
     },
     onError: (error) => {
       console.error('Logout error:', error);
-      // Still clear local state even if API call fails
       queryClient.setQueryData(authKeys.user(), null);
       queryClient.removeQueries({ queryKey: authKeys.all });
+      queryClient.removeQueries({ queryKey: globalQueryKeys.customerAddresses });
+      useAddressStore.getState().setAddresses([]);
     },
   });
 
-  // Login function
-  const login = async (email: string, password: string) => {
-    await loginMutation.mutateAsync({ email, password });
+  const sendOtp = async (phone: string) => {
+    await sendOtpMutation.mutateAsync(phone);
   };
 
-  // Register function
-  const register = async (email: string, password: string, name?: string) => {
-    await registerMutation.mutateAsync({ email, password, name });
+  const verifyOtp = async (phone: string, otp: string) => {
+    await verifyOtpMutation.mutateAsync({ phone, otp });
   };
 
-  // Logout function
+  const loginAsGuest = async () => {
+    await loginAsGuestMutation.mutateAsync();
+  };
+
   const logout = async () => {
     await logoutMutation.mutateAsync();
   };
+
+  const updateUser = useCallback((partial: Partial<User>) => {
+    const current = getStoredUser();
+    if (!current) return;
+    const merged = { ...current, ...partial };
+    setStoredUser(merged);
+    queryClient.setQueryData(authKeys.user(), merged);
+  }, [queryClient]);
 
   const value: AuthContextType = {
     user: user ?? null,
     isAuthLoading,
     isAuthenticated: !!user,
-    login,
+    sendOtp,
+    verifyOtp,
+    loginAsGuest,
     logout,
-    register,
     refetchUser: () => {
       refetchUser();
     },
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// Hook to use auth context
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -288,5 +274,4 @@ export const useAuth = (): AuthContextType => {
   return context;
 };
 
-// Export default
 export default AuthContext;
