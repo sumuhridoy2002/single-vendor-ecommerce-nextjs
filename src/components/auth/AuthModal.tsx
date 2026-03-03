@@ -10,33 +10,29 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { ChevronRightIcon, X } from "lucide-react";
+import { X } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
 import FacebookIcon from "../icons/FacebookIcon";
 
 const COUNTRY_CODES = [
   { value: "+88", label: "+88 BD" },
-  { value: "+91", label: "+91 IN" },
-  { value: "+92", label: "+92 PK" },
 ];
 
+const OTP_LENGTH = 4;
 
+function buildFullPhone(phone: string): string {
+  const phoneDigits = phone.replace(/\D/g, "").trim();
+  return phoneDigits;
+}
 
 interface AuthModalProps {
   open: boolean;
@@ -44,25 +40,20 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ open, onOpenChange }: AuthModalProps) {
-  const { login } = useAuth();
-  const router = useRouter();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const { sendOtp, verifyOtp, loginAsGuest } = useAuth();
+  const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("+88");
-  const [showReferral, setShowReferral] = useState(false);
-  const [referralCode, setReferralCode] = useState("");
+  const [otp, setOtp] = useState("");
   const [sendLoading, setSendLoading] = useState(false);
-  const [demoEmail, setDemoEmail] = useState("demo@example.com");
-  const [demoPassword, setDemoPassword] = useState("password");
-  const [demoLoading, setDemoLoading] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const fullPhone = buildFullPhone(phone);
 
-  const title = mode === "login" ? "Login" : "Sign up";
-  const subDescription =
-    mode === "login"
-      ? "Login to make an order, access your orders, special offers, health tips, and more!"
-      : "Create an account to place orders, save your addresses, and get exclusive offers.";
+  useEffect(() => {
+    if (open) setStep("phone");
+  }, [open]);
 
-  const handleSend = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone.trim()) {
       toast.error("Please enter your phone number");
@@ -70,57 +61,69 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     }
     setSendLoading(true);
     try {
-      const res = await fetch("/api/auth/otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone: `${countryCode} ${phone.trim()}`,
-          referralCode: referralCode || undefined,
-        }),
-      });
-      if (res.ok) {
-        toast.success("OTP sent to your number");
-      } else {
-        toast.info("OTP feature will be available soon. Use Google or Facebook to sign in.");
-      }
-    } catch {
-      toast.info("OTP feature will be available soon. Use Google or Facebook to sign in.");
+      await sendOtp(fullPhone);
+      toast.success("OTP sent successfully to " + fullPhone);
+      setStep("otp");
+      setOtp("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to send OTP");
     } finally {
       setSendLoading(false);
     }
+  };
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== OTP_LENGTH) {
+      toast.error("Please enter the 4-digit OTP");
+      return;
+    }
+    setVerifyLoading(true);
+    try {
+      await verifyOtp(fullPhone, otp);
+      toast.success("Login successful");
+      onOpenChange(false);
+      setStep("phone");
+      setPhone("");
+      setOtp("");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
+  const handleBackToPhone = () => {
+    setStep("phone");
+    setOtp("");
   };
 
   const handleSocialSignIn = (provider: "google" | "facebook") => {
     signIn(provider, { callbackUrl: typeof window !== "undefined" ? window.location.href : "/" });
   };
 
-  const handleDemoLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!demoEmail.trim()) {
-      toast.error("Please enter email");
-      return;
-    }
-    setDemoLoading(true);
+  const handleLoginAsGuest = async () => {
+    setGuestLoading(true);
     try {
-      await login(demoEmail.trim(), demoPassword || "password");
+      await loginAsGuest();
+      toast.success("Logged in as guest");
       onOpenChange(false);
-      router.push("/account");
-      toast.success("Logged in successfully");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+      toast.error(err instanceof Error ? err.message : "Guest login failed");
     } finally {
-      setDemoLoading(false);
+      setGuestLoading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        closeInOutsideClick={false}
         showCloseButton={false}
         className="max-w-[calc(100%-2rem)] w-full p-0 gap-0 overflow-x-hidden sm:max-w-4xl rounded-xl"
       >
         <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] min-h-[480px]">
-          {/* Left column - Promo (static, no carousel) */}
+          {/* Left column - Promo */}
           <div className="bg-muted/50 flex flex-col items-center justify-center p-8 text-center">
             <div className="w-full max-w-[200px] h-[200px] mx-auto mb-6 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
               <svg
@@ -163,111 +166,93 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </DialogClose>
             <div className="pr-8">
               <DialogHeader className="text-left">
-                <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
+                <DialogTitle className="text-xl font-bold">Login</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-sm mt-1">
-                  {subDescription}
+                  Login to make an order, access your orders, special offers, health tips, and more!
                 </DialogDescription>
               </DialogHeader>
             </div>
 
-            <form onSubmit={handleSend} className="flex flex-col gap-4 mt-6">
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <div className="flex rounded-md border border-input overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
-                  <Select value={countryCode} onValueChange={setCountryCode}>
-                    <SelectTrigger className="w-[100px] shrink-0 border-0 rounded-none focus:ring-0 bg-muted/30 h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRY_CODES.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="Enter number"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="border-0 rounded-none focus-visible:ring-0 flex-1 min-w-0"
-                  />
+            {step === "phone" ? (
+              <form onSubmit={handleSendOtp} className="flex flex-col gap-4 mt-6">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <div className="flex rounded-md border border-input overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2">
+                    <span className="text-center flex justify-center items-center w-[100px] shrink-0 rounded-none focus:ring-0 bg-muted/30 h-9 border-r">
+                      +88 BD
+                    </span>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="Enter number"
+                      value={phone}
+                      maxLength={11}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="border-0 rounded-none focus-visible:ring-0 flex-1 min-w-0 text-base md:text-base"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => setShowReferral(!showReferral)}
-                className="flex items-center gap-1 text-sm text-primary hover:underline underline-offset-2"
-              >
-                Have a referral code?
-                <ChevronRightIcon
-                  className={cn("size-4 transition-transform", showReferral && "rotate-90")}
-                />
-              </button>
-              {showReferral && (
-                <Input
-                  placeholder="Enter referral code"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                  className="h-9"
-                />
-              )}
-
-              <Button
-                type="submit"
-                disabled={sendLoading}
-                className="w-full bg-primary hover:bg-primary-dark text-white h-10"
-              >
-                {sendLoading ? "Sending…" : "Send"}
-              </Button>
-            </form>
-
-            <div className="flex items-center gap-3 my-4">
-              <Separator className="flex-1" />
-              <span className="text-xs text-muted-foreground">or</span>
-              <Separator className="flex-1" />
-            </div>
-
-            <form onSubmit={handleDemoLogin} className="space-y-3">
-              <p className="text-xs text-muted-foreground">Demo login (any email works):</p>
-              <div className="space-y-2">
-                <Label htmlFor="demo-email" className="sr-only">Email</Label>
-                <Input
-                  id="demo-email"
-                  type="email"
-                  placeholder="Email"
-                  value={demoEmail}
-                  onChange={(e) => setDemoEmail(e.target.value)}
-                  className="h-9"
-                />
-                <Label htmlFor="demo-password" className="sr-only">Password</Label>
-                <Input
-                  id="demo-password"
-                  type="password"
-                  placeholder="Password"
-                  value={demoPassword}
-                  onChange={(e) => setDemoPassword(e.target.value)}
-                  className="h-9"
-                />
-              </div>
-              <Button
-                type="submit"
-                variant="secondary"
-                className="w-full h-9"
-                disabled={demoLoading}
-              >
-                {demoLoading ? "Logging in…" : "Demo login & go to Account"}
-              </Button>
-            </form>
+                <Button
+                  type="submit"
+                  disabled={sendLoading}
+                  className="w-full bg-primary hover:bg-primary-dark text-white h-10"
+                >
+                  {sendLoading ? "Sending…" : "Send OTP"}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4 mt-6">
+                <p className="text-sm text-muted-foreground">
+                  Enter the 4-digit code sent to {fullPhone}
+                </p>
+                <div className="space-y-2">
+                  <Label>OTP</Label>
+                  <InputOTP
+                    maxLength={OTP_LENGTH}
+                    value={otp}
+                    onChange={setOtp}
+                    containerClassName="justify-center"
+                  >
+                    <InputOTPGroup className="gap-2">
+                      {Array.from({ length: OTP_LENGTH }).map((_, i) => (
+                        <InputOTPSlot key={i} index={i} />
+                      ))}
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+                <Button
+                  type="submit"
+                  disabled={verifyLoading || otp.length !== OTP_LENGTH}
+                  className="w-full bg-primary hover:bg-primary-dark text-white h-10"
+                >
+                  {verifyLoading ? "Verifying…" : "Verify"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleBackToPhone}
+                  className="text-sm text-muted-foreground hover:text-foreground"
+                >
+                  Change phone number
+                </button>
+              </form>
+            )}
 
             <div className="flex items-center gap-3 my-4">
               <Separator className="flex-1" />
               <span className="text-xs text-muted-foreground">or</span>
               <Separator className="flex-1" />
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full mb-4"
+              onClick={handleLoginAsGuest}
+              disabled={guestLoading}
+            >
+              {guestLoading ? "Signing in…" : "Continue as guest"}
+            </Button>
 
             <div className="flex gap-4 justify-center">
               <Button
@@ -278,7 +263,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                 onClick={() => handleSocialSignIn("google")}
                 aria-label="Sign in with Google"
               >
-                <FcGoogle size="size-5" />
+                <FcGoogle size={24} />
               </Button>
               <Button
                 type="button"
@@ -292,31 +277,6 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               </Button>
             </div>
 
-            <p className="text-sm text-muted-foreground mt-4 text-center">
-              {mode === "login" ? (
-                <>
-                  Don&apos;t have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("signup")}
-                    className="text-primary font-medium hover:underline underline-offset-2"
-                  >
-                    Sign up
-                  </button>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <button
-                    type="button"
-                    onClick={() => setMode("login")}
-                    className="text-primary font-medium hover:underline underline-offset-2"
-                  >
-                    Log in
-                  </button>
-                </>
-              )}
-            </p>
             <p className="text-xs text-muted-foreground mt-2 text-center">
               By continuing you agree to{" "}
               <Link href="#" className="text-primary hover:underline underline-offset-2">

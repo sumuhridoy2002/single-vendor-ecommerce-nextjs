@@ -1,45 +1,32 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useState } from "react"
-import { fetchCategories } from "@/lib/api/categories"
-import { useCategoriesStore } from "@/stores/categories-store"
-import type { CategoryApiNode } from "@/types/category"
+import { fetchCategories } from "@/lib/api/categories";
+import { globalQueryKeys } from "@/lib/query-keys";
+import { useCategoriesStore } from "@/stores/categories-store";
+import type { CategoryApiNode } from "@/types/category";
+import { useQuery } from "@tanstack/react-query";
 
 export function useCategories(): {
-  categories: CategoryApiNode[]
-  isLoading: boolean
-  error: Error | null
-  refetch: () => Promise<void>
+  categories: CategoryApiNode[];
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<unknown>;
 } {
-  const { categories: raw } = useCategoriesStore()
-  const [isLoading, setIsLoading] = useState(raw == null)
-  const [error, setError] = useState<Error | null>(null)
+  const { categories: raw } = useCategoriesStore();
 
-  const fetch = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await fetchCategories()
-      useCategoriesStore.getState().setCategories(data)
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data: queryData, refetch, isLoading, error } = useQuery({
+    queryKey: globalQueryKeys.categories,
+    queryFn: fetchCategories,
+    enabled: false,
+  });
 
-  useEffect(() => {
-    if (raw != null) {
-      setIsLoading(false)
-      return
-    }
-    fetch()
-  }, [raw, fetch])
+  // Use store first, then query cache (e.g. after rehydration) so we don't show loading when we have cached data
+  const categories = raw ?? queryData ?? [];
 
   return {
-    categories: raw ?? [],
+    categories,
     isLoading,
-    error,
-    refetch: fetch,
-  }
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    refetch,
+  };
 }

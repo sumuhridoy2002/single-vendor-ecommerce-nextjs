@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { addToSearchHistory, clearSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { useAddressStore } from "@/store/address-store";
+import { useAuthModalStore } from "@/store/auth-modal-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -20,7 +21,9 @@ import { NavbarSearch } from "./NavbarSearch";
 
 const Navbar = () => {
   const { isAuthenticated, user } = useAuth();
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const authModalOpen = useAuthModalStore((s) => s.open);
+  const setAuthModalOpen = useAuthModalStore((s) => s.setOpen);
+  const openAuthModal = useAuthModalStore((s) => s.openAuthModal);
   const [searchValue, setSearchValue] = useState("");
   const [searchCategory, setSearchCategory] = useState("all");
   const [showRecentSearches, setShowRecentSearches] = useState(false);
@@ -113,7 +116,7 @@ const Navbar = () => {
         <NavbarDesktopActions
           isAuthenticated={isAuthenticated}
           user={user}
-          onOpenAuthModal={() => setAuthModalOpen(true)}
+          onOpenAuthModal={openAuthModal}
         />
       </div>
 

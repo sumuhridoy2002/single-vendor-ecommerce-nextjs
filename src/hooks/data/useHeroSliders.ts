@@ -1,45 +1,32 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useState } from "react"
-import { fetchHeroSliders } from "@/lib/api/hero-sliders"
-import { useHeroSlidersStore } from "@/stores/hero-sliders-store"
-import type { HeroSliderItem } from "@/types/hero-slider"
+import { fetchHeroSliders } from "@/lib/api/hero-sliders";
+import { globalQueryKeys } from "@/lib/query-keys";
+import { useHeroSlidersStore } from "@/stores/hero-sliders-store";
+import type { HeroSliderItem } from "@/types/hero-slider";
+import { useQuery } from "@tanstack/react-query";
 
 export function useHeroSliders(): {
-  heroSliders: HeroSliderItem[]
-  isLoading: boolean
-  error: Error | null
-  refetch: () => Promise<void>
+  heroSliders: HeroSliderItem[];
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<unknown>;
 } {
-  const { heroSliders: raw } = useHeroSlidersStore()
-  const [isLoading, setIsLoading] = useState(raw == null)
-  const [error, setError] = useState<Error | null>(null)
+  const { heroSliders: raw } = useHeroSlidersStore();
 
-  const fetch = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const data = await fetchHeroSliders()
-      useHeroSlidersStore.getState().setHeroSliders(data)
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error(String(e)))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const { data: queryData, refetch, isLoading, error } = useQuery({
+    queryKey: globalQueryKeys.sliders,
+    queryFn: fetchHeroSliders,
+    enabled: false,
+  });
 
-  useEffect(() => {
-    if (raw != null) {
-      setIsLoading(false)
-      return
-    }
-    fetch()
-  }, [raw, fetch])
+  // Use store first, then query cache (e.g. after rehydration) so we don't show loading when we have cached data
+  const heroSliders = raw ?? queryData ?? [];
 
   return {
-    heroSliders: raw ?? [],
+    heroSliders,
     isLoading,
-    error,
-    refetch: fetch,
-  }
+    error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+    refetch,
+  };
 }
