@@ -19,6 +19,7 @@ export interface Product {
   longDescription?: string
   images?: string[]
   brand?: string
+  brandId?: string
   brandHref?: string
   inStock?: boolean
   deliveryText?: string

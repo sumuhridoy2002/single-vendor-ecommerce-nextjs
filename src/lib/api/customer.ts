@@ -165,6 +165,51 @@ export async function addAddress(payload: CreateAddressPayload): Promise<Address
   return data.data as Address;
 }
 
+export async function updateAddress(
+  addressId: number,
+  payload: CreateAddressPayload
+): Promise<Address> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Please log in again");
+  }
+
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/customer/addresses/${addressId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error((data.message as string) || "Failed to update address");
+  }
+
+  return data.data as Address;
+}
+
+export async function deleteAddressApi(addressId: number): Promise<void> {
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("Please log in again");
+  }
+
+  const baseUrl = getBaseUrl();
+  const response = await fetch(`${baseUrl}/customer/addresses/${addressId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error((data.message as string) || "Failed to delete address");
+  }
+}
+
 export async function setDefaultAddress(addressId: number): Promise<void> {
   const token = getAccessToken();
   if (!token) {

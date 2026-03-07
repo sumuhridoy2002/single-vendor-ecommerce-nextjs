@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -19,18 +18,8 @@ const PRICE_PRESETS = [
   { label: "Over ৳2000", min: 2000, max: undefined },
 ] as const;
 
-const DISCOUNT_BUCKETS = [10, 20, 30, 40, 50] as const;
-
 /** Max height for each filter section's scrollable list */
 const SECTION_SCROLL_HEIGHT = "max-h-[200px]";
-
-function formatPrice(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "BDT",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
 
 export interface SearchFiltersSidebarProps {
   /** Current search result set (before applying filters) — used to compute dynamic options */
@@ -51,10 +40,10 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
     [tree]
   );
 
-  const priceMin = searchParams.get("priceMin");
-  const priceMax = searchParams.get("priceMax");
-  const discount = searchParams.get("discount");
-  const categories = searchParams.getAll("category");
+  const priceMin = searchParams.get("min_price");
+  const priceMax = searchParams.get("max_price");
+  const categoryId = searchParams.get("category_id");
+  const brandId = searchParams.get("brand_id");
 
   const sectionScrollHeight = embedded ? "max-h-[160px]" : SECTION_SCROLL_HEIGHT;
 
@@ -67,27 +56,40 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
     };
   }, [searchResultSet]);
 
-  const discountCounts = useMemo(() => {
-    const counts: Record<number, number> = {};
-    for (const pct of DISCOUNT_BUCKETS) {
-      counts[pct] = searchResultSet.filter(
-        (p) => (p.discountPercent ?? 0) >= pct
-      ).length;
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of searchResultSet) {
+      if (p.categoryId) counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
     }
     return counts;
   }, [searchResultSet]);
 
-  const categoryCounts = useMemo(() => {
+  const brandCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const p of searchResultSet) {
-      counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
+      const id = p.brandId ?? p.brand ?? "";
+      if (id) counts[id] = (counts[id] ?? 0) + 1;
     }
     return counts;
+  }, [searchResultSet]);
+
+  const brandIdToName = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const p of searchResultSet) {
+      const id = p.brandId ?? p.brand ?? "";
+      if (id && p.brand) map[id] = p.brand;
+    }
+    return map;
   }, [searchResultSet]);
 
   const categoryIds = useMemo(
     () => Object.keys(categoryCounts).sort((a, b) => (categoryIdToTitle[a] ?? a).localeCompare(categoryIdToTitle[b] ?? b)),
     [categoryCounts, categoryIdToTitle]
+  );
+
+  const brandIds = useMemo(
+    () => Object.keys(brandCounts).sort((a, b) => (brandIdToName[a] ?? a).localeCompare(brandIdToName[b] ?? b)),
+    [brandCounts, brandIdToName]
   );
 
   const updateParams = useCallback(
@@ -109,37 +111,34 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
 
   const clearFilters = useCallback(() => {
     const next = new URLSearchParams(searchParams.toString());
-    next.delete("priceMin");
-    next.delete("priceMax");
-    next.delete("discount");
-    next.delete("category");
+    next.delete("min_price");
+    next.delete("max_price");
+    next.delete("category_id");
+    next.delete("brand_id");
     router.push(`${basePath}?${next.toString()}`, { scroll: false });
   }, [router, searchParams, basePath]);
 
   const setPricePreset = (min: number | undefined, max: number | undefined) => {
     updateParams({
-      priceMin: min != null ? String(min) : null,
-      priceMax: max != null ? String(max) : null,
+      min_price: min != null ? String(min) : null,
+      max_price: max != null ? String(max) : null,
     });
   };
 
-  const setCustomPrice = (field: "priceMin" | "priceMax", value: string) => {
+  const setCustomPrice = (field: "min_price" | "max_price", value: string) => {
     const num = value.trim() === "" ? null : value;
     updateParams({ [field]: num });
   };
 
-  const setDiscount = (pct: number | null) => {
-    updateParams({ discount: pct != null ? String(pct) : null });
+  const setCategoryId = (id: string | null) => {
+    updateParams({ category_id: id });
   };
 
-  const toggleCategory = (categoryId: string) => {
-    const next = categories.includes(categoryId)
-      ? categories.filter((c) => c !== categoryId)
-      : [...categories, categoryId];
-    updateParams({ category: next.length ? next : null });
+  const setBrandId = (id: string | null) => {
+    updateParams({ brand_id: id });
   };
 
-  const hasAnyFilter = priceMin || priceMax || discount || categories.length > 0;
+  const hasAnyFilter = priceMin || priceMax || categoryId || brandId;
 
   return (
     <aside className={className}>
@@ -200,7 +199,7 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
                   placeholder="Min"
                   className="h-9"
                   value={priceMin ?? ""}
-                  onChange={(e) => setCustomPrice("priceMin", e.target.value)}
+                  onChange={(e) => setCustomPrice("min_price", e.target.value)}
                 />
                 <span className="text-muted-foreground">-</span>
                 <Input
@@ -209,101 +208,94 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
                   placeholder="Max"
                   className="h-9"
                   value={priceMax ?? ""}
-                  onChange={(e) => setCustomPrice("priceMax", e.target.value)}
+                  onChange={(e) => setCustomPrice("max_price", e.target.value)}
                 />
               </div>
             </div>
           </ScrollArea>
         </div>
 
-        {/* Discount */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-medium text-foreground">Discount</Label>
-            {discount && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-auto py-0 text-xs"
-                onClick={() => setDiscount(null)}
-              >
-                Clear
-              </Button>
-            )}
-          </div>
-          <ScrollArea className={cn(sectionScrollHeight, "overflow-y-auto scrollbar-filter")}>
-            <div className="pr-2">
-              <RadioGroup
-                value={discount ?? "none"}
-                onValueChange={(v) => setDiscount(v === "none" ? null : Number(v))}
-                className="space-y-2"
-              >
-                {DISCOUNT_BUCKETS.map((pct) => {
-                  const count = discountCounts[pct] ?? 0;
-                  const disabled = count === 0;
-                  return (
-                    <div key={pct} className="flex items-center gap-2">
-                      <RadioGroupItem
-                        value={String(pct)}
-                        id={`discount-${pct}`}
-                        disabled={disabled}
-                      />
-                      <Label
-                        htmlFor={`discount-${pct}`}
-                        className={disabled ? "text-muted-foreground" : ""}
-                      >
-                        {pct}% and above
-                        {count > 0 && (
-                          <span className="ml-1 text-muted-foreground">({count})</span>
-                        )}
-                      </Label>
-                    </div>
-                  );
-                })}
-              </RadioGroup>
-            </div>
-          </ScrollArea>
-        </div>
-
-        {/* Category */}
+        {/* Category (single: category_id for API) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-foreground">Category</Label>
-            {categories.length > 0 && (
+            {categoryId && (
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-auto py-0 text-xs text-destructive hover:text-destructive"
-                onClick={() => updateParams({ category: null })}
+                onClick={() => setCategoryId(null)}
               >
                 Clear
               </Button>
             )}
           </div>
           <ScrollArea className={cn(sectionScrollHeight, "overflow-y-auto scrollbar-filter")}>
-            <div className="space-y-2 pr-2">
+            <RadioGroup
+              value={categoryId ?? ""}
+              onValueChange={(v) => setCategoryId(v || null)}
+              className="space-y-2 pr-2"
+            >
               {categoryIds.map((id) => {
                 const title = categoryIdToTitle[id] ?? id;
                 const count = categoryCounts[id] ?? 0;
                 return (
                   <div key={id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`cat-${id}`}
-                      checked={categories.includes(id)}
-                      onCheckedChange={() => toggleCategory(id)}
-                    />
+                    <RadioGroupItem value={id} id={`cat-${id}`} />
                     <Label
                       htmlFor={`cat-${id}`}
-                      className="cursor-pointer text-sm font-normal capitalize"
+                      className="cursor-pointer text-sm font-normal capitalize flex-1"
                     >
                       {title} ({count})
                     </Label>
                   </div>
                 );
               })}
-            </div>
+            </RadioGroup>
           </ScrollArea>
         </div>
+
+        {/* Brand (single: brand_id for API) */}
+        {brandIds.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-foreground">Brand</Label>
+              {brandId && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto py-0 text-xs text-destructive hover:text-destructive"
+                  onClick={() => setBrandId(null)}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            <ScrollArea className={cn(sectionScrollHeight, "overflow-y-auto scrollbar-filter")}>
+              <RadioGroup
+                value={brandId ?? ""}
+                onValueChange={(v) => setBrandId(v || null)}
+                className="space-y-2 pr-2"
+              >
+                {brandIds.map((id) => {
+                  const name = brandIdToName[id] ?? id;
+                  const count = brandCounts[id] ?? 0;
+                  return (
+                    <div key={id} className="flex items-center gap-2">
+                      <RadioGroupItem value={id} id={`brand-${id}`} />
+                      <Label
+                        htmlFor={`brand-${id}`}
+                        className="cursor-pointer text-sm font-normal capitalize flex-1"
+                      >
+                        {name} ({count})
+                      </Label>
+                    </div>
+                  );
+                })}
+              </RadioGroup>
+            </ScrollArea>
+          </div>
+        )}
       </div>
     </aside>
   );

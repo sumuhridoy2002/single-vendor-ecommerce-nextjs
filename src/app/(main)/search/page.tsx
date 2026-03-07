@@ -16,109 +16,43 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { getCategoryIdsForMain, useCategoryTree } from "@/hooks/data/useCategoryTree";
-import { useProducts } from "@/hooks/data/useProducts";
+import { useSearchProducts } from "@/hooks/data/useSearchProducts";
 import { useCartStore } from "@/store/cart-store";
 import type { Product } from "@/types/product";
+import type { ProductsSortParam } from "@/lib/api/products";
 import { Filter } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useState } from "react";
 
-const SORT_OPTIONS = [
-  { value: "relevance", label: "Relevance" },
-  { value: "popularity", label: "Popularity" },
-  { value: "price-asc", label: "Price: Low to High" },
-  { value: "price-desc", label: "Price: High to Low" },
-  { value: "discount-desc", label: "Discount: High to Low" },
-  { value: "discount-asc", label: "Discount: Low to High" },
-  { value: "name-asc", label: "Name (A to Z)" },
-] as const;
-
-function filterByQuery(products: Product[], q: string): Product[] {
-  const term = q.trim().toLowerCase();
-  if (!term) return products;
-  return products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(term) || p.slug.toLowerCase().includes(term)
-  );
-}
-
-function filterByScope(products: Product[], categorySlug: string | null, tree: ReturnType<typeof useCategoryTree>): Product[] {
-  if (!categorySlug) return products;
-  const main = tree.find((c) => c.slug === categorySlug);
-  if (!main) return products;
-  const ids = getCategoryIdsForMain(main);
-  return products.filter((p) => ids.includes(p.categoryId));
-}
-
-function filterByPrice(products: Product[], priceMin: number | null, priceMax: number | null): Product[] {
-  return products.filter((p) => {
-    if (priceMin != null && p.price < priceMin) return false;
-    if (priceMax != null && p.price > priceMax) return false;
-    return true;
-  });
-}
-
-function filterByDiscount(products: Product[], discountMin: number | null): Product[] {
-  if (discountMin == null) return products;
-  return products.filter((p) => (p.discountPercent ?? 0) >= discountMin);
-}
-
-function filterByCategories(products: Product[], categoryIds: string[]): Product[] {
-  if (categoryIds.length === 0) return products;
-  return products.filter((p) => categoryIds.includes(p.categoryId));
-}
-
-function sortProducts(products: Product[], sort: string): Product[] {
-  const list = [...products];
-  switch (sort) {
-    case "price-asc":
-      return list.sort((a, b) => a.price - b.price);
-    case "price-desc":
-      return list.sort((a, b) => b.price - a.price);
-    case "discount-desc":
-      return list.sort((a, b) => (b.discountPercent ?? 0) - (a.discountPercent ?? 0));
-    case "discount-asc":
-      return list.sort((a, b) => (a.discountPercent ?? 0) - (b.discountPercent ?? 0));
-    case "name-asc":
-      return list.sort((a, b) => a.name.localeCompare(b.name));
-    case "popularity":
-      return list.sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0));
-    case "relevance":
-    default:
-      return list;
-  }
-}
+const SORT_OPTIONS: { value: ProductsSortParam; label: string }[] = [
+  { value: "latest", label: "Latest" },
+  { value: "popular", label: "Popular" },
+  { value: "price_low", label: "Price: Low to High" },
+  { value: "price_high", label: "Price: High to Low" },
+];
 
 function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const tree = useCategoryTree();
-  const allProducts = useProducts();
 
   const q = searchParams.get("q") ?? "";
-  const scope = searchParams.get("scope");
-  const priceMinParam = searchParams.get("priceMin");
-  const priceMaxParam = searchParams.get("priceMax");
-  const discountParam = searchParams.get("discount");
-  const categoryFilterIds = searchParams.getAll("category");
-  const sortParam = searchParams.get("sort") ?? "relevance";
+  const categoryId = searchParams.get("category_id") ?? undefined;
+  const brandId = searchParams.get("brand_id") ?? undefined;
+  const minPriceParam = searchParams.get("min_price");
+  const maxPriceParam = searchParams.get("max_price");
+  const sortParam = (searchParams.get("sort") as ProductsSortParam) ?? "latest";
 
-  const searchResultSet = useMemo(() => {
-    let result = filterByQuery(allProducts, q);
-    result = filterByScope(result, scope, tree);
-    return result;
-  }, [allProducts, q, scope, tree]);
+  const minPrice = minPriceParam != null && minPriceParam !== "" ? Number(minPriceParam) : null;
+  const maxPrice = maxPriceParam != null && maxPriceParam !== "" ? Number(maxPriceParam) : null;
 
-  const filteredProducts = useMemo(() => {
-    const priceMin = priceMinParam != null && priceMinParam !== "" ? Number(priceMinParam) : null;
-    const priceMax = priceMaxParam != null && priceMaxParam !== "" ? Number(priceMaxParam) : null;
-    const discountMin = discountParam != null && discountParam !== "" ? Number(discountParam) : null;
-    let result = filterByPrice(searchResultSet, priceMin, priceMax);
-    result = filterByDiscount(result, discountMin);
-    result = filterByCategories(result, categoryFilterIds);
-    return sortProducts(result, sortParam);
-  }, [searchResultSet, priceMinParam, priceMaxParam, discountParam, categoryFilterIds, sortParam]);
+  const { products, isLoading, error } = useSearchProducts({
+    search: q || undefined,
+    category_id: categoryId,
+    brand_id: brandId,
+    min_price: minPrice ?? undefined,
+    max_price: maxPrice ?? undefined,
+    sort: sortParam,
+  });
 
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
@@ -135,10 +69,20 @@ function SearchPageContent() {
 
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
-  if (!q.trim()) {
+  const hasQueryOrFilters = q.trim() || categoryId || brandId || minPrice != null || maxPrice != null;
+
+  if (!hasQueryOrFilters) {
     return (
       <div className="container py-12 text-center text-muted-foreground">
-        <p>Enter a search term to see results.</p>
+        <p>Enter a search term or use filters to see results.</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container py-12 text-center text-destructive">
+        <p>Failed to load results. Please try again.</p>
       </div>
     );
   }
@@ -146,13 +90,19 @@ function SearchPageContent() {
   return (
     <div className="container w-full min-w-full flex gap-6">
       <div className="hidden w-56 shrink-0 lg:block">
-        <SearchFiltersSidebar searchResultSet={searchResultSet} />
+        <SearchFiltersSidebar searchResultSet={products} basePath="/search" />
       </div>
       <div className="min-w-0 flex-1 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            Showing all results for <strong className="text-foreground">{q}</strong>{" "}
-            ({filteredProducts.length}+ items)
+            {q.trim() ? (
+              <>
+                Showing results for <strong className="text-foreground">{q}</strong>
+              </>
+            ) : (
+              "Showing results"
+            )}{" "}
+            ({isLoading ? "..." : products.length} items)
           </p>
           <div className="flex items-center gap-4">
             <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
@@ -170,7 +120,7 @@ function SearchPageContent() {
               <SheetContent side="left" className="w-[min(20rem,100vw-2rem)] py-4 flex flex-col">
                 <SheetTitle className="sr-only">Filters</SheetTitle>
                 <div className="flex-1 overflow-hidden flex flex-col min-h-0 px-4">
-                  <SearchFiltersSidebar searchResultSet={searchResultSet} embedded className="flex flex-col flex-1 min-h-0 border-0" />
+                  <SearchFiltersSidebar searchResultSet={products} embedded className="flex flex-col flex-1 min-h-0 border-0" basePath="/search" />
                 </div>
               </SheetContent>
             </Sheet>
@@ -191,13 +141,15 @@ function SearchPageContent() {
             </div>
           </div>
         </div>
-        {filteredProducts.length === 0 ? (
+        {isLoading ? (
+          <p className="py-12 text-center text-muted-foreground">Loading...</p>
+        ) : products.length === 0 ? (
           <p className="py-12 text-center text-muted-foreground">
             No products match your filters. Try adjusting the filters or search term.
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}

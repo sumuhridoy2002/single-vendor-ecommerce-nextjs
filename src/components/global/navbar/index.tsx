@@ -69,7 +69,12 @@ const Navbar = () => {
 
   const handleSearchFocus = () => {
     refreshHistory();
-    setShowRecentSearches(getSearchHistory().length > 0);
+    setShowRecentSearches(true);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    if (value.trim().length > 0) setShowRecentSearches(true);
   };
 
   return (
@@ -98,7 +103,7 @@ const Navbar = () => {
         <div className="hidden min-w-0 flex-1 md:block max-w-5xl m-auto">
           <NavbarSearch
             searchValue={searchValue}
-            setSearchValue={setSearchValue}
+            setSearchValue={handleSearchChange}
             searchCategory={searchCategory}
             setSearchCategory={setSearchCategory}
             showRecentSearches={showRecentSearches}
@@ -123,7 +128,7 @@ const Navbar = () => {
       {/* Row 2 (mobile only): Full-width search with recent searches popover */}
       <NavbarSearch
         searchValue={searchValue}
-        setSearchValue={setSearchValue}
+        setSearchValue={handleSearchChange}
         searchCategory={searchCategory}
         setSearchCategory={setSearchCategory}
         showRecentSearches={showRecentSearches}

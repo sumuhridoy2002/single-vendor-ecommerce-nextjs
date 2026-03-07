@@ -96,3 +96,26 @@ export interface RelatedProductsApiResponse {
   status: number
   message: string
 }
+
+/** Product list item as returned by GET /products (search/filter). */
+export interface ProductListItemApi {
+  id: number
+  title: string
+  slug: string
+  base_price: number
+  final_price: number
+  reviews_count: number
+  thumbnail: string
+  gallery?: string[]
+  short_description?: string
+  is_in_stock: boolean
+  flash_sale: ProductDetailsFlashSaleApi
+  category?: { id: number; name?: string; slug?: string } | null
+  brand?: { id: number; name: string; slug: string } | null
+}
+
+export interface ProductsListApiResponse {
+  data: ProductListItemApi[]
+  status: number
+  message: string
+}
