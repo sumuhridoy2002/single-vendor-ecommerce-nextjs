@@ -1,4 +1,4 @@
-import type { Product } from "@/types/product"
+import type { Product, ProductReview } from "@/types/product"
 import type {
   ProductDetailsApi,
   ProductDetailsApiResponse,
@@ -7,8 +7,23 @@ import type {
   ProductsPaginatedResponse,
   RelatedProductItemApi,
   RelatedProductsApiResponse,
+  SubmitReviewApiResponse,
+  SubmitReviewRequestBody,
 } from "@/types/product-details"
 import { getBaseUrl } from "./client"
+
+const TOKEN_KEY = "access_token"
+
+function getAccessToken(): string | null {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+function getAuthHeaders(): Record<string, string> {
+  const token = getAccessToken()
+  if (!token) return {}
+  return { Authorization: `Bearer ${token}` }
+}
 
 /** Map a product API object (full or related) to app Product type. */
 function mapProductApiToProduct(api: {
@@ -78,7 +93,17 @@ export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
           image: v.image,
         }))
       : undefined
-  return { ...base, variations }
+  const recentReviews: ProductReview[] = Array.isArray(api.recent_reviews)
+    ? api.recent_reviews.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        user_name: r.user_name,
+        user_avatar: r.user_avatar,
+        created_at: r.created_at,
+      }))
+    : []
+  return { ...base, variations, recentReviews }
 }
 
 export async function fetchProductBySlug(
@@ -229,4 +254,27 @@ export async function fetchProductsByCategoryPaginated(
     meta: json.meta,
     links: json.links,
   }
+}
+
+/** Submit a review for a product. POST /products/{id}/review */
+export async function submitProductReview(
+  productId: string | number,
+  body: SubmitReviewRequestBody
+): Promise<SubmitReviewApiResponse> {
+  const baseUrl = getBaseUrl()
+  const res = await fetch(`${baseUrl}/products/${productId}/review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(body),
+  })
+
+  const json = (await res.json()) as SubmitReviewApiResponse & { message?: string }
+  if (!res.ok) {
+    throw new Error(json.message ?? `Submit review failed: ${res.status}`)
+  }
+  return json
 }

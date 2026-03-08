@@ -1,3 +1,26 @@
+/** Single review as returned in product details recent_reviews or submit response. */
+export interface ProductReviewApi {
+  id: number
+  rating: number
+  comment: string
+  user_name: string
+  user_avatar: string | null
+  created_at: string
+}
+
+/** Request body for POST /products/{id}/review */
+export interface SubmitReviewRequestBody {
+  rating: number
+  comment: string
+}
+
+/** Response from POST /products/{id}/review */
+export interface SubmitReviewApiResponse {
+  data: ProductReviewApi
+  status: number
+  message: string
+}
+
 /** Meta block for product/category/brand SEO. */
 export interface ProductDetailsMetaApi {
   title: string
@@ -66,7 +89,7 @@ export interface ProductDetailsApi {
   variations: ProductVariationApi[]
   flash_sale: ProductDetailsFlashSaleApi
   status: boolean
-  recent_reviews: unknown[]
+  recent_reviews: ProductReviewApi[]
   meta: ProductDetailsMetaApi
 }
 

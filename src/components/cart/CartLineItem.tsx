@@ -10,7 +10,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 
 const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png";
@@ -76,7 +75,7 @@ function CartLineItem({ item }: { item: CartItemType }) {
     <div className="flex gap-3 rounded-lg border bg-card p-3">
       <Link
         href={`/product/${product.slug}`}
-        className="relative size-16 shrink-0 overflow-hidden rounded-md bg-muted"
+        className="relative size-16 shrink-0 overflow-hidden rounded-md"
       >
         <Image
           src={imageSrc}
@@ -85,14 +84,6 @@ function CartLineItem({ item }: { item: CartItemType }) {
           className="object-cover"
           onError={() => setImageError(true)}
         />
-        {discountLabel && (
-          <Badge
-            variant="destructive"
-            className="absolute left-0 top-0 rounded-br-none rounded-tl-none text-[10px]"
-          >
-            {discountLabel}
-          </Badge>
-        )}
       </Link>
       <div className="min-w-0 flex-1">
         <Link

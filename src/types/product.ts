@@ -1,5 +1,15 @@
 export type ProductBadge = "new" | "sale" | "bestseller"
 
+/** Single review (mapped from API recent_reviews / submit response). */
+export interface ProductReview {
+  id: number
+  rating: number
+  comment: string
+  user_name: string
+  user_avatar: string | null
+  created_at: string
+}
+
 export interface Product {
   id: string
   name: string
@@ -11,6 +21,8 @@ export interface Product {
   badge?: ProductBadge
   rating?: number
   reviewCount?: number
+  /** Recent reviews from product details (recent_reviews). */
+  recentReviews?: ProductReview[]
   unit?: string
   categoryId: string
   description?: string

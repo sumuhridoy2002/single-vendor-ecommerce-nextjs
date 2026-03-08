@@ -136,14 +136,35 @@ export function ProductInfo({
       : null)
   const inStock = product.inStock ?? true
 
+  async function handleShare() {
+    const url = typeof window !== "undefined" ? window.location.href : ""
+    const shareData: ShareData = {
+      title: product.name,
+      text: `Check out ${product.name}`,
+      url,
+    }
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          await copyToClipboard(url)
+        }
+      }
+    } else {
+      await copyToClipboard(url)
+    }
+  }
+
+  async function copyToClipboard(text: string) {
+    if (typeof navigator?.clipboard?.writeText === "function") {
+      await navigator.clipboard.writeText(text)
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-5", className)}>
       <div>
-        {product.badge === "sale" && (
-          <Badge variant="destructive" className="mb-2">
-            {discountPercent != null ? `${discountPercent}% OFF` : "Sale"}
-          </Badge>
-        )}
         <h1 className="text-xl font-semibold leading-tight text-foreground md:text-2xl">
           {product.name}
         </h1>
@@ -184,7 +205,7 @@ export function ProductInfo({
               {formatPrice(product.originalPrice)}
             </span>
             {discountPercent != null && (
-              <Badge variant="secondary">{discountPercent}% OFF</Badge>
+              <Badge variant="destructive">{discountPercent}% OFF</Badge>
             )}
           </>
         )}
@@ -275,7 +296,7 @@ export function ProductInfo({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col flex-wrap gap-2 sm:flex-row">
         <Button
           className="flex-1 gap-2 bg-primary hover:bg-primary-dark"
           onClick={() =>
@@ -311,7 +332,13 @@ export function ProductInfo({
       <div className="flex items-center gap-4 border-t pt-4">
         <span className="text-sm text-muted-foreground">Share:</span>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" className="size-8" aria-label="Share">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            aria-label="Share"
+            onClick={handleShare}
+          >
             <Share2 className="size-4" />
           </Button>
         </div>

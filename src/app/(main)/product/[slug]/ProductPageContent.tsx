@@ -36,7 +36,7 @@ export function ProductPageContent({
   slug,
   initialProduct,
 }: ProductPageContentProps) {
-  const { product, isLoading, error } = useProductDetails(slug, initialProduct)
+  const { product, isLoading, error, refetch } = useProductDetails(slug, initialProduct)
   const { products: relatedProducts } = useRelatedProducts(product?.id)
   const tree = useCategoryTree()
   const addItem = useCartStore((s) => s.addItem)
@@ -75,7 +75,7 @@ export function ProductPageContent({
   const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
 
   return (
-    <div className="container space-y-8 py-6">
+    <div className="container space-y-8 min-w-full">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -100,7 +100,7 @@ export function ProductPageContent({
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4 lg:gap-8 xl:gap-32">
         <ProductGallery product={product} />
         <ProductInfo product={product} onAddToCart={handleAddToCart} />
       </div>
@@ -109,7 +109,7 @@ export function ProductPageContent({
         <ProductTabs product={product} />
       </section>
 
-      <RatingReviews product={product} />
+      <RatingReviews product={product} onReviewSubmitted={refetch} />
 
       <div className="space-y-0">
         {relatedProducts.length > 0 && (
