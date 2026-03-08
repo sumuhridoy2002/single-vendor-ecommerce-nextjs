@@ -26,11 +26,13 @@ import {
 } from "@/components/ui/sheet";
 import { useProducts } from "@/hooks/data/useProducts";
 import { useCartStore } from "@/store/cart-store";
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
 import type { Product } from "@/types/product";
 import { Filter } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 const SORT_OPTIONS = [
   { value: "relevance", label: "Relevance" },
@@ -140,9 +142,13 @@ function FlashSalePageContent() {
 
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
+  const whenLoggedIn = useWhenLoggedIn();
   const handleAddToCart = (product: Product) => {
-    addItem(product);
-    openCart();
+    whenLoggedIn(() => {
+      addItem(product)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"));
+    });
   };
 
   const setSort = (value: string) => {

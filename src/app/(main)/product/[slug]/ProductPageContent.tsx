@@ -20,10 +20,12 @@ import {
 } from "@/hooks/data/useCategoryTree"
 import { useProductDetails } from "@/hooks/data/useProductDetails"
 import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { toast } from "sonner"
 
 export interface ProductPageContentProps {
   slug: string
@@ -39,9 +41,17 @@ export function ProductPageContent({
   const tree = useCategoryTree()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
-  const handleAddToCart = (p: Product) => {
-    addItem(p)
-    openCart()
+  const whenLoggedIn = useWhenLoggedIn()
+  const handleAddToCart = (
+    p: Product,
+    quantity = 1,
+    options?: { variationId?: number }
+  ) => {
+    whenLoggedIn(() => {
+      addItem(p, quantity, options)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+    })
   }
 
   if (error) notFound()

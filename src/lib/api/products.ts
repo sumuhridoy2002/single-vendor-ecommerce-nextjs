@@ -68,7 +68,17 @@ function mapProductApiToProduct(api: {
 
 /** Map /products/{id} API response to app Product type. */
 export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
-  return mapProductApiToProduct(api)
+  const base = mapProductApiToProduct(api)
+  const variations =
+    api.variations?.length > 0
+      ? api.variations.map((v) => ({
+          id: v.id,
+          type: v.type,
+          value: v.value,
+          image: v.image,
+        }))
+      : undefined
+  return { ...base, variations }
 }
 
 export async function fetchProductBySlug(

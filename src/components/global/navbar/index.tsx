@@ -5,6 +5,7 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { CartSheet } from "@/components/cart/CartSheet";
 import LogoSvg from "@/components/svg/logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCartFromApi } from "@/hooks/data/useCartFromApi";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { addToSearchHistory, clearSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { useAddressStore } from "@/store/address-store";
@@ -20,6 +21,7 @@ import { NavbarMobileActions } from "./NavbarMobileActions";
 import { NavbarSearch } from "./NavbarSearch";
 
 const Navbar = () => {
+  useCartFromApi();
   const { isAuthenticated, user } = useAuth();
   const authModalOpen = useAuthModalStore((s) => s.open);
   const setAuthModalOpen = useAuthModalStore((s) => s.setOpen);

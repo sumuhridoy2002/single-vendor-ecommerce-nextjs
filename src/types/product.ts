@@ -13,9 +13,7 @@ export interface Product {
   reviewCount?: number
   unit?: string
   categoryId: string
-  /** Product details page */
   description?: string
-  /** Full/long description (HTML) from API */
   longDescription?: string
   images?: string[]
   brand?: string
@@ -24,6 +22,8 @@ export interface Product {
   inStock?: boolean
   deliveryText?: string
   specification?: Record<string, string>
+  /** From get-product-by-slug; used for size/color selectors. */
+  variations?: { id: number; type: string; value: string; image?: string }[]
 }
 
 export interface ProductCategory {

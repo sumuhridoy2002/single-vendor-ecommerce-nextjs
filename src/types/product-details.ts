@@ -35,6 +35,14 @@ export interface ProductDetailsFlashSaleApi {
   flash_final_price: number
 }
 
+/** Single variation as returned by GET /products/{slug}. */
+export interface ProductVariationApi {
+  id: number
+  type: string
+  value: string
+  image?: string
+}
+
 /** Single product as returned by GET /products/{id} (data object). */
 export interface ProductDetailsApi {
   id: number
@@ -55,7 +63,7 @@ export interface ProductDetailsApi {
   gallery: string[]
   category: ProductDetailsCategoryApi
   brand: ProductDetailsBrandApi
-  variations: unknown[]
+  variations: ProductVariationApi[]
   flash_sale: ProductDetailsFlashSaleApi
   status: boolean
   recent_reviews: unknown[]

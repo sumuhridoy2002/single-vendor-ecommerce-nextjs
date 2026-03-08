@@ -23,6 +23,8 @@ import type { Product } from "@/types/product"
 import type { ProductsSortParam } from "@/lib/api/products"
 import Image from "next/image"
 import Link from "next/link"
+import { toast } from "sonner"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 
 const SORT_OPTIONS: { value: ProductsSortParam; label: string }[] = [
   { value: "latest", label: "Latest" },
@@ -53,9 +55,13 @@ export function BrandPageContent({ brand, products: initialProducts }: BrandPage
   }, [initialProducts, sort])
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+  const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (p: Product) => {
-    addItem(p)
-    openCart()
+    whenLoggedIn(() => {
+      addItem(p)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+    })
   }
 
   return (

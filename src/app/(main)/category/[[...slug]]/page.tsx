@@ -16,8 +16,10 @@ import {
 import { getCategoryBySlugPath, useCategoryTree } from "@/hooks/data/useCategoryTree"
 import { useCategories } from "@/hooks/data/useCategories"
 import { useCartStore } from "@/store/cart-store"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 
 import { SubcategoryProductGrid } from "./components/SubcategoryProductGrid"
+import { toast } from "sonner"
 
 export default function CategoryPage({
   params,
@@ -29,9 +31,13 @@ export default function CategoryPage({
   const { isLoading } = useCategories()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+  const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (product: import("@/types/product").Product) => {
-    addItem(product)
-    openCart()
+    whenLoggedIn(() => {
+      addItem(product)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+    })
   }
 
   if (!slug || slug.length === 0) notFound()

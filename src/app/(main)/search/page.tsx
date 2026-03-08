@@ -18,11 +18,13 @@ import {
 } from "@/components/ui/sheet";
 import { useSearchProducts } from "@/hooks/data/useSearchProducts";
 import { useCartStore } from "@/store/cart-store";
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
 import type { Product } from "@/types/product";
 import type { ProductsSortParam } from "@/lib/api/products";
 import { Filter } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
+import { toast } from "sonner";
 
 const SORT_OPTIONS: { value: ProductsSortParam; label: string }[] = [
   { value: "latest", label: "Latest" },
@@ -56,9 +58,13 @@ function SearchPageContent() {
 
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
+  const whenLoggedIn = useWhenLoggedIn();
   const handleAddToCart = (product: Product) => {
-    addItem(product);
-    openCart();
+    whenLoggedIn(() => {
+      addItem(product)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"));
+    });
   };
 
   const setSort = (value: string) => {

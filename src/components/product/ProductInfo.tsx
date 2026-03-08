@@ -16,11 +16,15 @@ import {
   Truck,
 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 export interface ProductInfoProps {
   product: Product
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (
+    product: Product,
+    quantity?: number,
+    options?: { variationId?: number }
+  ) => void
   onWishlist?: (product: Product) => void
   className?: string
 }
@@ -87,6 +91,40 @@ export function ProductInfo({
   className,
 }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1)
+  const [selectedByType, setSelectedByType] = useState<Record<string, number>>(
+    () => {
+      const v = product.variations
+      if (!v?.length) return {}
+      const initial: Record<string, number> = {}
+      for (const variation of v) {
+        if (initial[variation.type] == null) {
+          initial[variation.type] = variation.id
+        }
+      }
+      return initial
+    }
+  )
+
+  const variationsByType = useMemo(() => {
+    const v = product.variations
+    if (!v?.length) return []
+    const byType = new Map<
+      string,
+      { id: number; type: string; value: string; image?: string }[]
+    >()
+    for (const item of v) {
+      const list = byType.get(item.type) ?? []
+      list.push(item)
+      byType.set(item.type, list)
+    }
+    return Array.from(byType.entries()).map(([type, list]) => ({ type, list }))
+  }, [product.variations])
+
+  const selectedVariationId = useMemo(() => {
+    const ids = Object.values(selectedByType).filter(Boolean)
+    return ids[0] ?? undefined
+  }, [selectedByType])
+
   const hasDiscount =
     product.originalPrice != null && product.originalPrice > product.price
   const discountPercent =
@@ -165,6 +203,45 @@ export function ProductInfo({
         </div>
       )}
 
+      {variationsByType.length > 0 && (
+        <div className="space-y-4">
+          {variationsByType.map(({ type, list }) => (
+            <div key={type} className="space-y-2">
+              <span className="text-sm font-medium text-foreground">
+                {type}:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {list.map((variation) => {
+                  const selected = selectedByType[type] === variation.id
+                  return (
+                    <button
+                      key={variation.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedByType((prev) => ({
+                          ...prev,
+                          [type]: variation.id,
+                        }))
+                      }
+                      className={cn(
+                        "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
+                        selected
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-input bg-background text-foreground hover:border-foreground/50"
+                      )}
+                      aria-pressed={selected}
+                      aria-label={`${type} ${variation.value}`}
+                    >
+                      {variation.value}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex items-center gap-2">
         <div className="flex items-center rounded-md border">
           <Button
@@ -201,7 +278,11 @@ export function ProductInfo({
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           className="flex-1 gap-2 bg-primary hover:bg-primary-dark"
-          onClick={() => onAddToCart?.(product)}
+          onClick={() =>
+            onAddToCart?.(product, quantity, {
+              variationId: selectedVariationId,
+            })
+          }
         >
           <ShoppingCart className="size-4" />
           Add To Cart
