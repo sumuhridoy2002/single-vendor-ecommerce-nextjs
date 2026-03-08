@@ -1,7 +1,7 @@
 "use client"
 
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
-import { useProductsByCategory } from "@/hooks/data/useProducts"
+import { useInfiniteProductsByCategory } from "@/hooks/data/useProducts"
 import type { CategoryTreeNode, Product } from "@/types/product"
 
 export function CategorySectionBySub({
@@ -15,7 +15,9 @@ export function CategorySectionBySub({
   sectionBgClassName: string
   onAddToCart?: (product: Product) => void
 }) {
-  const products = useProductsByCategory(sub.id)
+  const { data } = useInfiniteProductsByCategory(sub.id)
+  const products = data?.pages[0]?.products ?? []
+
   return (
     <CategoryProductSection
       title={sub.title}

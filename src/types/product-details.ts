@@ -119,3 +119,38 @@ export interface ProductsListApiResponse {
   status: number
   message: string
 }
+
+/** Pagination links from GET /products (paginated). */
+export interface ProductsPaginatedLinks {
+  first: string
+  last: string
+  prev: string | null
+  next: string | null
+}
+
+/** Pagination meta from GET /products (paginated). */
+export interface ProductsPaginatedMetaLink {
+  url: string | null
+  label: string
+  active: boolean
+}
+
+export interface ProductsPaginatedMeta {
+  current_page: number
+  from: number | null
+  last_page: number
+  links: ProductsPaginatedMetaLink[]
+  path: string
+  per_page: number
+  to: number | null
+  total: number
+}
+
+/** Full paginated response from GET /products?category_id=&page=. */
+export interface ProductsPaginatedResponse {
+  data: ProductListItemApi[]
+  links: ProductsPaginatedLinks
+  meta: ProductsPaginatedMeta
+  status: number
+  message: string
+}
