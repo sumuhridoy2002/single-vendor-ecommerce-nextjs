@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
@@ -17,6 +18,8 @@ import {
   useCartStore,
   type DeliveryOption
 } from "@/store/cart-store";
+import { useCouponStore } from "@/store/coupon-store";
+import { usePaymentModalStore } from "@/store/payment-modal-store";
 import {
   Bike,
   ChevronRight,
@@ -28,6 +31,7 @@ import {
   Zap
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { toast } from "sonner";
 import CartLineItem from "./CartLineItem";
 
@@ -51,15 +55,78 @@ export function CartSheet() {
   const selectedAddress = useAddressStore((s) => s.selectedAddress);
   const openAddressModal = useAddressStore((s) => s.openAddressModal);
 
+  const appliedCoupon = useCouponStore((s) => s.appliedCoupon);
+  const couponLoading = useCouponStore((s) => s.isLoading);
+  const applyCoupon = useCouponStore((s) => s.applyCoupon);
+  const resetCoupon = useCouponStore((s) => s.resetCoupon);
+
+  const openPaymentModal = usePaymentModalStore((s) => s.openPaymentModal);
+
+  const [couponInput, setCouponInput] = useState("");
+  const [showCouponInput, setShowCouponInput] = useState(false);
+
+  const afterProductDiscount = subtotalMRP - discountTotal;
+  const couponDiscountAmount = appliedCoupon
+    ? appliedCoupon.discount_type === "percentage"
+      ? (afterProductDiscount * appliedCoupon.discount_amount) / 100
+      : Math.min(appliedCoupon.discount_amount, afterProductDiscount)
+    : 0;
+  const afterCoupon = afterProductDiscount - couponDiscountAmount;
+  const beforeRoundingWithCoupon = afterCoupon + deliveryCharge;
+  const amountPayableWithCoupon = Math.round(beforeRoundingWithCoupon);
+  const roundingOffWithCoupon = amountPayableWithCoupon - beforeRoundingWithCoupon;
+
   const handleOpenChange = (open: boolean) => {
     if (!open) closeCart();
   };
 
   const handlePlaceOrder = () => {
     if (items.length === 0) return;
-    toast.success("Order placed (demo). Checkout API can be wired later.");
+    const payable = appliedCoupon ? amountPayableWithCoupon : amountPayable;
+    const rounding = appliedCoupon ? roundingOffWithCoupon : roundingOff;
+    const totalDiscount = discountTotal + (appliedCoupon ? couponDiscountAmount : 0);
+    const deliveryLabel =
+      deliveryOption === "express"
+        ? "Express Delivery"
+        : "Estimated Delivery 1-5 Days (Outside Dhaka)";
+    openPaymentModal({
+      orderId: `#${Math.floor(1000000 + Math.random() * 9000000)}`,
+      orderAt: new Date().toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      subtotalMRP,
+      deliveryLabel,
+      deliveryCharge,
+      discountApplied: totalDiscount,
+      roundingOff: rounding,
+      amountPayable: payable,
+      amountPaid: 0,
+      savings: Math.round(totalDiscount),
+    });
+    resetCoupon();
     clearCart();
     closeCart();
+  };
+
+  const handleApplyCoupon = async () => {
+    const result = await applyCoupon(couponInput);
+    if (result.success) {
+      toast.success("Coupon applied successfully");
+      setShowCouponInput(false);
+      setCouponInput("");
+    } else {
+      toast.error(result.message);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    resetCoupon();
+    setShowCouponInput(true);
   };
 
   const expressDate = new Date();
@@ -135,16 +202,72 @@ export function CartSheet() {
 
                 {/* Coupon & Savings */}
                 <section className="mt-4">
-                  <button
-                    type="button"
-                    className="text-sm text-primary underline hover:no-underline"
-                  >
-                    Have coupon code ?
-                  </button>
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between rounded-lg border border-primary/40 bg-primary/5 p-3">
+                      <div>
+                        <p className="text-sm font-medium text-primary">
+                          Coupon applied: {appliedCoupon.code}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {appliedCoupon.discount_type === "percentage"
+                            ? `${appliedCoupon.discount_amount}% off`
+                            : `${formatPriceSymbol(appliedCoupon.discount_amount)} off`}{" "}
+                          · Valid until {appliedCoupon.valid_until}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        onClick={handleRemoveCoupon}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : showCouponInput ? (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter coupon code"
+                          value={couponInput}
+                          onChange={(e) => setCouponInput(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleApplyCoupon()
+                          }
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleApplyCoupon}
+                          disabled={couponLoading}
+                        >
+                          {couponLoading ? "Applying..." : "Apply"}
+                        </Button>
+                      </div>
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground hover:underline"
+                        onClick={() => setShowCouponInput(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="text-sm text-primary underline hover:no-underline"
+                      onClick={() => setShowCouponInput(true)}
+                    >
+                      Have coupon code ?
+                    </button>
+                  )}
                   <div className="mt-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 p-3">
                     <p className="flex items-center gap-1.5 text-sm">
                       <span className="text-primary">৳</span>
-                      You are saving {formatPriceSymbol(Math.round(discountTotal))} in
+                      You are saving {formatPriceSymbol(Math.round(discountTotal + couponDiscountAmount))} in
                       this order.
                     </p>
                     <p className="mt-1 flex items-center gap-1.5 text-sm">
@@ -165,9 +288,15 @@ export function CartSheet() {
                     <span>Discount Applied</span>
                     <span>-{formatPriceSymbol(Math.abs(discountTotal))}</span>
                   </div>
+                  {appliedCoupon && couponDiscountAmount > 0 && (
+                    <div className="flex justify-between text-destructive">
+                      <span>Coupon ({appliedCoupon.code})</span>
+                      <span>-{formatPriceSymbol(couponDiscountAmount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-destructive">
                     <span>Rounding Off</span>
-                    <span>-{formatPriceSymbol(Math.abs(roundingOff))}</span>
+                    <span>-{formatPriceSymbol(Math.abs(appliedCoupon ? roundingOffWithCoupon : roundingOff))}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
@@ -244,7 +373,7 @@ export function CartSheet() {
                 <div className="mt-4 flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
                   <span className="text-sm font-medium">Amount Payable</span>
                   <span className="text-lg font-semibold">
-                    {formatPriceSymbol(amountPayable)}
+                    {formatPriceSymbol(appliedCoupon ? amountPayableWithCoupon : amountPayable)}
                   </span>
                 </div>
 
@@ -292,7 +421,7 @@ export function CartSheet() {
               <span>
                 {itemCount} item{itemCount !== 1 ? "s" : ""}
               </span>
-              <span className="font-semibold">{formatPriceSymbol(amountPayable)}</span>
+              <span className="font-semibold">{formatPriceSymbol(appliedCoupon ? amountPayableWithCoupon : amountPayable)}</span>
             </div>
             <Button
               onClick={handlePlaceOrder}

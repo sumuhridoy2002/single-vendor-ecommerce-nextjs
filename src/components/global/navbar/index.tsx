@@ -3,6 +3,7 @@
 import { AddressModal } from "@/components/address/AddressModal";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { CartSheet } from "@/components/cart/CartSheet";
+import { PaymentModal } from "@/components/cart/PaymentModal";
 import LogoSvg from "@/components/svg/logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCartFromApi } from "@/hooks/data/useCartFromApi";
@@ -147,6 +148,7 @@ const Navbar = () => {
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       <AddressModal />
       <CartSheet />
+      <PaymentModal />
     </nav>
   );
 };
