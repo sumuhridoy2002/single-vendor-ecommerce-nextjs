@@ -6,13 +6,6 @@ import { ProductTabs } from "@/components/product/ProductTabs"
 import { RatingReviews } from "@/components/product/RatingReviews"
 import { RelatedProductsCarousel } from "@/components/product/RelatedProductsCarousel"
 import {
-  getCategoryHrefById,
-  getCategoryIdToTitleMap,
-  useCategoryTree,
-} from "@/hooks/data/useCategoryTree"
-import { useProductDetails } from "@/hooks/data/useProductDetails"
-import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
-import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -20,22 +13,29 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import {
+  getCategoryHrefById,
+  getCategoryIdToTitleMap,
+  useCategoryTree,
+} from "@/hooks/data/useCategoryTree"
+import { useProductDetails } from "@/hooks/data/useProductDetails"
+import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
 import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 
 export interface ProductPageContentProps {
-  id: string
+  slug: string
   initialProduct?: Product | null
 }
 
 export function ProductPageContent({
-  id,
+  slug,
   initialProduct,
 }: ProductPageContentProps) {
-  const { product, isLoading, error } = useProductDetails(id, initialProduct)
-  const { products: relatedProducts } = useRelatedProducts(id)
+  const { product, isLoading, error } = useProductDetails(slug, initialProduct)
+  const { products: relatedProducts } = useRelatedProducts(product?.id)
   const tree = useCategoryTree()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)

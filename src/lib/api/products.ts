@@ -71,11 +71,11 @@ export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
   return mapProductApiToProduct(api)
 }
 
-export async function fetchProductById(
-  id: string | number
+export async function fetchProductBySlug(
+  slug: string
 ): Promise<ProductDetailsApi> {
   const baseUrl = getBaseUrl()
-  const res = await fetch(`${baseUrl}/products/${id}`, {
+  const res = await fetch(`${baseUrl}/products/${slug}`, {
     headers: { Accept: "application/json" },
   })
 

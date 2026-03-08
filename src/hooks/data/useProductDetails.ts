@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react"
 import {
-  fetchProductById,
+  fetchProductBySlug,
   mapProductDetailsToProduct,
 } from "@/lib/api/products"
 import { useProductDetailsStore } from "@/stores/product-details-store"
 import type { Product } from "@/types/product"
 
 export function useProductDetails(
-  id: string | null | undefined,
+  slug: string | null | undefined,
   initialData?: Product | null
 ): {
   product: Product | null
@@ -19,40 +19,40 @@ export function useProductDetails(
 } {
   const setProduct = useProductDetailsStore((s) => s.setProduct)
   const cached = useProductDetailsStore((s) =>
-    id ? s.productById[id] ?? null : null
+    slug ? s.productById[slug] ?? null : null
   )
-  const hasInitial = initialData != null && initialData.id === id
+  const hasInitial = initialData != null && initialData.slug === slug
   const effective = cached ?? (hasInitial ? initialData : null)
 
   const [isLoading, setIsLoading] = useState(
-    id != null && effective == null && !hasInitial
+    slug != null && effective == null && !hasInitial
   )
   const [error, setError] = useState<Error | null>(null)
 
   const fetch = useCallback(async () => {
-    if (id == null) return
+    if (slug == null) return
     setIsLoading(true)
     setError(null)
     try {
-      const data = await fetchProductById(id)
+      const data = await fetchProductBySlug(slug)
       const product = mapProductDetailsToProduct(data)
-      setProduct(id, product)
+      setProduct(slug, product)
     } catch (e) {
       setError(e instanceof Error ? e : new Error(String(e)))
-      setProduct(id, null)
+      setProduct(slug, null)
     } finally {
       setIsLoading(false)
     }
-  }, [id, setProduct])
+  }, [slug, setProduct])
 
   useEffect(() => {
-    if (id == null) {
+    if (slug == null) {
       setIsLoading(false)
       setError(null)
       return
     }
     if (hasInitial) {
-      setProduct(id, initialData!)
+      setProduct(slug, initialData!)
       setIsLoading(false)
       setError(null)
       return
@@ -63,10 +63,10 @@ export function useProductDetails(
       return
     }
     fetch()
-  }, [id, hasInitial, initialData, cached, setProduct, fetch])
+  }, [slug, hasInitial, initialData, cached, setProduct, fetch])
 
   return {
-    product: id != null ? effective : null,
+    product: slug != null ? effective : null,
     isLoading,
     error,
     refetch: fetch,

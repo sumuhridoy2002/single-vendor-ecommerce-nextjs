@@ -62,7 +62,7 @@ export function RecentSearchesPopover({
                   {suggestionProducts.map((product) => (
                     <li key={product.id} role="option" aria-selected={false}>
                       <Link
-                        href={`/product/${product.id}`}
+                        href={`/product/${product.slug}`}
                         className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
                         onClick={() => onSuggestionSelect?.()}
                       >
