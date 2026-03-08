@@ -1,6 +1,5 @@
 "use client"
 
-import { useMemo, useState } from "react"
 import { ProductCard } from "@/components/common/ProductCard"
 import {
   Breadcrumb,
@@ -10,6 +9,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -17,14 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useInfiniteProductsByBrand } from "@/hooks/data/useProducts"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
+import type { ProductsSortParam } from "@/lib/api/products"
 import { useCartStore } from "@/store/cart-store"
 import type { BrandApi } from "@/types/brand"
 import type { Product } from "@/types/product"
-import type { ProductsSortParam } from "@/lib/api/products"
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
-import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 
 const SORT_OPTIONS: { value: ProductsSortParam; label: string }[] = [
   { value: "latest", label: "Latest" },
@@ -35,24 +37,35 @@ const SORT_OPTIONS: { value: ProductsSortParam; label: string }[] = [
 
 export interface BrandPageContentProps {
   brand: BrandApi
-  products: Product[]
 }
 
-export function BrandPageContent({ brand, products: initialProducts }: BrandPageContentProps) {
-  const [sort, setSort] = useState<ProductsSortParam>("latest")
-  const products = useMemo(() => {
-    const list = [...initialProducts]
-    switch (sort) {
-      case "price_low":
-        return list.sort((a, b) => a.price - b.price)
-      case "price_high":
-        return list.sort((a, b) => b.price - a.price)
-      case "popular":
-        return list.sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0))
-      default:
-        return list
-    }
-  }, [initialProducts, sort])
+export function BrandPageContent({ brand }: BrandPageContentProps) {
+  const [sort, setSort] = useState<ProductsSortParam | "">("")
+  const sortParam = sort || undefined
+  const {
+    products,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+  } = useInfiniteProductsByBrand(brand.id, sortParam)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return
+    const el = loadMoreRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) fetchNextPage()
+      },
+      { rootMargin: "100px", threshold: 0 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
@@ -116,13 +129,16 @@ export function BrandPageContent({ brand, products: initialProducts }: BrandPage
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Sort:</span>
             <Select
-              value={sort}
-              onValueChange={(v) => setSort(v as ProductsSortParam)}
+              value={sort || "none"}
+              onValueChange={(v) =>
+                setSort(v === "none" ? "" : (v as ProductsSortParam))
+              }
             >
               <SelectTrigger className="w-[180px]" size="sm">
-                <SelectValue />
+                <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">Select an option</SelectItem>
                 {SORT_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
@@ -133,21 +149,52 @@ export function BrandPageContent({ brand, products: initialProducts }: BrandPage
           </div>
         </div>
 
-        {products.length === 0 && (
+        {isLoading && (
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-64 animate-pulse rounded-lg bg-muted"
+              />
+            ))}
+          </div>
+        )}
+
+        {!isLoading && error && (
+          <p className="py-12 text-center text-destructive">
+            Failed to load products. Please try again.
+          </p>
+        )}
+
+        {!isLoading && !error && products.length === 0 && (
           <p className="py-12 text-center text-muted-foreground">
             No products found for this brand.
           </p>
         )}
-        {products.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={handleAddToCart}
-              />
-            ))}
-          </div>
+
+        {!isLoading && !error && products.length > 0 && (
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                />
+              ))}
+            </div>
+            <div ref={loadMoreRef} className="flex justify-center py-6">
+              {hasNextPage && (
+                <Button
+                  variant="outline"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                >
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
+                </Button>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

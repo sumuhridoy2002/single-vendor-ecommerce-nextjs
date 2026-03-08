@@ -1,4 +1,4 @@
-import { fetchProductsByCategoryPaginated } from "@/lib/api/products"
+import { fetchProductsByCategoryPaginated, fetchProductsByBrandPaginated } from "@/lib/api/products"
 import type { ProductsSortParam } from "@/lib/api/products"
 import { globalQueryKeys } from "@/lib/query-keys"
 import type { Product } from "@/types/product"
@@ -27,6 +27,35 @@ export function useInfiniteProductsByCategory(
     ),
     queryFn: ({ pageParam }) =>
       fetchProductsByCategoryPaginated(categoryId, pageParam as number, sort),
+    initialPageParam: 1 as number,
+    getNextPageParam: (lastPage) => {
+      const { current_page, last_page } = lastPage.meta
+      return current_page < last_page ? current_page + 1 : undefined
+    },
+  })
+
+  const products = useMemo(
+    () => query.data?.pages.flatMap((p) => p.products) ?? [],
+    [query.data]
+  )
+
+  return {
+    ...query,
+    products,
+  }
+}
+
+/** Infinite pagination for products by brand_id. */
+export function useInfiniteProductsByBrand(
+  brandId: string | number,
+  sort?: ProductsSortParam
+) {
+  const query = useInfiniteQuery({
+    queryKey: globalQueryKeys.productsByBrand(brandId).concat(
+      sort ?? ("no-sort" as const)
+    ),
+    queryFn: ({ pageParam }) =>
+      fetchProductsByBrandPaginated(brandId, pageParam as number, sort),
     initialPageParam: 1 as number,
     getNextPageParam: (lastPage) => {
       const { current_page, last_page } = lastPage.meta

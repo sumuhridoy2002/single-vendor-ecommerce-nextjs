@@ -13,5 +13,8 @@ export const globalQueryKeys = {
   /** Products by category (infinite): ["products", "category", categoryId] */
   productsByCategory: (categoryId: string) =>
     ["products", "category", categoryId] as const,
+  /** Products by brand (infinite): ["products", "brand", brandId] */
+  productsByBrand: (brandId: string | number) =>
+    ["products", "brand", String(brandId)] as const,
   brands: ["brands"] as const,
 } as const;

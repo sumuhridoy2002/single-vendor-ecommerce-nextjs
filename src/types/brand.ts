@@ -1,4 +1,4 @@
-/** Single brand from GET /brands or GET /brands/{id} API. */
+/** Single brand from GET /brands or GET /brands/{slug} API. */
 export interface BrandApi {
   id: number
   name: string
@@ -6,6 +6,11 @@ export interface BrandApi {
   image?: string | null
   description?: string | null
   banner?: string | null
+  meta?: {
+    title?: string | null
+    keywords?: string | null
+    description?: string | null
+  } | null
 }
 
 export interface BrandsApiResponse {
@@ -14,7 +19,7 @@ export interface BrandsApiResponse {
   message?: string
 }
 
-/** Brand detail payload from GET /brands/{id} (may include products). */
+/** Brand detail payload from GET /brands/{slug} (may include products and meta). */
 export interface BrandDetailDataApi extends BrandApi {
   products?: BrandDetailProductApi[]
 }
@@ -34,7 +39,7 @@ export interface BrandDetailProductApi {
   reviews_count: number
 }
 
-/** Response for GET /brands/{id}. */
+/** Response for GET /brands/{slug}. */
 export interface BrandDetailApiResponse {
   data: BrandDetailDataApi
   status: number

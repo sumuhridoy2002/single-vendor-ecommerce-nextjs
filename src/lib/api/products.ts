@@ -256,6 +256,62 @@ export async function fetchProductsByCategoryPaginated(
   }
 }
 
+export async function fetchProductsByBrandPaginated(
+  brandId: string | number,
+  page = 1,
+  sort?: ProductsSortParam
+): Promise<FetchProductsByCategoryPaginatedResult> {
+  const baseUrl = getBaseUrl()
+  const searchParams = new URLSearchParams()
+  searchParams.set("brand_id", String(brandId))
+  if (page > 1) searchParams.set("page", String(page))
+  if (sort) searchParams.set("sort", sort)
+
+  const url = `${baseUrl}/products?${searchParams.toString()}`
+  const res = await fetch(url, { headers: { Accept: "application/json" } })
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      return {
+        products: [],
+        meta: {
+          current_page: 1,
+          from: null,
+          last_page: 1,
+          links: [],
+          path: `${baseUrl}/products`,
+          per_page: 10,
+          to: null,
+          total: 0,
+        },
+        links: {
+          first: url,
+          last: url,
+          prev: null,
+          next: null,
+        },
+      }
+    }
+    throw new Error(`Products fetch failed: ${res.status}`)
+  }
+
+  const json = (await res.json()) as ProductsPaginatedResponse
+  if (json.status !== 200 || !Array.isArray(json.data)) {
+    return {
+      products: [],
+      meta: json.meta,
+      links: json.links,
+    }
+  }
+
+  const products = json.data.map(mapProductListItemToProduct)
+  return {
+    products,
+    meta: json.meta,
+    links: json.links,
+  }
+}
+
 /** Submit a review for a product. POST /products/{id}/review */
 export async function submitProductReview(
   productId: string | number,

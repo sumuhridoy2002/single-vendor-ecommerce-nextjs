@@ -75,9 +75,9 @@ export function EspeciallyForYouSection() {
               className="brands-swiper"
             >
               {brands.map((brand) => (
-                <SwiperSlide key={brand.id}>
+                <SwiperSlide key={brand.slug}>
                   <Link
-                    href={`/brand/${brand.id}`}
+                    href={`/brand/${brand.slug}`}
                     className="flex flex-col items-center justify-center gap-2 rounded-xl border border-border bg-muted/30 p-4 transition-colors hover:bg-muted/50"
                   >
                     {brand.image ? (
