@@ -5,7 +5,9 @@ import { EspeciallyForYouSection } from "@/components/common/EspeciallyForYouSec
 import { HeroBannerSlider } from "@/components/common/HeroBannerSlider"
 import { useHomepage } from "@/hooks/data/useHomepage"
 import { useCartStore } from "@/store/cart-store"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import type { Product } from "@/types/product"
+import { toast } from "sonner"
 
 const SECTION_BG_CLASSES = [
   "bg-info-light/10 dark:bg-info-dark/20",
@@ -18,9 +20,13 @@ export default function Home() {
   const { data, isLoading, error } = useHomepage()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+  const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (product: Product) => {
-    addItem(product)
-    openCart()
+    whenLoggedIn(() => {
+      addItem(product)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+    })
   }
 
   if (error) {

@@ -3,8 +3,10 @@
 import { AddressModal } from "@/components/address/AddressModal";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { CartSheet } from "@/components/cart/CartSheet";
+import { PaymentModal } from "@/components/cart/PaymentModal";
 import LogoSvg from "@/components/svg/logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCartFromApi } from "@/hooks/data/useCartFromApi";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { addToSearchHistory, clearSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { useAddressStore } from "@/store/address-store";
@@ -20,6 +22,7 @@ import { NavbarMobileActions } from "./NavbarMobileActions";
 import { NavbarSearch } from "./NavbarSearch";
 
 const Navbar = () => {
+  useCartFromApi();
   const { isAuthenticated, user } = useAuth();
   const authModalOpen = useAuthModalStore((s) => s.open);
   const setAuthModalOpen = useAuthModalStore((s) => s.setOpen);
@@ -69,7 +72,12 @@ const Navbar = () => {
 
   const handleSearchFocus = () => {
     refreshHistory();
-    setShowRecentSearches(getSearchHistory().length > 0);
+    setShowRecentSearches(true);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchValue(value);
+    if (value.trim().length > 0) setShowRecentSearches(true);
   };
 
   return (
@@ -98,7 +106,7 @@ const Navbar = () => {
         <div className="hidden min-w-0 flex-1 md:block max-w-5xl m-auto">
           <NavbarSearch
             searchValue={searchValue}
-            setSearchValue={setSearchValue}
+            setSearchValue={handleSearchChange}
             searchCategory={searchCategory}
             setSearchCategory={setSearchCategory}
             showRecentSearches={showRecentSearches}
@@ -123,7 +131,7 @@ const Navbar = () => {
       {/* Row 2 (mobile only): Full-width search with recent searches popover */}
       <NavbarSearch
         searchValue={searchValue}
-        setSearchValue={setSearchValue}
+        setSearchValue={handleSearchChange}
         searchCategory={searchCategory}
         setSearchCategory={setSearchCategory}
         showRecentSearches={showRecentSearches}
@@ -140,6 +148,7 @@ const Navbar = () => {
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
       <AddressModal />
       <CartSheet />
+      <PaymentModal />
     </nav>
   );
 };

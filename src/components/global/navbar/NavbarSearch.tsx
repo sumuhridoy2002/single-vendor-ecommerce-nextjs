@@ -6,6 +6,8 @@ import {
   Popover,
   PopoverAnchor,
 } from "@/components/ui/popover";
+import { useSearchProductSuggestions } from "@/hooks/data/useSearchProducts";
+import { useDebounce } from "@/hooks/useDebounce";
 import { Search } from "lucide-react";
 import { RecentSearchesPopover } from "./RecentSearchesPopover";
 
@@ -40,6 +42,9 @@ export function NavbarSearch({
   variant,
   isMobile,
 }: NavbarSearchProps) {
+  const debouncedSearch = useDebounce(searchValue, 300);
+  const { suggestions, isLoading } = useSearchProductSuggestions(debouncedSearch);
+
   const showPopoverContent =
     variant === "desktop" ? !isMobile : isMobile;
 
@@ -50,21 +55,6 @@ export function NavbarSearch({
       onSubmit={onSubmit}
     >
       <div className="flex-1 flex items-center gap-2 border border-border bg-muted/30 rounded-l-lg h-12">
-        {/* <Select value={searchCategory} onValueChange={setSearchCategory}>
-          <SelectTrigger
-            className={cn(
-              "w-[72px] shrink-0 rounded-none border-0 border-r bg-muted/50 shadow-none focus:ring-0 min-h-12 rounded-l-lg outline-0 focus-within:ring-0 focus:outline-0",
-              ""
-            )}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="medicine">Medicine</SelectItem>
-            <SelectItem value="healthcare">Healthcare</SelectItem>
-          </SelectContent>
-        </Select> */}
         <div className="relative flex-1 flex min-h-12">
           <PlaceholdersAndVanishInput
             placeholders={[
@@ -110,6 +100,9 @@ export function NavbarSearch({
           onSelect={onRecentSelect}
           onClear={onClearRecentSearches}
           onOpenAutoFocus={(e) => e.preventDefault()}
+          suggestionProducts={suggestions}
+          suggestionLoading={isLoading}
+          onSuggestionSelect={() => setShowRecentSearches(false)}
         />
       )}
     </Popover>

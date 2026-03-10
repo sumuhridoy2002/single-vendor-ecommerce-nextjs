@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
+import { RatingReviews } from "./RatingReviews"
 
 /** Decode HTML entities so escaped API content (e.g. &lt; &gt; &amp;) renders as real HTML. Works in SSR and client. */
 function decodeHtmlEntities(html: string): string {
@@ -17,9 +18,10 @@ function decodeHtmlEntities(html: string): string {
 export interface ProductTabsProps {
   product: Product
   className?: string
+  onReviewSubmitted: () => void
 }
 
-export function ProductTabs({ product, className }: ProductTabsProps) {
+export function ProductTabs({ product, className, onReviewSubmitted }: ProductTabsProps) {
   const longDesc = product.longDescription ?? product.description
   const raw =
     longDesc ?? "No detailed description available for this product."
@@ -38,6 +40,9 @@ export function ProductTabs({ product, className }: ProductTabsProps) {
         </TabsTrigger>
         <TabsTrigger value="specification" className="flex-1 sm:flex-none">
           Specification
+        </TabsTrigger>
+        <TabsTrigger value="reviews" className="flex-1 sm:flex-none">
+          Reviews
         </TabsTrigger>
       </TabsList>
       <TabsContent value="details" className="mt-4">
@@ -82,6 +87,9 @@ export function ProductTabs({ product, className }: ProductTabsProps) {
             No specification available for this product.
           </p>
         )}
+      </TabsContent>
+      <TabsContent value="reviews" className="mt-4">
+        <RatingReviews product={product} onReviewSubmitted={onReviewSubmitted} />
       </TabsContent>
     </Tabs>
   )

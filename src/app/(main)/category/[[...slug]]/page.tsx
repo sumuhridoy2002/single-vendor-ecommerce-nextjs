@@ -5,7 +5,6 @@ import { notFound } from "next/navigation"
 import { Fragment, use } from "react"
 
 import { CategoryHero } from "@/components/category/CategoryHero"
-import { SubcategoryCards } from "@/components/category/SubcategoryCards"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,14 +13,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { getCategoryBySlugPath, getSiblingSubcategories, useCategoryTree } from "@/hooks/data/useCategoryTree"
+import { getCategoryBySlugPath, useCategoryTree } from "@/hooks/data/useCategoryTree"
 import { useCategories } from "@/hooks/data/useCategories"
 import { useCartStore } from "@/store/cart-store"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 
-import { CategoryProductsHighlight } from "./components/CategoryProductsHighlight"
-import { CategorySectionBySub } from "./components/CategorySectionBySub"
 import { SubcategoryProductGrid } from "./components/SubcategoryProductGrid"
-import { SECTION_BG_CLASSES } from "./components/constants"
+import { toast } from "sonner"
 
 export default function CategoryPage({
   params,
@@ -33,9 +31,13 @@ export default function CategoryPage({
   const { isLoading } = useCategories()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
+  const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (product: import("@/types/product").Product) => {
-    addItem(product)
-    openCart()
+    whenLoggedIn(() => {
+      addItem(product)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+    })
   }
 
   if (!slug || slug.length === 0) notFound()
@@ -52,12 +54,10 @@ export default function CategoryPage({
   const resolved = getCategoryBySlugPath(slug, tree)
   if (!resolved) notFound()
 
-  const { main, sub, breadcrumb } = resolved
-  const siblings = getSiblingSubcategories(resolved)
+  const { main, breadcrumb } = resolved
 
   // Subcategory page: breadcrumb + page title + sort + grid of all products
   if (resolved.type === "sub") {
-    const subSiblings = resolved.current.children ?? []
     return (
       <div className="container w-full space-y-6">
         <Breadcrumb>
@@ -78,12 +78,6 @@ export default function CategoryPage({
             ))}
           </BreadcrumbList>
         </Breadcrumb>
-        {subSiblings.length > 0 && (
-          <SubcategoryCards
-            subcategories={subSiblings}
-            parentPathSlug={resolved.path.map((p) => p.slug).join("/")}
-          />
-        )}
         <SubcategoryProductGrid sub={resolved.current} onAddToCart={handleAddToCart} />
       </div>
     )
@@ -113,31 +107,7 @@ export default function CategoryPage({
 
       <CategoryHero title={main.title} />
 
-      {siblings.length > 0 && (
-        <SubcategoryCards
-          subcategories={siblings}
-          parentPathSlug={resolved.path.map((p) => p.slug).join("/")}
-        />
-      )}
-
-      <div className="space-y-0">
-        <CategoryProductsHighlight
-          resolved={resolved}
-          sectionBgClassName={SECTION_BG_CLASSES[0]}
-          onAddToCart={handleAddToCart}
-        />
-        {siblings.map((subNode, index) => (
-          <CategorySectionBySub
-            key={subNode.id}
-            sub={subNode}
-            parentPathSlug={resolved.path.map((p) => p.slug).join("/")}
-            sectionBgClassName={
-              SECTION_BG_CLASSES[index % SECTION_BG_CLASSES.length]
-            }
-            onAddToCart={handleAddToCart}
-          />
-        ))}
-      </div>
+      <SubcategoryProductGrid sub={main} onAddToCart={handleAddToCart} />
     </div>
   )
 }

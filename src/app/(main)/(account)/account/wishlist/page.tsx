@@ -1,20 +1,66 @@
 "use client";
 
 import { Heart } from "lucide-react";
+import { ProductCard } from "@/components/common/ProductCard";
+import { useWishlistStore } from "@/store/wishlist-store";
+import { useCartStore } from "@/store/cart-store";
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
+import type { Product } from "@/types/product";
+import { toast } from "sonner";
 
 export default function WishlistPage() {
-  return (
-    <div className="container max-w-2xl py-6 md:py-8">
-      <h1 className="text-2xl font-bold text-foreground mb-6">Wishlist</h1>
-      <p className="text-sm text-muted-foreground mb-2">Tags:</p>
+  const items = useWishlistStore((state) => state.items);
+  const remove = useWishlistStore((state) => state.remove);
+  const addItem = useCartStore((s) => s.addItem);
+  const openCart = useCartStore((s) => s.openCart);
+  const whenLoggedIn = useWhenLoggedIn();
 
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="rounded-full bg-muted p-6 mb-4">
-          <Heart className="size-12 text-muted-foreground" aria-hidden />
+  const handleAddToCart = (product: Product) => {
+    whenLoggedIn(() => {
+      addItem(product)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"));
+    });
+  };
+
+  const handleWishlist = (product: Product) => {
+    remove(product.id);
+  };
+
+  const hasItems = items.length > 0;
+
+  return (
+    <div className="container py-6 md:py-8">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Wishlist</h1>
+      <p className="mb-4 text-sm text-muted-foreground">Your saved products.</p>
+
+      {!hasItems && (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="mb-4 rounded-full bg-muted p-6">
+            <Heart className="size-12 text-muted-foreground" aria-hidden />
+          </div>
+          <p className="font-medium text-muted-foreground">
+            — No wishlist yet! —
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            — You haven&apos;t marked any wishlist —
+          </p>
         </div>
-        <p className="text-muted-foreground font-medium">— No wishlist yet! —</p>
-        <p className="text-muted-foreground text-sm mt-1">— You haven&apos;t marked any wishlist —</p>
-      </div>
+      )}
+
+      {hasItems && (
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {items.map((item) => (
+            <ProductCard
+              key={item.id}
+              product={item}
+              onAddToCart={handleAddToCart}
+              onWishlist={handleWishlist}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+

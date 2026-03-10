@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
 import {
   ChevronRight,
@@ -16,11 +17,15 @@ import {
   Truck,
 } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 export interface ProductInfoProps {
   product: Product
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (
+    product: Product,
+    quantity?: number,
+    options?: { variationId?: number }
+  ) => void
   onWishlist?: (product: Product) => void
   className?: string
 }
@@ -87,6 +92,40 @@ export function ProductInfo({
   className,
 }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1)
+  const [selectedByType, setSelectedByType] = useState<Record<string, number>>(
+    () => {
+      const v = product.variations
+      if (!v?.length) return {}
+      const initial: Record<string, number> = {}
+      for (const variation of v) {
+        if (initial[variation.type] == null) {
+          initial[variation.type] = variation.id
+        }
+      }
+      return initial
+    }
+  )
+
+  const variationsByType = useMemo(() => {
+    const v = product.variations
+    if (!v?.length) return []
+    const byType = new Map<
+      string,
+      { id: number; type: string; value: string; image?: string }[]
+    >()
+    for (const item of v) {
+      const list = byType.get(item.type) ?? []
+      list.push(item)
+      byType.set(item.type, list)
+    }
+    return Array.from(byType.entries()).map(([type, list]) => ({ type, list }))
+  }, [product.variations])
+
+  const selectedVariationId = useMemo(() => {
+    const ids = Object.values(selectedByType).filter(Boolean)
+    return ids[0] ?? undefined
+  }, [selectedByType])
+
   const hasDiscount =
     product.originalPrice != null && product.originalPrice > product.price
   const discountPercent =
@@ -97,15 +136,43 @@ export function ProductInfo({
       )
       : null)
   const inStock = product.inStock ?? true
+  const toggleWishlist = useWishlistStore((state) => state.toggle)
+  const isInWishlist = useIsInWishlist(product.id)
+
+  async function handleShare() {
+    const url = typeof window !== "undefined" ? window.location.href : ""
+    const shareData: ShareData = {
+      title: product.name,
+      text: `Check out ${product.name}`,
+      url,
+    }
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          await copyToClipboard(url)
+        }
+      }
+    } else {
+      await copyToClipboard(url)
+    }
+  }
+
+  async function copyToClipboard(text: string) {
+    if (typeof navigator?.clipboard?.writeText === "function") {
+      await navigator.clipboard.writeText(text)
+    }
+  }
+
+  const handleWishlistClick = () => {
+    toggleWishlist(product)
+    onWishlist?.(product)
+  }
 
   return (
     <div className={cn("flex flex-col gap-5", className)}>
       <div>
-        {product.badge === "sale" && (
-          <Badge variant="destructive" className="mb-2">
-            {discountPercent != null ? `${discountPercent}% OFF` : "Sale"}
-          </Badge>
-        )}
         <h1 className="text-xl font-semibold leading-tight text-foreground md:text-2xl">
           {product.name}
         </h1>
@@ -146,7 +213,7 @@ export function ProductInfo({
               {formatPrice(product.originalPrice)}
             </span>
             {discountPercent != null && (
-              <Badge variant="secondary">{discountPercent}% OFF</Badge>
+              <Badge variant="destructive">{discountPercent}% OFF</Badge>
             )}
           </>
         )}
@@ -162,6 +229,45 @@ export function ProductInfo({
         <div className="flex items-center gap-2 text-sm text-success">
           <span className="size-2 rounded-full bg-success" aria-hidden />
           In Stock
+        </div>
+      )}
+
+      {variationsByType.length > 0 && (
+        <div className="space-y-4">
+          {variationsByType.map(({ type, list }) => (
+            <div key={type} className="space-y-2">
+              <span className="text-sm font-medium text-foreground">
+                {type}:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {list.map((variation) => {
+                  const selected = selectedByType[type] === variation.id
+                  return (
+                    <button
+                      key={variation.id}
+                      type="button"
+                      onClick={() =>
+                        setSelectedByType((prev) => ({
+                          ...prev,
+                          [type]: variation.id,
+                        }))
+                      }
+                      className={cn(
+                        "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
+                        selected
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-input bg-background text-foreground hover:border-foreground/50"
+                      )}
+                      aria-pressed={selected}
+                      aria-label={`${type} ${variation.value}`}
+                    >
+                      {variation.value}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -198,21 +304,31 @@ export function ProductInfo({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col flex-wrap gap-2 sm:flex-row">
         <Button
           className="flex-1 gap-2 bg-primary hover:bg-primary-dark"
-          onClick={() => onAddToCart?.(product)}
+          onClick={() =>
+            onAddToCart?.(product, quantity, {
+              variationId: selectedVariationId,
+            })
+          }
         >
           <ShoppingCart className="size-4" />
           Add To Cart
         </Button>
         <Button
-          variant="outline"
+          variant={isInWishlist ? "default" : "outline"}
           className="flex-1 gap-2"
-          onClick={() => onWishlist?.(product)}
+          onClick={handleWishlistClick}
+          aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className="size-4" />
-          Add to Wishlist
+          <Heart
+            className={cn(
+              "size-4",
+              isInWishlist ? "fill-red-500 text-red-500" : undefined
+            )}
+          />
+          {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
         </Button>
       </div>
 
@@ -230,7 +346,13 @@ export function ProductInfo({
       <div className="flex items-center gap-4 border-t pt-4">
         <span className="text-sm text-muted-foreground">Share:</span>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" className="size-8" aria-label="Share">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            aria-label="Share"
+            onClick={handleShare}
+          >
             <Share2 className="size-4" />
           </Button>
         </div>

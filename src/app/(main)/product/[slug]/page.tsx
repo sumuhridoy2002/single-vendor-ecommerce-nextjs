@@ -1,17 +1,17 @@
 import {
-  fetchProductById,
+  fetchProductBySlug,
   mapProductDetailsToProduct,
 } from "@/lib/api/products"
-import { ProductPageContent } from "./ProductPageContent"
-import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { notFound } from "next/navigation"
+import { ProductPageContent } from "./ProductPageContent"
 
-type Props = { params: Promise<{ id: string }> }
+type Props = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params
+  const { slug } = await params
   try {
-    const data = await fetchProductById(id)
+    const data = await fetchProductBySlug(slug)
     const title = data.meta?.title ?? data.title
     const description = data.meta?.description ?? data.short_description
     const keywords = data.meta?.keywords
@@ -26,16 +26,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage({ params }: Props) {
-  const { id } = await params
+  const { slug } = await params
   let initialProduct = null
   try {
-    const data = await fetchProductById(id)
+    const data = await fetchProductBySlug(slug)
     initialProduct = mapProductDetailsToProduct(data)
   } catch {
     notFound()
   }
 
   return (
-    <ProductPageContent id={id} initialProduct={initialProduct} />
+    <ProductPageContent slug={slug} initialProduct={initialProduct} />
   )
 }

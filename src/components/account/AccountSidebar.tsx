@@ -4,37 +4,29 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import {
-  Banknote,
-  Bell,
-  BellRing,
   ChevronRight,
   FileCheck,
   Heart,
   HelpCircle,
-  Leaf,
   LogOut,
   MapPin,
   Package,
-  Pill,
   RefreshCw,
-  Shield,
-  Star,
-  Tag,
-  Users
+  Shield
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const NAV_ITEMS = [
-  { label: "Notification", href: "/account/notifications", icon: Bell },
+  // { label: "Notification", href: "/account/notifications", icon: Bell },
   { label: "Orders", href: "/account/orders", icon: Package },
-  { label: "Notified Products", href: "/account/notified-products", icon: BellRing },
-  { label: "Suggest Products", href: "/account/suggest-products", icon: Pill },
+  // { label: "Notified Products", href: "/account/notified-products", icon: BellRing },
+  // { label: "Suggest Products", href: "/account/suggest-products", icon: Pill },
   { label: "Wishlist", href: "/account/wishlist", icon: Heart },
   { label: "Manage Address", href: "/account/addresses", icon: MapPin },
-  { label: "Transaction History", href: "/account/transactions", icon: Banknote },
-  { label: "Special Offers", href: "/account/offers", icon: Tag },
-  { label: "Refer and Earn", href: "/account/refer", icon: Users },
+  // { label: "Transaction History", href: "/account/transactions", icon: Banknote },
+  // { label: "Special Offers", href: "/account/offers", icon: Tag },
+  // { label: "Refer and Earn", href: "/account/refer", icon: Users },
 ] as const;
 
 const LEGAL_ITEMS = [

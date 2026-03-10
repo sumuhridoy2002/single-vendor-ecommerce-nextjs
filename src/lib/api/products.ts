@@ -1,11 +1,29 @@
-import type { Product } from "@/types/product"
+import type { Product, ProductReview } from "@/types/product"
 import type {
   ProductDetailsApi,
   ProductDetailsApiResponse,
+  ProductListItemApi,
+  ProductsListApiResponse,
+  ProductsPaginatedResponse,
   RelatedProductItemApi,
   RelatedProductsApiResponse,
+  SubmitReviewApiResponse,
+  SubmitReviewRequestBody,
 } from "@/types/product-details"
 import { getBaseUrl } from "./client"
+
+const TOKEN_KEY = "access_token"
+
+function getAccessToken(): string | null {
+  if (typeof window === "undefined") return null
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+function getAuthHeaders(): Record<string, string> {
+  const token = getAccessToken()
+  if (!token) return {}
+  return { Authorization: `Bearer ${token}` }
+}
 
 /** Map a product API object (full or related) to app Product type. */
 function mapProductApiToProduct(api: {
@@ -21,8 +39,8 @@ function mapProductApiToProduct(api: {
   long_description?: string
   is_in_stock: boolean
   flash_sale: { is_active: boolean; flash_final_price: number }
-  category?: { id: number; slug: string } | null
-  brand?: { name: string; slug: string } | null
+  category?: { id: number; slug?: string } | null
+  brand?: { id?: number; name: string; slug: string } | null
 }): Product {
   const price =
     api.flash_sale?.is_active === true
@@ -56,6 +74,7 @@ function mapProductApiToProduct(api: {
         ? [api.thumbnail, ...api.gallery]
         : [api.thumbnail],
     brand: api.brand?.name,
+    brandId: api.brand?.id != null ? String(api.brand.id) : undefined,
     brandHref: api.brand?.slug ? `/brand/${api.brand.slug}` : undefined,
     inStock: api.is_in_stock,
     specification: {},
@@ -64,14 +83,35 @@ function mapProductApiToProduct(api: {
 
 /** Map /products/{id} API response to app Product type. */
 export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
-  return mapProductApiToProduct(api)
+  const base = mapProductApiToProduct(api)
+  const variations =
+    api.variations?.length > 0
+      ? api.variations.map((v) => ({
+          id: v.id,
+          type: v.type,
+          value: v.value,
+          image: v.image,
+        }))
+      : undefined
+  const recentReviews: ProductReview[] = Array.isArray(api.recent_reviews)
+    ? api.recent_reviews.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        user_name: r.user_name,
+        user_avatar: r.user_avatar,
+        created_at: r.created_at,
+        reply: r.reply ?? undefined,
+      }))
+    : []
+  return { ...base, variations, recentReviews }
 }
 
-export async function fetchProductById(
-  id: string | number
+export async function fetchProductBySlug(
+  slug: string
 ): Promise<ProductDetailsApi> {
   const baseUrl = getBaseUrl()
-  const res = await fetch(`${baseUrl}/products/${id}`, {
+  const res = await fetch(`${baseUrl}/products/${slug}`, {
     headers: { Accept: "application/json" },
   })
 
@@ -111,4 +151,187 @@ export async function fetchRelatedProducts(
   }
 
   return json.data.map(mapRelatedProductToProduct)
+}
+
+/** Sort values supported by GET /products API. */
+export type ProductsSortParam = "price_low" | "price_high" | "latest" | "popular"
+
+export interface FetchProductsParams {
+  search?: string
+  category_id?: string | number
+  brand_id?: string | number
+  min_price?: number
+  max_price?: number
+  sort?: ProductsSortParam
+}
+
+function mapProductListItemToProduct(api: ProductListItemApi): Product {
+  return mapProductApiToProduct(api)
+}
+
+export async function fetchProducts(params: FetchProductsParams = {}): Promise<Product[]> {
+  const baseUrl = getBaseUrl()
+  const searchParams = new URLSearchParams()
+  if (params.search?.trim()) searchParams.set("search", params.search.trim())
+  if (params.category_id != null) searchParams.set("category_id", String(params.category_id))
+  if (params.brand_id != null) searchParams.set("brand_id", String(params.brand_id))
+  if (params.min_price != null) searchParams.set("min_price", String(params.min_price))
+  if (params.max_price != null) searchParams.set("max_price", String(params.max_price))
+  if (params.sort) searchParams.set("sort", params.sort)
+
+  const url = `${baseUrl}/products?${searchParams.toString()}`
+  const res = await fetch(url, { headers: { Accept: "application/json" } })
+
+  if (!res.ok) {
+    if (res.status === 404) return []
+    throw new Error(`Products fetch failed: ${res.status}`)
+  }
+
+  const json = (await res.json()) as ProductsListApiResponse
+  if (json.status !== 200 || !Array.isArray(json.data)) {
+    return []
+  }
+
+  return json.data.map(mapProductListItemToProduct)
+}
+
+export interface FetchProductsByCategoryPaginatedResult {
+  products: Product[]
+  meta: ProductsPaginatedResponse["meta"]
+  links: ProductsPaginatedResponse["links"]
+}
+
+export async function fetchProductsByCategoryPaginated(
+  categoryId: string | number,
+  page = 1,
+  sort?: ProductsSortParam
+): Promise<FetchProductsByCategoryPaginatedResult> {
+  const baseUrl = getBaseUrl()
+  const searchParams = new URLSearchParams()
+  searchParams.set("category_id", String(categoryId))
+  if (page > 1) searchParams.set("page", String(page))
+  if (sort) searchParams.set("sort", sort)
+
+  const url = `${baseUrl}/products?${searchParams.toString()}`
+  const res = await fetch(url, { headers: { Accept: "application/json" } })
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      return {
+        products: [],
+        meta: {
+          current_page: 1,
+          from: null,
+          last_page: 1,
+          links: [],
+          path: `${baseUrl}/products`,
+          per_page: 10,
+          to: null,
+          total: 0,
+        },
+        links: {
+          first: url,
+          last: url,
+          prev: null,
+          next: null,
+        },
+      }
+    }
+    throw new Error(`Products fetch failed: ${res.status}`)
+  }
+
+  const json = (await res.json()) as ProductsPaginatedResponse
+  if (json.status !== 200 || !Array.isArray(json.data)) {
+    return {
+      products: [],
+      meta: json.meta,
+      links: json.links,
+    }
+  }
+
+  const products = json.data.map(mapProductListItemToProduct)
+  return {
+    products,
+    meta: json.meta,
+    links: json.links,
+  }
+}
+
+export async function fetchProductsByBrandPaginated(
+  brandId: string | number,
+  page = 1,
+  sort?: ProductsSortParam
+): Promise<FetchProductsByCategoryPaginatedResult> {
+  const baseUrl = getBaseUrl()
+  const searchParams = new URLSearchParams()
+  searchParams.set("brand_id", String(brandId))
+  if (page > 1) searchParams.set("page", String(page))
+  if (sort) searchParams.set("sort", sort)
+
+  const url = `${baseUrl}/products?${searchParams.toString()}`
+  const res = await fetch(url, { headers: { Accept: "application/json" } })
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      return {
+        products: [],
+        meta: {
+          current_page: 1,
+          from: null,
+          last_page: 1,
+          links: [],
+          path: `${baseUrl}/products`,
+          per_page: 10,
+          to: null,
+          total: 0,
+        },
+        links: {
+          first: url,
+          last: url,
+          prev: null,
+          next: null,
+        },
+      }
+    }
+    throw new Error(`Products fetch failed: ${res.status}`)
+  }
+
+  const json = (await res.json()) as ProductsPaginatedResponse
+  if (json.status !== 200 || !Array.isArray(json.data)) {
+    return {
+      products: [],
+      meta: json.meta,
+      links: json.links,
+    }
+  }
+
+  const products = json.data.map(mapProductListItemToProduct)
+  return {
+    products,
+    meta: json.meta,
+    links: json.links,
+  }
+}
+
+/** Submit a review for a product. POST /products/{id}/review */
+export async function submitProductReview(
+  productId: string | number,
+  body: SubmitReviewRequestBody
+): Promise<SubmitReviewApiResponse> {
+  const baseUrl = getBaseUrl()
+  const res = await fetch(`${baseUrl}/products/${productId}/review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(body),
+  })
+
+  const json = (await res.json()) as SubmitReviewApiResponse & { message?: string }
+  if (!res.ok) {
+    throw new Error(json.message ?? `Submit review failed: ${res.status}`)
+  }
+  return json
 }

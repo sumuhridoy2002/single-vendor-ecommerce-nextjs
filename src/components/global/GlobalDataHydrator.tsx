@@ -5,23 +5,32 @@ import { getAddresses } from "@/lib/api/customer";
 import { fetchCategories } from "@/lib/api/categories";
 import { fetchHeroSliders } from "@/lib/api/hero-sliders";
 import { fetchHomepage } from "@/lib/api/homepage";
+import { fetchPages } from "@/lib/api/pages";
 import { fetchSettings } from "@/lib/api/settings";
 import { globalQueryKeys } from "@/lib/query-keys";
 import { useAddressStore } from "@/store/address-store";
 import { useCategoriesStore } from "@/stores/categories-store";
 import { useHeroSlidersStore } from "@/stores/hero-sliders-store";
 import { useHomepageStore } from "@/stores/homepage-store";
+import { usePagesStore } from "@/stores/pages-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useAccessToken } from "@/hooks/data/useAccessToken";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 
 const THIRTY_MINUTES_MS = 30 * 60 * 1000;
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
 const PERSISTED_QUERY_OPTIONS = {
   staleTime: THIRTY_MINUTES_MS,
   refetchOnMount: false,
   refetchOnWindowFocus: false,
   gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days so persisted cache keeps data
+} as const;
+const PAGES_QUERY_OPTIONS = {
+  staleTime: THIRTY_MINUTES_MS,
+  refetchOnMount: false,
+  refetchOnWindowFocus: false,
+  gcTime: THREE_DAYS_MS,
 } as const;
 
 /**
@@ -35,6 +44,7 @@ export function GlobalDataHydrator() {
   const setAddresses = useAddressStore((s) => s.setAddresses);
   const setData = useHomepageStore((s) => s.setData);
   const setHeroSliders = useHeroSlidersStore((s) => s.setHeroSliders);
+  const setPages = usePagesStore((s) => s.setPages);
 
   const { data: settingsData } = useQuery({
     queryKey: globalQueryKeys.settings,
@@ -73,6 +83,12 @@ export function GlobalDataHydrator() {
     ...PERSISTED_QUERY_OPTIONS,
   });
 
+  const { data: pagesData } = useQuery({
+    queryKey: globalQueryKeys.pages,
+    queryFn: fetchPages,
+    ...PAGES_QUERY_OPTIONS,
+  });
+
   useEffect(() => {
     if (settingsData) setSettings(settingsData);
   }, [settingsData, setSettings]);
@@ -92,6 +108,10 @@ export function GlobalDataHydrator() {
   useEffect(() => {
     if (slidersData) setHeroSliders(slidersData);
   }, [slidersData, setHeroSliders]);
+
+  useEffect(() => {
+    if (pagesData) setPages(pagesData);
+  }, [pagesData, setPages]);
 
   return null;
 }

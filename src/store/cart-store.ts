@@ -1,9 +1,16 @@
 import { create } from "zustand";
 import type { Product } from "@/types/product";
+import {
+  addToCart,
+  removeFromCart,
+  updateCartQuantity,
+} from "@/lib/api/cart";
 
 export type DeliveryOption = "regular" | "express";
 
 export interface CartItem {
+  /** Cart line id from API (when synced from server) */
+  lineId?: number;
   product: Product;
   quantity: number;
 }
@@ -33,7 +40,6 @@ interface CartState {
   couponCode: string;
   deliveryOption: DeliveryOption;
   additionalInfo: string;
-  isRecurringPurchase: boolean;
 
   // Derived (computed in getState / selectors)
   itemCount: number;
@@ -47,12 +53,26 @@ interface CartState {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  addItem: (product: Product, quantity?: number) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  /** Add item via API then refetch cart. Options: variationId, campaignId for product variants/campaigns. */
+  addItem: (
+    product: Product,
+    quantity?: number,
+    options?: { variationId?: number; campaignId?: number }
+  ) => Promise<void>;
+  removeItem: (productIdOrLineId: string | number) => Promise<void>;
+  updateQuantity: (
+    productIdOrLineId: string | number,
+    quantity: number
+  ) => Promise<void>;
+  /** Update quantity in store only (no API). For optimistic UI before debounced API call. */
+  setQuantityOptimistic: (
+    productIdOrLineId: string | number,
+    quantity: number
+  ) => void;
+  /** Replace cart with items from API (e.g. after fetchCart) */
+  setItems: (items: CartItem[]) => void;
   setDeliveryOption: (option: DeliveryOption) => void;
   setAdditionalInfo: (info: string) => void;
-  setRecurringPurchase: (value: boolean) => void;
   setCouponCode: (code: string) => void;
   clearCart: () => void;
 }
@@ -85,46 +105,99 @@ export const useCartStore = create<CartState>((set) => ({
   couponCode: "",
   deliveryOption: "regular",
   additionalInfo: "",
-  isRecurringPurchase: false,
   ...initialDerived,
 
   openCart: () => set({ isOpen: true }),
   closeCart: () => set({ isOpen: false }),
   toggleCart: () => set((s) => ({ isOpen: !s.isOpen })),
 
-  addItem: (product, quantity = 1) =>
-    set((state) => {
-      const existing = state.items.find((i) => i.product.id === product.id);
-      let nextItems: CartItem[];
-      if (existing) {
-        nextItems = state.items.map((i) =>
-          i.product.id === product.id
-            ? { ...i, quantity: Math.min(MAX_QUANTITY, i.quantity + quantity) }
-            : i
-        );
-      } else {
-        nextItems = [...state.items, { product, quantity: Math.min(MAX_QUANTITY, quantity) }];
-      }
-      const derived = computeDerived(nextItems, state.deliveryOption);
-      return { items: nextItems, ...derived };
-    }),
+  addItem: async (product, quantity = 1, options) => {
+    const items = await addToCart({
+      product_id: Number(product.id),
+      product_variation_id: options?.variationId,
+      campaign_id: options?.campaignId,
+      quantity,
+    });
+    set((state) => ({
+      items,
+      ...computeDerived(items, state.deliveryOption),
+    }));
+  },
 
-  removeItem: (productId) =>
-    set((state) => {
-      const nextItems = state.items.filter((i) => i.product.id !== productId);
-      const derived = computeDerived(nextItems, state.deliveryOption);
-      return { items: nextItems, ...derived };
-    }),
-
-  updateQuantity: (productId, quantity) =>
-    set((state) => {
-      const q = Math.max(1, Math.min(MAX_QUANTITY, quantity));
-      const nextItems = state.items.map((i) =>
-        i.product.id === productId ? { ...i, quantity: q } : i
+  removeItem: async (productIdOrLineId) => {
+    const state = useCartStore.getState();
+    let cartId: number | null = null;
+    if (typeof productIdOrLineId === "number") {
+      cartId = productIdOrLineId;
+    } else {
+      const item = state.items.find(
+        (i) => i.product.id === productIdOrLineId
       );
-      const derived = computeDerived(nextItems, state.deliveryOption);
-      return { items: nextItems, ...derived };
-    }),
+      cartId = item?.lineId ?? null;
+    }
+    if (cartId != null) {
+      const items = await removeFromCart(cartId);
+      set((s) => ({
+        items,
+        ...computeDerived(items, s.deliveryOption),
+      }));
+    } else {
+      const nextItems = state.items.filter(
+        (i) => i.product.id !== productIdOrLineId
+      );
+      set((s) => ({
+        items: nextItems,
+        ...computeDerived(nextItems, s.deliveryOption),
+      }));
+    }
+  },
+
+  updateQuantity: async (productIdOrLineId, quantity) => {
+    const q = Math.max(1, Math.min(MAX_QUANTITY, quantity));
+    const state = useCartStore.getState();
+    let cartId: number | null = null;
+    if (typeof productIdOrLineId === "number") {
+      cartId = productIdOrLineId;
+    } else {
+      const item = state.items.find(
+        (i) => i.product.id === productIdOrLineId
+      );
+      cartId = item?.lineId ?? null;
+    }
+    if (cartId != null) {
+      const items = await updateCartQuantity(cartId, q);
+      set((s) => ({
+        items,
+        ...computeDerived(items, s.deliveryOption),
+      }));
+    } else {
+      const nextItems = state.items.map((i) => {
+        const match = i.product.id === productIdOrLineId;
+        return match ? { ...i, quantity: q } : i;
+      });
+      set((s) => ({
+        items: nextItems,
+        ...computeDerived(nextItems, s.deliveryOption),
+      }));
+    }
+  },
+
+  setQuantityOptimistic: (productIdOrLineId, quantity) => {
+    const q = Math.max(1, Math.min(MAX_QUANTITY, quantity));
+    set((state) => {
+      const nextItems = state.items.map((i) => {
+        const match =
+          typeof productIdOrLineId === "number"
+            ? i.lineId === productIdOrLineId
+            : i.product.id === productIdOrLineId;
+        return match ? { ...i, quantity: q } : i;
+      });
+      return {
+        items: nextItems,
+        ...computeDerived(nextItems, state.deliveryOption),
+      };
+    });
+  },
 
   setDeliveryOption: (option) =>
     set((state) => ({
@@ -133,8 +206,12 @@ export const useCartStore = create<CartState>((set) => ({
     })),
 
   setAdditionalInfo: (info) => set({ additionalInfo: info }),
-  setRecurringPurchase: (value) => set({ isRecurringPurchase: value }),
   setCouponCode: (code) => set({ couponCode: code }),
+  setItems: (items) =>
+    set((state) => ({
+      items,
+      ...computeDerived(items, state.deliveryOption),
+    })),
   clearCart: () =>
     set((state) => ({
       items: [],

@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,21 +18,22 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { NestedSelect, type NestedSelectOption } from "@/components/ui/nested-select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import {
   apiAddressToStore,
   formToCreatePayload,
   getCityAreaFromTree,
 } from "@/lib/api/address-mappers";
-import { addAddress, getAddresses, setDefaultAddress as setDefaultAddressApi } from "@/lib/api/customer";
+import {
+  addAddress,
+  deleteAddressApi,
+  getAddresses,
+  setDefaultAddress as setDefaultAddressApi,
+  updateAddress,
+} from "@/lib/api/customer";
 import { globalQueryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
-import { useAddressStore, type Address, type AddressType } from "@/store/address-store";
+import { useAddressStore, type AddressType } from "@/store/address-store";
 import { useAuth } from "@/contexts/AuthContext";
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -44,13 +44,14 @@ import {
   Building2,
   Home,
   Loader2,
-  MoreVertical,
   X,
 } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+
+import { AddressCard } from "@/components/address/AddressCard";
 
 /** Hierarchical delivery areas (Division > District > Area) for NestedSelect */
 const DELIVERY_AREAS_TREE: NestedSelectOption[] = [
@@ -131,21 +132,6 @@ const ADDRESS_TYPE_OPTIONS: {
     { value: "hometown", label: "Hometown", icon: Building2 },
   ];
 
-function AddressTypeIcon({ type }: { type: AddressType }) {
-  const opt = ADDRESS_TYPE_OPTIONS.find((o) => o.value === type);
-  const Icon = opt?.icon ?? Home;
-  return <Icon className="size-5 text-primary" aria-hidden />;
-}
-
-function AddressTypeLabel(type: AddressType): string {
-  const labels: Record<AddressType, string> = {
-    home: "Home Address",
-    office: "Office Address",
-    hometown: "Hometown Address",
-  };
-  return labels[type];
-}
-
 export function AddressModal() {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
@@ -158,9 +144,12 @@ export function AddressModal() {
     addresses,
     closeAddressModal,
     openAddForm,
+    openEditForm,
     closeForm,
     setSelectedAddress,
     setDefaultAddress,
+    setAddresses,
+    deleteAddress,
   } = useAddressStore();
 
   // If address modal opened while not logged in, close it and open auth modal
@@ -239,12 +228,37 @@ export function AddressModal() {
   }, [formOpen, editingAddressId, editingAddress?.id, form]);
 
   const onSubmit = async (data: AddressFormValues) => {
-    if (editingAddressId) {
-      toast.info("Edit is not available yet.");
-      return;
-    }
     const { city, area } = getCityAreaFromTree(DELIVERY_AREAS_TREE, data.deliveryArea);
     const payload = formToCreatePayload(data, city, area);
+
+    if (editingAddressId) {
+      const numId = parseInt(editingAddressId, 10);
+      if (Number.isNaN(numId)) {
+        toast.error("Invalid address");
+        return;
+      }
+      try {
+        const updated = await updateAddress(numId, payload);
+        if (data.isDefault) {
+          await setDefaultAddressApi(updated.id);
+        }
+        queryClient.invalidateQueries({ queryKey: globalQueryKeys.customerAddresses });
+        const mapped = apiAddressToStore(updated);
+        const nextList = addressesToShow.map((a) => (a.id === mapped.id ? mapped : a));
+        setAddresses(nextList);
+        if (data.isDefault) {
+          setDefaultAddress(mapped.id);
+          setSelectedAddress(mapped.id);
+        }
+        closeForm();
+        toast.success("Address updated");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to update address";
+        toast.error(message);
+      }
+      return;
+    }
+
     try {
       const added = await addAddress(payload);
       if (data.isDefault) {
@@ -275,6 +289,20 @@ export function AddressModal() {
       setSelectedAddress(id);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to set default address";
+      toast.error(message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const numId = parseInt(id, 10);
+    if (Number.isNaN(numId)) return;
+    try {
+      await deleteAddressApi(numId);
+      queryClient.invalidateQueries({ queryKey: globalQueryKeys.customerAddresses });
+      deleteAddress(id);
+      toast.success("Address removed");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete address";
       toast.error(message);
     }
   };
@@ -472,9 +500,10 @@ export function AddressModal() {
                     <AddressCard
                       key={addr.id}
                       address={addr}
-                      selected={selectedAddress?.id === addr.id}
-                      onSelect={() => handleSetDefault(addr.id)}
+                      isSelected={selectedAddress?.id === addr.id}
                       onSetDefault={() => handleSetDefault(addr.id)}
+                      onEdit={() => openEditForm(addr.id)}
+                      onDelete={() => handleDelete(addr.id)}
                     />
                   ))
                 )}
@@ -491,111 +520,5 @@ export function AddressModal() {
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function AddressCard({
-  address,
-  selected,
-  onSelect,
-  onSetDefault,
-}: {
-  address: Address;
-  selected: boolean;
-  onSelect: () => void;
-  onSetDefault: () => void;
-}) {
-  const addressLine = [
-    address.address,
-    address.deliveryArea ? `, ${address.deliveryArea}` : "",
-  ].join("");
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      onClick={onSelect}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
-      className={cn(
-        "relative rounded-lg border p-4 flex gap-3 cursor-pointer transition-colors hover:bg-muted/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 min-w-0",
-        selected ? "border-primary bg-primary-light/10 dark:bg-primary-dark/20" : "bg-muted/30"
-      )}
-      aria-pressed={selected}
-      aria-label={`Select ${AddressTypeLabel(address.addressType)}`}
-    >
-      <div className="shrink-0 pt-0.5">
-        <AddressTypeIcon type={address.addressType} />
-      </div>
-      <div className="flex justify-between items-center">
-        <div className="min-w-0 flex-1 overflow-hidden pr-4">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-              <span className="font-medium truncate">
-                {AddressTypeLabel(address.addressType)}
-                {address.isDefault && " (Shipping Address)"}
-              </span>
-              {address.isDefault && (
-                <Badge className="bg-success hover:bg-success shrink-0">
-                  Default
-                </Badge>
-              )}
-            </div>
-            <div className="absolute right-3 top-3">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0"
-                    aria-label="Address options"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVertical className="size-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-48 p-2">
-                  <div className="flex flex-col gap-0.5">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="justify-start text-primary hover:text-primary-dark hover:bg-primary-light"
-                      onClick={onSetDefault}
-                    >
-                      Make Default
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1 min-w-0 truncate" title={address.fullName}>
-            {address.fullName}
-          </p>
-          <p className="text-sm text-muted-foreground min-w-0 truncate" title={address.phone}>
-            {address.phone}
-          </p>
-          <p className="text-sm text-muted-foreground mt-0.5 min-w-0 wrap-break-word line-clamp-2" title={addressLine}>
-            {addressLine}
-          </p>
-        </div>
-        <div className="shrink-0 flex items-center justify-center size-6" aria-hidden>
-          <span
-            className={cn(
-              "flex items-center justify-center rounded-full border-2 transition-colors",
-              selected
-                ? "border-primary size-6 bg-transparent"
-                : "border-muted-foreground size-6 bg-transparent"
-            )}
-          >
-            {selected && <span className="size-2.5 rounded-full bg-primary" />}
-          </span>
-        </div>
-      </div>
-    </div>
   );
 }

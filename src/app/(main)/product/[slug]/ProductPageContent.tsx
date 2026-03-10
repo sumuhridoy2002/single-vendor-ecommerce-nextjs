@@ -3,15 +3,7 @@
 import { ProductGallery } from "@/components/product/ProductGallery"
 import { ProductInfo } from "@/components/product/ProductInfo"
 import { ProductTabs } from "@/components/product/ProductTabs"
-import { RatingReviews } from "@/components/product/RatingReviews"
 import { RelatedProductsCarousel } from "@/components/product/RelatedProductsCarousel"
-import {
-  getCategoryHrefById,
-  getCategoryIdToTitleMap,
-  useCategoryTree,
-} from "@/hooks/data/useCategoryTree"
-import { useProductDetails } from "@/hooks/data/useProductDetails"
-import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -20,28 +12,45 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import {
+  getCategoryHrefById,
+  getCategoryIdToTitleMap,
+  useCategoryTree,
+} from "@/hooks/data/useCategoryTree"
+import { useProductDetails } from "@/hooks/data/useProductDetails"
+import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { toast } from "sonner"
 
 export interface ProductPageContentProps {
-  id: string
+  slug: string
   initialProduct?: Product | null
 }
 
 export function ProductPageContent({
-  id,
+  slug,
   initialProduct,
 }: ProductPageContentProps) {
-  const { product, isLoading, error } = useProductDetails(id, initialProduct)
-  const { products: relatedProducts } = useRelatedProducts(id)
+  const { product, isLoading, error, refetch } = useProductDetails(slug, initialProduct)
+  const { products: relatedProducts } = useRelatedProducts(product?.id)
   const tree = useCategoryTree()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
-  const handleAddToCart = (p: Product) => {
-    addItem(p)
-    openCart()
+  const whenLoggedIn = useWhenLoggedIn()
+  const handleAddToCart = (
+    p: Product,
+    quantity = 1,
+    options?: { variationId?: number }
+  ) => {
+    whenLoggedIn(() => {
+      addItem(p, quantity, options)
+        .then(() => openCart())
+        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+    })
   }
 
   if (error) notFound()
@@ -65,7 +74,7 @@ export function ProductPageContent({
   const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
 
   return (
-    <div className="container space-y-8 py-6">
+    <div className="container space-y-8 min-w-full">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -90,16 +99,14 @@ export function ProductPageContent({
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4 lg:gap-8 xl:gap-32">
         <ProductGallery product={product} />
         <ProductInfo product={product} onAddToCart={handleAddToCart} />
       </div>
 
       <section className="rounded-xl border bg-card p-6">
-        <ProductTabs product={product} />
+        <ProductTabs product={product} onReviewSubmitted={refetch} />
       </section>
-
-      <RatingReviews product={product} />
 
       <div className="space-y-0">
         {relatedProducts.length > 0 && (
