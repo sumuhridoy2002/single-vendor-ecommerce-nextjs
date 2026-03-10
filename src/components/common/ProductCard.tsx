@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
-import { Rocket, Zap } from "lucide-react"
+import { Heart, Rocket, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { Rating } from "../ui/rating"
+import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 
 export interface ProductCardProps {
   product: Product
@@ -32,10 +33,13 @@ const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png"
 export function ProductCard({
   product,
   onAddToCart,
+  onWishlist,
   className,
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false)
   const imageSrc = imageError ? PLACEHOLDER_IMAGE : product.image
+  const toggleWishlist = useWishlistStore((state) => state.toggle)
+  const isInWishlist = useIsInWishlist(product.id)
 
   const hasDiscount =
     product.originalPrice != null &&
@@ -46,6 +50,11 @@ export function ProductCard({
       : product.badge === "sale"
         ? "Sale"
         : null
+
+  const handleWishlistClick = () => {
+    toggleWishlist(product)
+    onWishlist?.(product)
+  }
 
   return (
     <Card
@@ -73,6 +82,19 @@ export function ProductCard({
             <span>{discountLabel}</span>
           </div>
         )}
+        <button
+          type="button"
+          onClick={handleWishlistClick}
+          className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-white/80 text-muted-foreground shadow hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart
+            className={cn(
+              "size-4",
+              isInWishlist ? "fill-red-500 text-red-500" : "text-muted-foreground"
+            )}
+          />
+        </button>
       </CardHeader>
 
       <CardContent className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-2.5">
@@ -137,3 +159,4 @@ export function ProductCard({
     </Card>
   )
 }
+

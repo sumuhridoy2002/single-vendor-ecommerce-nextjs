@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
 import {
   ChevronRight,
@@ -135,6 +136,8 @@ export function ProductInfo({
       )
       : null)
   const inStock = product.inStock ?? true
+  const toggleWishlist = useWishlistStore((state) => state.toggle)
+  const isInWishlist = useIsInWishlist(product.id)
 
   async function handleShare() {
     const url = typeof window !== "undefined" ? window.location.href : ""
@@ -160,6 +163,11 @@ export function ProductInfo({
     if (typeof navigator?.clipboard?.writeText === "function") {
       await navigator.clipboard.writeText(text)
     }
+  }
+
+  const handleWishlistClick = () => {
+    toggleWishlist(product)
+    onWishlist?.(product)
   }
 
   return (
@@ -309,12 +317,18 @@ export function ProductInfo({
           Add To Cart
         </Button>
         <Button
-          variant="outline"
+          variant={isInWishlist ? "default" : "outline"}
           className="flex-1 gap-2"
-          onClick={() => onWishlist?.(product)}
+          onClick={handleWishlistClick}
+          aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className="size-4" />
-          Add to Wishlist
+          <Heart
+            className={cn(
+              "size-4",
+              isInWishlist ? "fill-red-500 text-red-500" : undefined
+            )}
+          />
+          {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
         </Button>
       </div>
 
