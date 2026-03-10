@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, formatPriceSymbol } from "@/lib/utils";
+import { placeOrder } from "@/lib/api/orders";
 import { useAddressStore } from "@/store/address-store";
 import {
   useCartStore,
@@ -64,6 +65,7 @@ export function CartSheet() {
 
   const [couponInput, setCouponInput] = useState("");
   const [showCouponInput, setShowCouponInput] = useState(false);
+  const [placingOrder, setPlacingOrder] = useState(false);
 
   const afterProductDiscount = subtotalMRP - discountTotal;
   const couponDiscountAmount = appliedCoupon
@@ -80,37 +82,35 @@ export function CartSheet() {
     if (!open) closeCart();
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (items.length === 0) return;
-    const payable = appliedCoupon ? amountPayableWithCoupon : amountPayable;
-    const rounding = appliedCoupon ? roundingOffWithCoupon : roundingOff;
-    const totalDiscount = discountTotal + (appliedCoupon ? couponDiscountAmount : 0);
-    const deliveryLabel =
-      deliveryOption === "express"
-        ? "Express Delivery"
-        : "Estimated Delivery 1-5 Days (Outside Dhaka)";
-    openPaymentModal({
-      orderId: `#${Math.floor(1000000 + Math.random() * 9000000)}`,
-      orderAt: new Date().toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      subtotalMRP,
-      deliveryLabel,
-      deliveryCharge,
-      discountApplied: totalDiscount,
-      roundingOff: rounding,
-      amountPayable: payable,
-      amountPaid: 0,
-      savings: Math.round(totalDiscount),
-    });
-    resetCoupon();
-    clearCart();
-    closeCart();
+    if (!selectedAddress) {
+      toast.error("Please select a shipping address.");
+      return;
+    }
+    const addressId = Number(selectedAddress.id);
+    if (Number.isNaN(addressId)) {
+      toast.error("Invalid address. Please select a valid address.");
+      return;
+    }
+
+    setPlacingOrder(true);
+    try {
+      const res = await placeOrder({
+        address_id: addressId,
+        payment_method: "cod",
+        coupon_code: appliedCoupon?.code,
+      });
+      openPaymentModal(res.data);
+      resetCoupon();
+      clearCart();
+      closeCart();
+      toast.success(res.message ?? "Order placed successfully.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to place order.");
+    } finally {
+      setPlacingOrder(false);
+    }
   };
 
   const handleApplyCoupon = async () => {
@@ -425,9 +425,10 @@ export function CartSheet() {
             </div>
             <Button
               onClick={handlePlaceOrder}
+              disabled={placingOrder}
               className="gap-1.5 bg-primary hover:bg-primary/90"
             >
-              Place Order
+              {placingOrder ? "Placing…" : "Place Order"}
               <ChevronRight className="size-4" />
             </Button>
           </SheetFooter>

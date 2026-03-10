@@ -1,32 +1,21 @@
+import type { PlacedOrderData } from "@/lib/api/orders";
 import { create } from "zustand";
-
-export interface PaymentOrderSummary {
-  orderId: string;
-  orderAt: string;
-  subtotalMRP: number;
-  deliveryLabel: string;
-  deliveryCharge: number;
-  discountApplied: number;
-  roundingOff: number;
-  amountPayable: number;
-  amountPaid: number;
-  savings: number;
-}
 
 interface PaymentModalState {
   isOpen: boolean;
-  orderSummary: PaymentOrderSummary | null;
-  openPaymentModal: (summary: PaymentOrderSummary) => void;
+  /** Placed order data from POST /orders/place */
+  placedOrder: PlacedOrderData | null;
+  openPaymentModal: (order: PlacedOrderData) => void;
   closePaymentModal: () => void;
 }
 
 export const usePaymentModalStore = create<PaymentModalState>((set) => ({
   isOpen: false,
-  orderSummary: null,
+  placedOrder: null,
 
-  openPaymentModal: (summary) =>
-    set({ isOpen: true, orderSummary: summary }),
+  openPaymentModal: (order) =>
+    set({ isOpen: true, placedOrder: order }),
 
   closePaymentModal: () =>
-    set({ isOpen: false, orderSummary: null }),
+    set({ isOpen: false, placedOrder: null }),
 }));

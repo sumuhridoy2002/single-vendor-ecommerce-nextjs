@@ -35,24 +35,15 @@ function CardsLogo() {
 }
 
 export function PaymentModal() {
-  const { isOpen, orderSummary, closePaymentModal } = usePaymentModalStore();
+  const { isOpen, placedOrder, closePaymentModal } = usePaymentModalStore();
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [showDetails, setShowDetails] = useState(false);
 
-  if (!orderSummary) return null;
+  if (!placedOrder) return null;
 
-  const {
-    orderId,
-    orderAt,
-    subtotalMRP,
-    deliveryLabel,
-    deliveryCharge,
-    discountApplied,
-    roundingOff,
-    amountPayable,
-    amountPaid,
-    savings,
-  } = orderSummary;
+  const { order_no, tracking_no, shipping_info, amounts, status, items, date } =
+    placedOrder;
+  const savings = amounts.discount;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closePaymentModal()}>
@@ -81,16 +72,16 @@ export function PaymentModal() {
               </div>
               <p className="mt-3 text-lg font-semibold">Congratulations!</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Order placed successfully by &quot;Cash on delivery&quot;
+                Order placed successfully by &quot;{status.payment_method}&quot;
               </p>
               <div className="mt-4 flex items-center gap-4 text-sm">
                 <span className="flex items-center gap-1.5 font-medium text-primary">
                   <Check className="size-4" />
-                  Order Placed
+                  {status.order.charAt(0).toUpperCase() + status.order.slice(1)}
                 </span>
                 <span className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="size-4 rounded-full border-2 border-primary bg-primary/20" />
-                  Pay Online
+                  {status.payment.charAt(0).toUpperCase() + status.payment.slice(1)}
                 </span>
               </div>
               <button
@@ -141,38 +132,60 @@ export function PaymentModal() {
               </div>
               <dl className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Order ID</dt>
-                  <dd className="font-medium">{orderId}</dd>
+                  <dt className="text-muted-foreground">Order No</dt>
+                  <dd className="font-medium">{order_no}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Order At</dt>
-                  <dd className="font-medium">{orderAt}</dd>
+                  <dt className="text-muted-foreground">Tracking No</dt>
+                  <dd className="font-medium">{tracking_no}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Subtotal (MRP)</dt>
-                  <dd>{formatPriceSymbol(subtotalMRP)}</dd>
+                  <dt className="text-muted-foreground">Date</dt>
+                  <dd className="font-medium">{date}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Subtotal</dt>
+                  <dd>{formatPriceSymbol(amounts.subtotal)}</dd>
                 </div>
                 <div className="flex justify-between text-destructive">
-                  <dt>{deliveryLabel}</dt>
-                  <dd>{formatPriceSymbol(deliveryCharge)}</dd>
+                  <dt>Discount</dt>
+                  <dd>- {formatPriceSymbol(amounts.discount)}</dd>
                 </div>
-                <div className="flex justify-between text-destructive">
-                  <dt>Discount applied</dt>
-                  <dd>- {formatPriceSymbol(discountApplied)}</dd>
-                </div>
-                <div className="flex justify-between text-destructive">
-                  <dt>Rounding off</dt>
-                  <dd>- {formatPriceSymbol(Math.abs(roundingOff))}</dd>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Shipping</dt>
+                  <dd>{formatPriceSymbol(amounts.shipping)}</dd>
                 </div>
                 <div className="flex justify-between font-medium">
-                  <dt>Amount Payable</dt>
-                  <dd>{formatPriceSymbol(amountPayable)}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Amount Paid</dt>
-                  <dd>{formatPriceSymbol(amountPaid)}</dd>
+                  <dt>Grand Total</dt>
+                  <dd>{formatPriceSymbol(amounts.grand_total)}</dd>
                 </div>
               </dl>
+
+              {showDetails && (
+                <>
+                  <h4 className="mt-4 mb-2 text-sm font-medium">Shipping</h4>
+                  <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+                    <p className="font-medium">{shipping_info.receiver_name}</p>
+                    <p className="text-muted-foreground">{shipping_info.receiver_phone}</p>
+                    <p className="text-muted-foreground">{shipping_info.address}</p>
+                    <p className="text-muted-foreground">{shipping_info.city}</p>
+                  </div>
+                  <h4 className="mt-4 mb-2 text-sm font-medium">Items</h4>
+                  <ul className="space-y-2 rounded-lg border bg-muted/30 p-3 text-sm">
+                    {items.map((item) => (
+                      <li key={item.id} className="flex justify-between gap-2">
+                        <span className="min-w-0 flex-1 truncate">
+                          {item.product_name}
+                          {item.variation ? ` · ${item.variation}` : ""} × {item.quantity}
+                        </span>
+                        <span className="shrink-0 font-medium">
+                          {formatPriceSymbol(item.total_price)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </section>
           </div>
         </div>
@@ -185,10 +198,13 @@ export function PaymentModal() {
               /* Wire to payment gateway */
             }}
           >
-            Pay Online: {formatPriceSymbol(amountPayable)}
+            Pay Online: {formatPriceSymbol(amounts.grand_total)}
           </Button>
           <Button variant="outline" className="w-full" asChild>
-            <Link href="/account/orders" onClick={() => closePaymentModal()}>
+            <Link
+              href={`/account/orders/track/${encodeURIComponent(tracking_no)}`}
+              onClick={() => closePaymentModal()}
+            >
               Track Order
             </Link>
           </Button>
