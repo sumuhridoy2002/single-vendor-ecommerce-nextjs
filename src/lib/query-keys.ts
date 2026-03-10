@@ -8,6 +8,9 @@ export const globalQueryKeys = {
   customerAddresses: ["customer", "addresses"] as const,
   productsHomepage: ["products", "homepage"] as const,
   sliders: ["sliders"] as const,
+  pages: ["pages"] as const,
+  /** Page by slug: ["pages", slug] */
+  pageBySlug: (slug: string) => ["pages", slug] as const,
   /** Search/filter products: [search, category_id, brand_id, min_price, max_price, sort] */
   productsSearch: ["products", "search"] as const,
   /** Products by category (infinite): ["products", "category", categoryId] */

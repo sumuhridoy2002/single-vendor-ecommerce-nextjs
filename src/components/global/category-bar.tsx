@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useCategoryTree } from "@/hooks/data/useCategoryTree";
+import { usePagesStore } from "@/stores/pages-store";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +21,7 @@ const STATIC_LINKS = [
 export function CategoryBar() {
   const pathname = usePathname();
   const tree = useCategoryTree();
+  const pages = usePagesStore((s) => s.pages) ?? [];
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -27,6 +29,7 @@ export function CategoryBar() {
   const categoryLinks = [
     ...STATIC_LINKS,
     ...tree.map((c) => ({ label: c.title, href: `/category/${c.slug}` })),
+    ...pages.map((p) => ({ label: p.title, href: `/page/${p.slug}` })),
   ];
 
   const updateScrollState = useCallback(() => {
