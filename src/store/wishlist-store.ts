@@ -1,28 +1,27 @@
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import type { Product } from "@/types/product";
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-export interface WishlistItem
-  extends Pick<
-    Product,
-    | "id"
-    | "name"
-    | "slug"
-    | "image"
-    | "price"
-    | "originalPrice"
-    | "discountPercent"
-    | "badge"
-    | "rating"
-    | "reviewCount"
-    | "unit"
-    | "categoryId"
-    | "inStock"
-    | "deliveryText"
-    | "brand"
-    | "brandId"
-    | "brandHref"
-  > {}
+export type WishlistItem = Pick<
+  Product,
+  | "id"
+  | "name"
+  | "slug"
+  | "image"
+  | "price"
+  | "originalPrice"
+  | "discountPercent"
+  | "badge"
+  | "rating"
+  | "reviewCount"
+  | "unit"
+  | "categoryId"
+  | "inStock"
+  | "deliveryText"
+  | "brand"
+  | "brandId"
+  | "brandHref"
+>;
 
 interface WishlistState {
   items: WishlistItem[];
@@ -32,10 +31,12 @@ interface WishlistState {
   clear: () => void;
 }
 
+type PersistedWishlist = { items: WishlistItem[] };
+
 const storage =
   typeof window === "undefined"
     ? undefined
-    : createJSONStorage<WishlistState>(() => window.localStorage);
+    : createJSONStorage<PersistedWishlist>(() => window.localStorage);
 
 export const useWishlistStore = create<WishlistState>()(
   persist(
