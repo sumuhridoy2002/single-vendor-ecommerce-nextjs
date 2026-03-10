@@ -8,6 +8,8 @@ export interface ProductReview {
   user_name: string
   user_avatar: string | null
   created_at: string
+  /** Optional reply from admin/store. */
+  reply?: string | null
 }
 
 export interface Product {

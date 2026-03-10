@@ -3,7 +3,6 @@
 import { ProductGallery } from "@/components/product/ProductGallery"
 import { ProductInfo } from "@/components/product/ProductInfo"
 import { ProductTabs } from "@/components/product/ProductTabs"
-import { RatingReviews } from "@/components/product/RatingReviews"
 import { RelatedProductsCarousel } from "@/components/product/RelatedProductsCarousel"
 import {
   Breadcrumb,
@@ -106,10 +105,8 @@ export function ProductPageContent({
       </div>
 
       <section className="rounded-xl border bg-card p-6">
-        <ProductTabs product={product} />
+        <ProductTabs product={product} onReviewSubmitted={refetch} />
       </section>
-
-      <RatingReviews product={product} onReviewSubmitted={refetch} />
 
       <div className="space-y-0">
         {relatedProducts.length > 0 && (

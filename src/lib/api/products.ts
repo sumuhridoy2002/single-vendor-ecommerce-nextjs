@@ -101,6 +101,7 @@ export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
         user_name: r.user_name,
         user_avatar: r.user_avatar,
         created_at: r.created_at,
+        reply: r.reply ?? undefined,
       }))
     : []
   return { ...base, variations, recentReviews }

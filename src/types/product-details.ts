@@ -6,6 +6,8 @@ export interface ProductReviewApi {
   user_name: string
   user_avatar: string | null
   created_at: string
+  /** Optional admin/store reply. */
+  reply?: string | null
 }
 
 /** Request body for POST /products/{id}/review */

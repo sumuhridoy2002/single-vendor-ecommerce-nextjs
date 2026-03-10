@@ -245,6 +245,16 @@ export function RatingReviews({
                 <p className="mt-1 text-sm text-muted-foreground">
                   {review.comment}
                 </p>
+                {review.reply ? (
+                  <div className="mt-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Store reply
+                    </p>
+                    <p className="mt-0.5 text-sm text-foreground">
+                      {review.reply}
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </li>
           ))
