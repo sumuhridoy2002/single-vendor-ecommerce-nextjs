@@ -74,7 +74,18 @@ export const useAddressStore = create<AddressState>((set) => ({
       return { selectedAddress: address };
     }),
 
-  setAddresses: (addresses) => set({ addresses }),
+  setAddresses: (addresses) =>
+    set((state) => {
+      const defaultAddr =
+        addresses.find((a) => a.isDefault) ?? addresses[0] ?? null;
+      const currentStillValid =
+        state.selectedAddress &&
+        addresses.some((a) => a.id === state.selectedAddress?.id);
+      const selectedAddress = currentStillValid
+        ? state.selectedAddress
+        : defaultAddr;
+      return { addresses, selectedAddress };
+    }),
 
   setAddressesLoading: (addressesLoading) => set({ addressesLoading }),
 

@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { formatPriceSymbol } from "@/lib/utils";
 import { usePaymentModalStore } from "@/store/payment-modal-store";
 import { Check, ChevronDown, Info, X } from "lucide-react";
@@ -97,7 +96,7 @@ export function PaymentModal() {
             </div>
 
             {/* Do you want to pay now? */}
-            <section>
+            {/* <section>
               <p className="mb-3 text-sm font-medium">Do you want to pay now?</p>
               <RadioGroup
                 value={paymentMethod}
@@ -119,7 +118,7 @@ export function PaymentModal() {
                   <CardsLogo />
                 </label>
               </RadioGroup>
-            </section>
+            </section> */}
 
             {/* Payment Details */}
             <section>
