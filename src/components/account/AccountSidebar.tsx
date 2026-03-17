@@ -38,9 +38,13 @@ const LEGAL_ITEMS = [
 
 interface AccountSidebarProps {
   variant?: "default" | "sheet";
+  onNavigate?: () => void;
 }
 
-export function AccountSidebar({ variant = "default" }: AccountSidebarProps) {
+export function AccountSidebar({
+  variant = "default",
+  onNavigate,
+}: AccountSidebarProps) {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -84,6 +88,7 @@ export function AccountSidebar({ variant = "default" }: AccountSidebarProps) {
           </div>
           <Link
             href="/account/profile"
+            onClick={variant === "sheet" ? onNavigate : undefined}
             className="text-sm text-primary hover:underline font-medium"
           >
             View Profile
@@ -100,6 +105,7 @@ export function AccountSidebar({ variant = "default" }: AccountSidebarProps) {
               <li key={href}>
                 <Link
                   href={href}
+                  onClick={variant === "sheet" ? onNavigate : undefined}
                   className={cn(
                     "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors",
                     "hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -127,6 +133,7 @@ export function AccountSidebar({ variant = "default" }: AccountSidebarProps) {
               <li key={href}>
                 <Link
                   href={href}
+                  onClick={variant === "sheet" ? onNavigate : undefined}
                   className={cn(
                     "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors",
                     "hover:bg-muted text-muted-foreground hover:text-foreground"

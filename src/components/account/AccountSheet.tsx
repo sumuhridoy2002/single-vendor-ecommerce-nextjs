@@ -26,7 +26,10 @@ export function AccountSheet({ open, onOpenChange }: AccountSheetProps) {
           </SheetTitle>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <AccountSidebar variant="sheet" />
+          <AccountSidebar
+            variant="sheet"
+            onNavigate={() => onOpenChange(false)}
+          />
         </div>
       </SheetContent>
     </Sheet>

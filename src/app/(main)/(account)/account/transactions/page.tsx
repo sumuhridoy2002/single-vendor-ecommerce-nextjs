@@ -9,7 +9,7 @@ export default function TransactionsPage() {
   const balance = "৮০"; // placeholder
 
   return (
-    <div className="container max-w-2xl py-6 md:py-8">
+    <div className="container max-w-2xl py-3 xs:py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">Transaction History</h1>
 
       <div className="rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 text-white p-6 mb-8 flex flex-wrap items-center justify-between gap-4">

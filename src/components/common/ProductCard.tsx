@@ -9,13 +9,13 @@ import {
   CardHeader,
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
 import { Heart, Rocket, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { Rating } from "../ui/rating"
-import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 
 export interface ProductCardProps {
   product: Product
@@ -107,12 +107,14 @@ export function ProductCard({
         )}
 
         {/* Product title - bold, truncated */}
-        <Link
-          href={`/product/${product?.slug}`}
-          className="line-clamp-2 text-sm lg:text-base font-bold leading-tight text-foreground hover:underline h-10"
-        >
-          {product.name}
-        </Link>
+        <div className="h-8 xs:h-10">
+          <Link
+            href={`/product/${product?.slug}`}
+            className="line-clamp-2 text-xs xs:text-sm lg:text-base font-bold leading-tight text-foreground hover:underline h-auto"
+          >
+            {product.name}
+          </Link>
+        </div>
         {/* Variant / unit line - centered with asterisks */}
         {/* {product.unit && (
           <p className="text-xs text-muted-foreground">
@@ -120,30 +122,26 @@ export function ProductCard({
           </p>
         )} */}
         {/* Star rating with review count */}
-        <div className="flex min-h-5 items-center gap-1.5">
-          {product.rating != null ? (
-            <>
-              <Rating rating={product.rating} size="sm" />
-              {product.reviewCount != null && (
-                <span className="text-xs text-muted-foreground">
-                  ({product.reviewCount})
-                </span>
-              )}
-            </>
-          ) : (
-            <span className="invisible text-xs">&#8203;</span>
-          )}
+        <div className="flex min-h-3 xs:min-h-5 items-center gap-1.5">
+          <>
+            <Rating rating={product.rating ?? 0} size="sm" />
+            {product.reviewCount != null && (
+              <span className="text-xs text-muted-foreground">
+                ({product.reviewCount})
+              </span>
+            )}
+          </>
         </div>
       </CardContent>
 
       <CardFooter className="shrink-0 flex items-end justify-between gap-2 border-border/50 px-3 pt-1 pb-2.5">
-        <div className="flex flex-col gap-0.5 h-10 items-start justify-end">
+        <div className="flex flex-col gap-0.5 h-8 xs:h-10 items-start justify-end">
           {hasDiscount && product.originalPrice != null && (
-            <span className="text-xs text-muted-foreground line-through">
+            <span className="text-[10px] xs:text-xs text-muted-foreground line-through">
               {formatPriceSymbol(product.originalPrice)}
             </span>
           )}
-          <span className="text-base font-bold text-foreground">
+          <span className="text-xs xs:text-base font-bold text-foreground">
             {formatPriceSymbol(product.price)}
           </span>
         </div>

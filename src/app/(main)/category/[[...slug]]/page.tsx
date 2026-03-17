@@ -13,13 +13,13 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { getCategoryBySlugPath, useCategoryTree } from "@/hooks/data/useCategoryTree"
 import { useCategories } from "@/hooks/data/useCategories"
-import { useCartStore } from "@/store/cart-store"
+import { getCategoryBySlugPath, useCategoryTree } from "@/hooks/data/useCategoryTree"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
+import { useCartStore } from "@/store/cart-store"
 
-import { SubcategoryProductGrid } from "./components/SubcategoryProductGrid"
 import { toast } from "sonner"
+import { SubcategoryProductGrid } from "./components/SubcategoryProductGrid"
 
 export default function CategoryPage({
   params,
@@ -85,7 +85,7 @@ export default function CategoryPage({
 
   // Main category page: hero, subcategory cards, product sections
   return (
-    <div className="container w-full space-y-8">
+    <div className="container w-full space-y-6 xs:space-y-8 min-w-full">
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumb.map((item, i) => (

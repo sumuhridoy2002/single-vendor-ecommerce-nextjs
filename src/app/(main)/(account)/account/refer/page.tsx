@@ -32,7 +32,7 @@ export default function ReferPage() {
   };
 
   return (
-    <div className="container max-w-2xl py-6 md:py-8">
+    <div className="container max-w-2xl py-3 xs:py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">Refer and Earn</h1>
 
       <div className="flex justify-center gap-4 mb-8">

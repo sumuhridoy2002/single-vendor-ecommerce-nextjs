@@ -1,10 +1,10 @@
 "use client"
 
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
+import { Button } from "@/components/ui/button"
 import type { ResolvedCategory } from "@/hooks/data/useCategoryTree"
 import { useInfiniteProductsByCategory } from "@/hooks/data/useProducts"
 import type { Product } from "@/types/product"
-import { Button } from "@/components/ui/button"
 
 /** Top product section for current category (main page only; same style as home page). */
 export function CategoryProductsHighlight({
@@ -31,7 +31,7 @@ export function CategoryProductsHighlight({
 
   if (isLoading) {
     return (
-      <section className={`w-full min-w-full container py-6 md:py-8 ${sectionBgClassName}`}>
+      <section className={`w-full min-w-full container py-3 xs:py-6 md:py-8 ${sectionBgClassName}`}>
         <div className="h-8 w-48 animate-pulse rounded bg-muted" />
         <div className="mt-4 h-40 animate-pulse rounded bg-muted" />
       </section>
@@ -40,7 +40,7 @@ export function CategoryProductsHighlight({
 
   if (error) {
     return (
-      <section className={`w-full min-w-full container py-6 md:py-8 ${sectionBgClassName}`}>
+      <section className={`w-full min-w-full container py-3 xs:py-6 md:py-8 ${sectionBgClassName}`}>
         <p className="text-destructive">Failed to load products. Please try again.</p>
       </section>
     )

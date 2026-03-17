@@ -25,7 +25,7 @@ export function HeroBannerSlider() {
 
   if (error) {
     return (
-      <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-4 md:pb-6">
+      <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-0 xs:pb-4 md:pb-6">
         <div className="flex aspect-1920/600 min-h-[200px] items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground">
           Failed to load banners
         </div>
@@ -35,7 +35,7 @@ export function HeroBannerSlider() {
 
   if (isLoading || heroSliders.length === 0) {
     return (
-      <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-4 md:pb-6">
+      <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-0 xs:pb-4 md:pb-6">
         <div
           className={cn(
             "rounded-lg overflow-hidden",
@@ -48,7 +48,7 @@ export function HeroBannerSlider() {
   }
 
   return (
-    <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-4 md:pb-6">
+    <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-0 xs:pb-4 md:pb-6">
       <Swiper
         modules={[Autoplay, Pagination]}
         spaceBetween={0}

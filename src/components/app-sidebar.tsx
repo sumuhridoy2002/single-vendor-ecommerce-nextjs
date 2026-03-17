@@ -16,12 +16,11 @@ import {
   SidebarGroupContent,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  SidebarMenuSubItem
 } from "@/components/ui/sidebar"
 import { useCategoryTree } from "@/hooks/data/useCategoryTree"
 import { cn } from "@/lib/utils"
@@ -45,7 +44,6 @@ const flashSaleItem = {
   label: "FLASH SALE",
   href: "/flash-sale",
   icon: Zap,
-  badge: "1000+",
 }
 
 function CategoryIcon({ icon: Icon }: { icon: LucideIcon }) {
@@ -246,13 +244,9 @@ export function AppSidebar() {
                 className="flex w-full items-center gap-2"
               >
                 <flashSaleItem.icon className="size-5 shrink-0 text-warning" />
-                <span className="font-semibold text-destructive">
+                <span className="font-bold text-destructive text-sm xs:text-base md:text-lg">
                   {flashSaleItem.label}
                 </span>
-                <SidebarMenuBadge className="relative right-0 ml-auto border border-destructive bg-transparent px-2 py-0.5 text-xs font-medium text-foreground">
-                  {flashSaleItem.badge}
-                </SidebarMenuBadge>
-                <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground" />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

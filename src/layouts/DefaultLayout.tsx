@@ -10,7 +10,7 @@ const DefaultLayout = ({ children }: DefaultLayoutProps) => {
       <div className="w-0 shrink-0 overflow-hidden md:w-(--sidebar-width) md:overflow-visible md:self-stretch">
         <AppSidebar />
       </div>
-      <main className="flex min-w-0 flex-1 flex-col py-6 md:py-8">
+      <main className="flex min-w-0 flex-1 flex-col py-3 xs:py-6 md:py-8">
         {children}
       </main>
     </>

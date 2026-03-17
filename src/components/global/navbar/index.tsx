@@ -5,6 +5,7 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { CartSheet } from "@/components/cart/CartSheet";
 import { PaymentModal } from "@/components/cart/PaymentModal";
 import LogoSvg from "@/components/svg/logo";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCartFromApi } from "@/hooks/data/useCartFromApi";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,8 +15,6 @@ import { useAuthModalStore } from "@/store/auth-modal-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
 import { NavbarDelivery } from "./NavbarDelivery";
 import { NavbarDesktopActions } from "./NavbarDesktopActions";
 import { NavbarMobileActions } from "./NavbarMobileActions";
@@ -83,15 +82,13 @@ const Navbar = () => {
   return (
     <nav className="flex flex-col gap-2 border-b border-border bg-background px-4 py-3 sticky top-0 z-50 md:flex-row md:items-center md:justify-between md:gap-6">
       {/* Row 1: Logo + Delivery + (mobile: Wallet, Messenger, Cart | desktop: Search, User, Cart) */}
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:contents">
+      <div className="flex min-w-0 flex-1 items-start md:items-center justify-between gap-2 md:contents">
         <div className="flex flex-col lg:flex-row lg:items-end gap-2 lg:gap-20">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 xs:gap-2">
             <SidebarTrigger
-              className="size-9 shrink-0 md:hidden"
+              className="size-4 xs:size-6 md:size-9 shrink-0 md:hidden"
               aria-label="Open menu"
-            >
-              <Menu className="size-5" />
-            </SidebarTrigger>
+            />
             <Link href="/" className="shrink-0">
               <LogoSvg />
             </Link>

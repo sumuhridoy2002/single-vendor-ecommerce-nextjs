@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { setDefaultAddress as setDefaultAddressApi, deleteAddressApi } from "@/lib/api/customer";
+import { deleteAddressApi, setDefaultAddress as setDefaultAddressApi } from "@/lib/api/customer";
 import { globalQueryKeys } from "@/lib/query-keys";
 import { useAddressStore } from "@/store/address-store";
 import { useQueryClient } from "@tanstack/react-query";
@@ -60,7 +60,7 @@ export default function AddressesPage() {
   };
 
   return (
-    <div className="container max-w-2xl py-6 md:py-8">
+    <div className="container max-w-2xl py-3 xs:py-6 md:py-8">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold text-foreground">Manage Address</h1>
         <Button onClick={handleAddNew} className="bg-teal-600 hover:bg-teal-700">

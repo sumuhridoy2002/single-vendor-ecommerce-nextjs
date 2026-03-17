@@ -2,7 +2,8 @@
 
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { PanelLeftIcon } from "lucide-react"
+import { Menu } from "lucide-react"
+import { usePathname } from "next/navigation"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -66,7 +67,13 @@ function SidebarProvider({
   onOpenChange?: (open: boolean) => void
 }) {
   const isMobile = useIsMobile()
+  const pathname = usePathname()
   const [openMobile, setOpenMobile] = React.useState(false)
+
+  // Close mobile sidebar when route changes.
+  React.useEffect(() => {
+    if (isMobile) setOpenMobile(false)
+  }, [pathname, isMobile])
 
   // This is the internal state of the sidebar.
   // We use openProp and setOpenProp for control from outside the component.
@@ -183,7 +190,15 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div
+            className="flex h-full w-full flex-col"
+            onClick={(e) => {
+              const target = e.target as HTMLElement
+              if (target.closest("a")) setOpenMobile(false)
+            }}
+          >
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     )
@@ -272,7 +287,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <Menu />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
