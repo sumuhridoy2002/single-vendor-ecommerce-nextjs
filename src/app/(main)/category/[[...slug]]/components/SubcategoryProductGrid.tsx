@@ -1,9 +1,6 @@
 "use client"
 
-import { useRef, useEffect, useState } from "react"
 import { ProductCard } from "@/components/common/ProductCard"
-import { useInfiniteProductsByCategory } from "@/hooks/data/useProducts"
-import type { CategoryTreeNode, Product } from "@/types/product"
 import { Button } from "@/components/ui/button"
 import {
   Select,
@@ -12,7 +9,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useInfiniteProductsByCategory } from "@/hooks/data/useProducts"
 import type { ProductsSortParam } from "@/lib/api/products"
+import type { CategoryTreeNode, Product } from "@/types/product"
+import { useEffect, useRef, useState } from "react"
 
 const SORT_OPTIONS: { value: ProductsSortParam; label: string }[] = [
   { value: "price_low", label: "Price: Low to High" },
@@ -115,7 +115,7 @@ export function SubcategoryProductGrid({
         </p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {products.map((product) => (
               <ProductCard
                 key={product.id}

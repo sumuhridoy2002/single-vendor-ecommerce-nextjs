@@ -101,7 +101,7 @@ export function BlogsListClient() {
   }, [page]);
 
   return (
-    <div className="container py-6 md:py-8">
+    <div className="container py-3 xs:py-6 md:py-8">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Blogs</h1>
 
       {loading && blogs.length === 0 ? (

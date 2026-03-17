@@ -28,9 +28,11 @@ export function NavbarDelivery({ onOpenAddressModal }: NavbarDeliveryProps) {
         "flex items-center gap-1 text-sm text-muted-foreground",
       )}>
         <MapPin className="size-3.5 shrink-0" />
-        Delivery to
+        <span className="whitespace-nowrap text-xs xs:text-sm">
+          Delivery to
+        </span>
       </span>
-      <span className="flex min-w-0 w-28 items-center gap-0.5 text-sm font-semibold">
+      <span className="flex min-w-0 w-20 xs:w-28 items-center gap-0.5 text-xs xs:text-sm font-semibold">
         <span className="min-w-0 truncate">
           {selectedAddress ? `${selectedAddress.address} (${selectedAddress.addressType})` : "Bangladesh"}
         </span>

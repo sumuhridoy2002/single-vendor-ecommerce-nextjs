@@ -63,7 +63,7 @@ const FAQ_SECTIONS = [
 
 export default function FAQPage() {
   return (
-    <div className="container max-w-3xl py-6 md:py-8">
+    <div className="container max-w-3xl py-3 xs:py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">
         Hi, what can we help you with?
       </h1>

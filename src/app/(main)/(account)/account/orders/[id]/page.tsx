@@ -1,14 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import type { PlacedOrderData } from "@/lib/api/orders";
 import { getOrderById } from "@/lib/api/orders";
 import { formatPriceSymbol } from "@/lib/utils";
-import { Bike, Home, Loader2, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Bike, Home, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { PlacedOrderData } from "@/lib/api/orders";
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -44,7 +44,7 @@ export default function OrderDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container py-6 md:py-8">
+      <div className="container py-3 xs:py-6 md:py-8">
         <div className="flex justify-center py-12">
           <Loader2 className="size-8 animate-spin text-muted-foreground" />
         </div>
@@ -54,7 +54,7 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="container py-6 md:py-8">
+      <div className="container py-3 xs:py-6 md:py-8">
         <p className="text-muted-foreground">Order not found.</p>
         <Button variant="link" asChild className="mt-2">
           <Link href="/account/orders">
@@ -70,7 +70,7 @@ export default function OrderDetailPage() {
   const addressLine = [shipping.address, shipping.city].filter(Boolean).join(", ");
 
   return (
-    <div className="container py-6 md:py-8">
+    <div className="container py-3 xs:py-6 md:py-8">
       <Button variant="ghost" size="sm" asChild className="mb-6 -ml-2">
         <Link href="/account/orders" className="gap-1.5">
           <ArrowLeft className="size-4" />

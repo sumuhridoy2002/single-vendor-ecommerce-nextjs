@@ -12,7 +12,7 @@ export function NavbarCartButton() {
     <button
       type="button"
       onClick={openCart}
-      className="cursor-pointer relative flex size-10 items-center justify-center rounded-full bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="cursor-pointer relative flex size-8 xs:size-10 items-center justify-center rounded-full bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       aria-label="Shopping cart"
     >
       <ShoppingCart className="size-5 text-muted-foreground" />

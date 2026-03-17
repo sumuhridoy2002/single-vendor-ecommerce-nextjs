@@ -78,7 +78,7 @@ export function BrandPageContent({ brand }: BrandPageContentProps) {
   }
 
   return (
-    <div className="container w-full space-y-8 py-6">
+    <div className="container w-full space-y-6 xs:space-y-8 py-3 xs:py-6 min-w-full">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -174,7 +174,7 @@ export function BrandPageContent({ brand }: BrandPageContentProps) {
 
         {!isLoading && !error && products.length > 0 && (
           <>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {products.map((product) => (
                 <ProductCard
                   key={product.id}

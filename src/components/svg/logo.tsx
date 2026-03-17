@@ -4,6 +4,7 @@ const LogoSvg = () => (
     xmlns="http://www.w3.org/2000/svg"
     width="106"
     height="48"
+    className="aspect-[106/48] h-10 xs:h-12"
     fill="none"
     viewBox="0 0 106 48"
   >

@@ -4,7 +4,7 @@ import { Bell } from "lucide-react";
 
 export default function NotificationsPage() {
   return (
-    <div className="container max-w-2xl py-6 md:py-8">
+    <div className="container max-w-2xl py-3 xs:py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-1">Notifications</h1>
       <p className="text-sm text-muted-foreground mb-8">(0 Notifications Unread)</p>
 

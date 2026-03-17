@@ -1,6 +1,6 @@
 export default function TermsPage() {
   return (
-    <div className="container max-w-3xl py-6 md:py-8">
+    <div className="container max-w-3xl py-3 xs:py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">Terms and Conditions</h1>
 
       <div className="prose prose-neutral dark:prose-invert max-w-none space-y-4 text-muted-foreground">

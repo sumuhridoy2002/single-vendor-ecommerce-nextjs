@@ -42,7 +42,7 @@ export function EspeciallyForYouSection() {
   }
 
   return (
-    <section className="py-6 md:py-8 px-4 2xl:px-0 max-w-7xl mx-auto">
+    <section className="py-3 xs:py-6 md:py-8 px-4 2xl:px-0 max-w-7xl mx-auto">
       {/* <h2 className="mb-8 font-semibold text-foreground text-lg md:text-3xl text-center">
         Especially For You
       </h2>
@@ -63,7 +63,7 @@ export function EspeciallyForYouSection() {
       </div> */}
       {!brandsLoading && brands.length > 0 && (
         <>
-          <h2 className="mb-8 mt-12 font-semibold text-foreground text-lg md:text-3xl text-center">
+          <h2 className="mb-2 xs:mb-4 md:mb-8 mt-3 xs:mt-6 md:mt-12 font-semibold text-foreground text-lg md:text-3xl text-center">
             Shop by Brand
           </h2>
           <div className="min-w-0 w-full overflow-hidden">

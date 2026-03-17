@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { AuthPromoSwiper } from "@/components/auth/AuthPromoSwiper";
 import { useAuth } from "@/contexts/AuthContext";
-import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
@@ -22,10 +22,6 @@ import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
 import FacebookIcon from "../icons/FacebookIcon";
-
-const COUNTRY_CODES = [
-  { value: "+88", label: "+88 BD" },
-];
 
 const OTP_LENGTH = 4;
 
@@ -123,38 +119,8 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
         className="max-w-[calc(100%-2rem)] w-full p-0 gap-0 overflow-x-hidden sm:max-w-4xl rounded-xl"
       >
         <div className="grid grid-cols-1 md:grid-cols-[2fr_3fr] min-h-[480px]">
-          {/* Left column - Promo */}
-          <div className="bg-muted/50 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-full max-w-[200px] h-[200px] mx-auto mb-6 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
-              <svg
-                viewBox="0 0 200 200"
-                className="w-full h-full text-muted-foreground/60"
-                aria-hidden
-              >
-                <rect width="120" height="180" x="40" y="10" rx="8" fill="currentColor" opacity="0.3" />
-                <rect width="60" height="90" x="70" y="30" rx="4" fill="currentColor" opacity="0.5" />
-                <circle cx="100" cy="140" r="20" fill="currentColor" opacity="0.4" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">
-              Quick & easy ordering process
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-xs">
-              Now you can order your medicine from Arogga. We provide all the medicines you need.
-            </p>
-            <div className="flex gap-1.5 mt-6">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className={cn(
-                    "rounded-full transition-all inline-block",
-                    i === 0 ? "w-6 h-2 bg-primary" : "w-2 h-2 bg-muted-foreground/30"
-                  )}
-                  aria-hidden
-                />
-              ))}
-            </div>
-          </div>
+          {/* Left column - Promo swiper */}
+          <AuthPromoSwiper />
 
           {/* Right column - Form */}
           <div className="bg-background flex flex-col p-6 md:p-8 relative">

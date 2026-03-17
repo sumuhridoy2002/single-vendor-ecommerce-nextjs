@@ -1,11 +1,11 @@
 "use client";
 
-import { Heart } from "lucide-react";
 import { ProductCard } from "@/components/common/ProductCard";
-import { useWishlistStore } from "@/store/wishlist-store";
-import { useCartStore } from "@/store/cart-store";
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
+import { useCartStore } from "@/store/cart-store";
+import { useWishlistStore } from "@/store/wishlist-store";
 import type { Product } from "@/types/product";
+import { Heart } from "lucide-react";
 import { toast } from "sonner";
 
 export default function WishlistPage() {
@@ -30,7 +30,7 @@ export default function WishlistPage() {
   const hasItems = items.length > 0;
 
   return (
-    <div className="container py-6 md:py-8">
+    <div className="container py-3 xs:py-6 md:py-8">
       <h1 className="mb-6 text-2xl font-bold text-foreground">Wishlist</h1>
       <p className="mb-4 text-sm text-muted-foreground">Your saved products.</p>
 

@@ -1,8 +1,8 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { getOrders, type OrderListItem } from "@/lib/api/orders";
 import { formatPriceSymbol } from "@/lib/utils";
 import { Bike, Home, Loader2 } from "lucide-react";
@@ -130,7 +130,7 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="container py-6 md:py-8">
+    <div className="container py-3 xs:py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">My Orders</h1>
 
       {loading && orders.length === 0 ? (

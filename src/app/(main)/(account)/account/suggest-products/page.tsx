@@ -10,12 +10,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Plus } from "lucide-react";
 import { useRef } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { z } from "zod";
 
 const suggestProductSchema = z.object({
   productName: z.string().min(1, "Product name is required"),
@@ -55,7 +55,7 @@ export default function SuggestProductsPage() {
   };
 
   return (
-    <div className="container max-w-2xl py-6 md:py-8">
+    <div className="container max-w-2xl py-3 xs:py-6 md:py-8">
       <h1 className="text-2xl font-bold text-foreground mb-6">Suggest Products</h1>
       <p className="text-sm font-medium text-muted-foreground mb-6">Suggestions</p>
 

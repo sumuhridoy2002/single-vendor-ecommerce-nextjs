@@ -304,7 +304,7 @@ export function ProductInfo({
         </div>
       </div>
 
-      <div className="flex flex-col flex-wrap gap-2 sm:flex-row">
+      <div className="flex gap-2 flex-row">
         <Button
           className="flex-1 gap-2 bg-primary hover:bg-primary-dark"
           onClick={() =>
@@ -317,8 +317,8 @@ export function ProductInfo({
           Add To Cart
         </Button>
         <Button
-          variant={isInWishlist ? "default" : "outline"}
-          className="flex-1 gap-2"
+          variant={"outline"}
+          className="gap-2"
           onClick={handleWishlistClick}
           aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
@@ -328,7 +328,6 @@ export function ProductInfo({
               isInWishlist ? "fill-red-500 text-red-500" : undefined
             )}
           />
-          {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
         </Button>
       </div>
 
