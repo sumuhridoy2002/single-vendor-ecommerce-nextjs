@@ -12,7 +12,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { addToSearchHistory, clearSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { useAddressStore } from "@/store/address-store";
 import { useAuthModalStore } from "@/store/auth-modal-store";
-import { Menu } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -83,15 +82,13 @@ const Navbar = () => {
   return (
     <nav className="flex flex-col gap-2 border-b border-border bg-background px-4 py-3 sticky top-0 z-50 md:flex-row md:items-center md:justify-between md:gap-6">
       {/* Row 1: Logo + Delivery + (mobile: Wallet, Messenger, Cart | desktop: Search, User, Cart) */}
-      <div className="flex min-w-0 flex-1 items-center justify-between gap-2 md:contents">
+      <div className="flex min-w-0 flex-1 items-start md:items-center justify-between gap-2 md:contents">
         <div className="flex flex-col lg:flex-row lg:items-end gap-2 lg:gap-20">
           <div className="flex items-center gap-1 xs:gap-2">
             <SidebarTrigger
-              className="size-4 xs:size-6 sm:size-9 shrink-0 md:hidden"
+              className="size-4 xs:size-6 md:size-9 shrink-0 md:hidden"
               aria-label="Open menu"
-            >
-              <Menu className="size-5" />
-            </SidebarTrigger>
+            />
             <Link href="/" className="shrink-0">
               <LogoSvg />
             </Link>
