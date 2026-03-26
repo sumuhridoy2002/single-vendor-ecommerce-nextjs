@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { cn } from "@/lib/utils"
 import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
@@ -11,13 +12,22 @@ import {
   Heart,
   Minus,
   Plus,
-  Share2,
   ShoppingCart,
   Star,
   Truck,
 } from "lucide-react"
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import { BsTwitterX } from "react-icons/bs"
+import {
+  FaFacebook,
+  FaLinkedin,
+  FaShareAlt,
+  FaTelegram
+} from "react-icons/fa"
+import { toast } from "sonner"
+
+
 
 export interface ProductInfoProps {
   product: Product
@@ -27,6 +37,7 @@ export interface ProductInfoProps {
     options?: { variationId?: number }
   ) => void
   onWishlist?: (product: Product) => void
+  onVariantImageChange?: (image?: string) => void
   className?: string
 }
 
@@ -89,6 +100,7 @@ export function ProductInfo({
   product,
   onAddToCart,
   onWishlist,
+  onVariantImageChange,
   className,
 }: ProductInfoProps) {
   const [quantity, setQuantity] = useState(1)
@@ -137,13 +149,26 @@ export function ProductInfo({
       : null)
   const inStock = product.inStock ?? true
   const toggleWishlist = useWishlistStore((state) => state.toggle)
+  const pendingIds = useWishlistStore((state) => state.pendingIds)
   const isInWishlist = useIsInWishlist(product.id)
+  const isWishlistPending = pendingIds.includes(product.id)
+  const whenLoggedIn = useWhenLoggedIn()
+
+  const getShareUrl = () =>
+    typeof window !== "undefined" ? window.location.href : ""
+  const getShareText = () => `Check out ${product.name}`
+
+  function openShareLink(shareUrl: string) {
+    if (typeof window === "undefined") return
+    // Using a new tab/window avoids blocking the user if popups are allowed.
+    window.open(shareUrl, "_blank", "noopener,noreferrer")
+  }
 
   async function handleShare() {
-    const url = typeof window !== "undefined" ? window.location.href : ""
+    const url = getShareUrl()
     const shareData: ShareData = {
       title: product.name,
-      text: `Check out ${product.name}`,
+      text: getShareText(),
       url,
     }
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -159,6 +184,52 @@ export function ProductInfo({
     }
   }
 
+  function handleFacebookShare() {
+    const url = getShareUrl()
+    if (!url) return
+    openShareLink(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        url
+      )}`
+    )
+  }
+
+  function handleTwitterShare() {
+    const url = getShareUrl()
+    if (!url) return
+    openShareLink(
+      `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+        url
+      )}&text=${encodeURIComponent(getShareText())}`
+    )
+  }
+
+  function handleLinkedInShare() {
+    const url = getShareUrl()
+    if (!url) return
+    openShareLink(
+      `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+        url
+      )}`
+    )
+  }
+
+  function handleTelegramShare() {
+    const url = getShareUrl()
+    if (!url) return
+    openShareLink(
+      `https://t.me/share/url?url=${encodeURIComponent(
+        url
+      )}&text=${encodeURIComponent(getShareText())}`
+    )
+  }
+
+  function handleImoShare() {
+    // IMO doesn't have a widely documented universal share URL scheme.
+    // We use your existing Web Share/copy fallback so it still works.
+    void handleShare()
+  }
+
   async function copyToClipboard(text: string) {
     if (typeof navigator?.clipboard?.writeText === "function") {
       await navigator.clipboard.writeText(text)
@@ -166,8 +237,11 @@ export function ProductInfo({
   }
 
   const handleWishlistClick = () => {
-    toggleWishlist(product)
-    onWishlist?.(product)
+    whenLoggedIn(() => {
+      toggleWishlist(product.id)
+        .then(() => onWishlist?.(product))
+        .catch((e) => toast.error(e?.message ?? "Failed to update wishlist"))
+    })
   }
 
   return (
@@ -246,14 +320,16 @@ export function ProductInfo({
                     <button
                       key={variation.id}
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
                         setSelectedByType((prev) => ({
                           ...prev,
                           [type]: variation.id,
                         }))
+                        onVariantImageChange?.(variation.image)
+                      }
                       }
                       className={cn(
-                        "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
+                        "rounded-md border px-4 py-2 text-xs font-medium transition-colors",
                         selected
                           ? "border-foreground bg-foreground text-background"
                           : "border-input bg-background text-foreground hover:border-foreground/50"
@@ -320,6 +396,7 @@ export function ProductInfo({
           variant={"outline"}
           className="gap-2"
           onClick={handleWishlistClick}
+          disabled={isWishlistPending}
           aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart
@@ -344,15 +421,50 @@ export function ProductInfo({
 
       <div className="flex items-center gap-4 border-t pt-4">
         <span className="text-sm text-muted-foreground">Share:</span>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="ghost"
-            size="icon"
-            className="size-8"
-            aria-label="Share"
+            size="icon-sm"
+            aria-label="Share on Facebook"
+            onClick={handleFacebookShare}
+          >
+            <FaFacebook className="size-5 text-gray-600" />
+            <span className="sr-only">Facebook</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Share on Twitter"
+            onClick={handleTwitterShare}
+          >
+            <BsTwitterX className="size-5 text-gray-600" />
+            <span className="sr-only">Twitter</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Share on LinkedIn"
+            onClick={handleLinkedInShare}
+          >
+            <FaLinkedin className="size-5 text-gray-600" />
+            <span className="sr-only">LinkedIn</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Share on Telegram"
+            onClick={handleTelegramShare}
+          >
+            <FaTelegram className="size-5 text-gray-600" />
+            <span className="sr-only">Telegram</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Global share"
             onClick={handleShare}
           >
-            <Share2 className="size-4" />
+            <FaShareAlt className="size-5 text-gray-600" />
           </Button>
         </div>
       </div>

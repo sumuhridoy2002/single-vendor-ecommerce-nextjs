@@ -3,6 +3,7 @@
 import { apiAddressToStore } from "@/lib/api/address-mappers";
 import { getAddresses } from "@/lib/api/customer";
 import { fetchCategories } from "@/lib/api/categories";
+import { fetchCampaigns } from "@/lib/api/campaigns";
 import { fetchHeroSliders } from "@/lib/api/hero-sliders";
 import { fetchHomepage } from "@/lib/api/homepage";
 import { fetchPages } from "@/lib/api/pages";
@@ -10,6 +11,7 @@ import { fetchSettings } from "@/lib/api/settings";
 import { globalQueryKeys } from "@/lib/query-keys";
 import { useAddressStore } from "@/store/address-store";
 import { useCategoriesStore } from "@/stores/categories-store";
+import { useCampaignsStore } from "@/stores/campaigns-store";
 import { useHeroSlidersStore } from "@/stores/hero-sliders-store";
 import { useHomepageStore } from "@/stores/homepage-store";
 import { usePagesStore } from "@/stores/pages-store";
@@ -41,6 +43,7 @@ export function GlobalDataHydrator() {
   const hasAccessToken = useAccessToken().hasAccessToken;
   const setSettings = useSettingsStore((s) => s.setSettings);
   const setCategories = useCategoriesStore((s) => s.setCategories);
+  const setCampaigns = useCampaignsStore((s) => s.setCampaigns);
   const setAddresses = useAddressStore((s) => s.setAddresses);
   const setData = useHomepageStore((s) => s.setData);
   const setHeroSliders = useHeroSlidersStore((s) => s.setHeroSliders);
@@ -77,6 +80,12 @@ export function GlobalDataHydrator() {
     ...PERSISTED_QUERY_OPTIONS,
   });
 
+  const { data: campaignsData } = useQuery({
+    queryKey: globalQueryKeys.campaigns,
+    queryFn: fetchCampaigns,
+    ...PERSISTED_QUERY_OPTIONS,
+  });
+
   const { data: slidersData } = useQuery({
     queryKey: globalQueryKeys.sliders,
     queryFn: fetchHeroSliders,
@@ -104,6 +113,10 @@ export function GlobalDataHydrator() {
   useEffect(() => {
     if (homepageData) setData(homepageData);
   }, [homepageData, setData]);
+
+  useEffect(() => {
+    if (campaignsData) setCampaigns(campaignsData);
+  }, [campaignsData, setCampaigns]);
 
   useEffect(() => {
     if (slidersData) setHeroSliders(slidersData);

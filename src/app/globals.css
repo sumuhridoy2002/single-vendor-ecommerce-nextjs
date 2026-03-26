@@ -299,6 +299,9 @@
   }
 }
 
+button {
+  cursor: pointer;
+}
 
 
 /* Chrome, Edge, Safari */

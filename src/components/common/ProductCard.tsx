@@ -8,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { cn } from "@/lib/utils"
 import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
@@ -15,6 +16,7 @@ import { Heart, Rocket, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
+import { toast } from "sonner"
 import { Rating } from "../ui/rating"
 
 export interface ProductCardProps {
@@ -39,7 +41,10 @@ export function ProductCard({
   const [imageError, setImageError] = useState(false)
   const imageSrc = imageError ? PLACEHOLDER_IMAGE : product.image
   const toggleWishlist = useWishlistStore((state) => state.toggle)
+  const pendingIds = useWishlistStore((state) => state.pendingIds)
   const isInWishlist = useIsInWishlist(product.id)
+  const isWishlistPending = pendingIds.includes(product.id)
+  const whenLoggedIn = useWhenLoggedIn()
 
   const hasDiscount =
     product.originalPrice != null &&
@@ -52,8 +57,11 @@ export function ProductCard({
         : null
 
   const handleWishlistClick = () => {
-    toggleWishlist(product)
-    onWishlist?.(product)
+    whenLoggedIn(() => {
+      toggleWishlist(product.id)
+        .then(() => onWishlist?.(product))
+        .catch((e) => toast.error(e?.message ?? "Failed to update wishlist"))
+    })
   }
 
   return (
@@ -85,6 +93,7 @@ export function ProductCard({
         <button
           type="button"
           onClick={handleWishlistClick}
+          disabled={isWishlistPending}
           className="absolute right-2 top-2 inline-flex size-8 items-center justify-center rounded-full bg-white/80 text-muted-foreground shadow hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >

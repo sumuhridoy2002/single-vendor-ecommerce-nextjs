@@ -94,6 +94,13 @@ function mapCartProductToProduct(
 export function mapCartLineToCartItem(line: CartLineApi): CartItem {
   return {
     lineId: line.id,
+    variation: line.variation
+      ? {
+          id: line.variation.id,
+          type: line.variation.type,
+          value: line.variation.value,
+        }
+      : undefined,
     product: mapCartProductToProduct(line.product, line.variation),
     quantity: line.quantity,
   };

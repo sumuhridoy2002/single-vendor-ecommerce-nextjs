@@ -7,6 +7,8 @@ export const globalQueryKeys = {
   categories: ["categories"] as const,
   customerAddresses: ["customer", "addresses"] as const,
   productsHomepage: ["products", "homepage"] as const,
+  campaigns: ["campaigns"] as const,
+  campaignById: (id: number) => ["campaigns", "detail", id] as const,
   sliders: ["sliders"] as const,
   pages: ["pages"] as const,
   /** Page by slug: ["pages", slug] */

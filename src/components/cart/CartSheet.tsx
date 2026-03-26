@@ -21,6 +21,7 @@ import {
 } from "@/store/cart-store";
 import { useCouponStore } from "@/store/coupon-store";
 import { usePaymentModalStore } from "@/store/payment-modal-store";
+import { PolicyConsentLinks } from "@/components/legal/PolicyLinks";
 import {
   Bike,
   ChevronRight,
@@ -31,7 +32,6 @@ import {
   ShoppingCart,
   Zap
 } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import CartLineItem from "./CartLineItem";
@@ -380,17 +380,10 @@ export function CartSheet() {
                 {/* Terms */}
                 <p className="mt-4 text-xs text-muted-foreground">
                   By continuing you agree to{" "}
-                  <Link href="#" className="text-primary underline">
-                    Terms & Conditions
-                  </Link>
-                  ,{" "}
-                  <Link href="#" className="text-primary underline">
-                    Privacy Policy
-                  </Link>{" "}
-                  &{" "}
-                  <Link href="#" className="text-primary underline">
-                    Refund-Return Policy
-                  </Link>
+                  <PolicyConsentLinks
+                    enabled={isOpen}
+                    linkClassName="text-primary underline"
+                  />
                 </p>
 
                 {/* Flash sale card */}

@@ -46,7 +46,7 @@ export function MobileBottomNav({ onAccountClick }: MobileBottomNavProps) {
               )}
             >
               <Icon className="size-5 shrink-0" aria-hidden />
-              <span>{label}</span>
+              <span className="text-center text-[10px] xs:text-xs">{label}</span>
             </Link>
           );
         })}
@@ -62,7 +62,7 @@ export function MobileBottomNav({ onAccountClick }: MobileBottomNavProps) {
           aria-label="Account menu"
         >
           <User className="size-5 shrink-0" aria-hidden />
-          <span>Account</span>
+          <span className="text-[10px] xs:text-xs">Account</span>
         </button>
       </div>
     </nav>

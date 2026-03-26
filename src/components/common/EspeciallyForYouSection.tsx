@@ -63,7 +63,7 @@ export function EspeciallyForYouSection() {
       </div> */}
       {!brandsLoading && brands.length > 0 && (
         <>
-          <h2 className="mb-2 xs:mb-4 md:mb-8 mt-3 xs:mt-6 md:mt-12 font-semibold text-foreground text-lg md:text-3xl text-center">
+          <h2 className="mb-2 xs:mb-4 md:mb-8 font-semibold text-foreground text-lg md:text-3xl text-center">
             Shop by Brand
           </h2>
           <div className="min-w-0 w-full overflow-hidden">

@@ -57,7 +57,9 @@ export default function RootLayout({
             <div className="flex min-h-svh w-full flex-col">
               <Navbar />
               <CategoryBar />
-              <div className="flex min-h-0 flex-1 pb-16 md:pb-0">{children}</div>
+              <div className="flex min-h-0 flex-1">
+                {children}
+              </div>
               <MobileBottomNavWithAccountSheet />
             </div>
           </SidebarProvider>

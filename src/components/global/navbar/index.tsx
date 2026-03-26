@@ -8,6 +8,7 @@ import LogoSvg from "@/components/svg/logo";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCartFromApi } from "@/hooks/data/useCartFromApi";
+import { useWishlistFromApi } from "@/hooks/data/useWishlistFromApi";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { addToSearchHistory, clearSearchHistory, getSearchHistory } from "@/lib/search-history";
 import { useAddressStore } from "@/store/address-store";
@@ -22,6 +23,7 @@ import { NavbarSearch } from "./NavbarSearch";
 
 const Navbar = () => {
   useCartFromApi();
+  useWishlistFromApi();
   const { isAuthenticated, user } = useAuth();
   const authModalOpen = useAuthModalStore((s) => s.open);
   const setAuthModalOpen = useAuthModalStore((s) => s.setOpen);

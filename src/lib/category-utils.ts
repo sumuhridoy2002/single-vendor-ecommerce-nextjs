@@ -7,6 +7,7 @@ export function mapApiCategoryToTreeNode(api: CategoryApiNode): CategoryTreeNode
     id: String(api.id),
     title: api.name,
     slug: api.slug,
+    image: api.image,
     children:
       api.children && api.children.length > 0
         ? api.children.map(mapApiCategoryToTreeNode)

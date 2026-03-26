@@ -52,5 +52,6 @@ export interface CategoryTreeNode {
   id: string
   title: string
   slug: string
+  image?: string
   children?: CategoryTreeNode[]
 }

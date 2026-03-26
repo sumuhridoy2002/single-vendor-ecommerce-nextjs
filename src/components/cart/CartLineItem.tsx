@@ -16,7 +16,7 @@ const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png";
 const DEBOUNCE_MS = 500;
 
 function CartLineItem({ item }: { item: CartItemType }) {
-  const { product, quantity } = item;
+  const { product, quantity, variation } = item;
   const removeItem = useCartStore((s) => s.removeItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const setQuantityOptimistic = useCartStore((s) => s.setQuantityOptimistic);
@@ -64,13 +64,6 @@ function CartLineItem({ item }: { item: CartItemType }) {
 
   const hasDiscount =
     product.originalPrice != null && product.originalPrice > product.price;
-  const discountLabel =
-    product.discountPercent != null
-      ? `${product.discountPercent}% OFF`
-      : hasDiscount
-        ? "Sale"
-        : null;
-
   return (
     <div className="flex gap-3 rounded-lg border bg-card p-3">
       <Link
@@ -96,6 +89,11 @@ function CartLineItem({ item }: { item: CartItemType }) {
           {product.brand && <span>{product.brand}</span>}
           {product.unit && <span>{product.unit}</span>}
         </div>
+        {variation && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            {variation.type}: <span className="font-medium text-foreground">{variation.value}</span>
+          </p>
+        )}
         <div className="mt-2 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {hasDiscount && product.originalPrice != null && (

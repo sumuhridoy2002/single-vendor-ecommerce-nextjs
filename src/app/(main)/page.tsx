@@ -1,6 +1,7 @@
 "use client"
 
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
+import { CampaignsSection } from "@/components/common/CampaignsSection"
 import { EspeciallyForYouSection } from "@/components/common/EspeciallyForYouSection"
 import { HeroBannerSlider } from "@/components/common/HeroBannerSlider"
 import { useHomepage } from "@/hooks/data/useHomepage"
@@ -41,6 +42,7 @@ export default function Home() {
     return (
       <div className="w-full">
         <HeroBannerSlider />
+        <CampaignsSection />
         <EspeciallyForYouSection />
         <div className="container py-8">
           <div className="h-24 animate-pulse rounded bg-muted" />
@@ -59,6 +61,7 @@ export default function Home() {
   return (
     <div className="w-full">
       <HeroBannerSlider />
+      <CampaignsSection />
       <EspeciallyForYouSection />
       {sections.map((section, index) => (
         <CategoryProductSection

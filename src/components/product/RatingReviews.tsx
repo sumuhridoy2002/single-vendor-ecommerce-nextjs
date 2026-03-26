@@ -9,7 +9,7 @@ import { submitProductReview } from "@/lib/api/products"
 import type { Product, ProductReview } from "@/types/product"
 import { useAuth } from "@/contexts/AuthContext"
 import { Loader2, Star } from "lucide-react"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 const STAR_COUNTS = [5, 4, 3, 2, 1] as const
@@ -17,7 +17,7 @@ const STAR_COUNTS = [5, 4, 3, 2, 1] as const
 export interface RatingReviewsProps {
   product: Product
   /** Callback after a review is submitted (e.g. to refetch product). */
-  onReviewSubmitted?: () => void
+  onReviewSubmitted?: () => Promise<void> | void
   className?: string
 }
 
@@ -55,12 +55,11 @@ function getInitials(name: string): string {
 
 export function RatingReviews({
   product,
-  onReviewSubmitted,
   className,
 }: RatingReviewsProps) {
   const { isAuthenticated } = useAuth()
-  const reviews: ProductReview[] = product.recentReviews ?? []
-  const reviewCount = product.reviewCount ?? reviews.length
+  const [reviews, setReviews] = useState<ProductReview[]>(() => product.recentReviews ?? [])
+  const reviewCount = Math.max(product.reviewCount ?? 0, reviews.length)
   const rating =
     reviews.length > 0
       ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
@@ -75,6 +74,10 @@ export function RatingReviews({
   const [formComment, setFormComment] = useState("")
   const [hoverRating, setHoverRating] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    setReviews(product.recentReviews ?? [])
+  }, [product.id, product.recentReviews])
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -94,17 +97,26 @@ export function RatingReviews({
           rating: formRating,
           comment,
         })
+        const newReview: ProductReview = {
+          id: res.data.id,
+          rating: res.data.rating,
+          comment: res.data.comment,
+          user_name: res.data.user_name,
+          user_avatar: res.data.user_avatar,
+          created_at: res.data.created_at,
+          reply: res.data.reply ?? undefined,
+        }
+        setReviews((prev) => [newReview, ...prev.filter((r) => r.id !== newReview.id)])
         toast.success(res.message ?? "Review submitted successfully!")
         setFormRating(0)
         setFormComment("")
-        onReviewSubmitted?.()
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to submit review")
       } finally {
         setIsSubmitting(false)
       }
     },
-    [product.id, formRating, formComment, onReviewSubmitted]
+    [product.id, formRating, formComment]
   )
 
   return (

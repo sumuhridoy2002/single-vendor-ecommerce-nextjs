@@ -7,21 +7,52 @@ import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
 import { ZoomIn } from "lucide-react"
 import Image from "next/image"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 const ZOOM_LEVEL = 2
 
 export interface ProductGalleryProps {
   product: Product
+  variantImage?: string
+  onVariantImageChange?: (image?: string) => void
   className?: string
 }
 
-export function ProductGallery({ product, className }: ProductGalleryProps) {
-  const images = product.images?.length ? product.images : [product.image]
+export function ProductGallery({
+  product,
+  variantImage,
+  onVariantImageChange,
+  className,
+}: ProductGalleryProps) {
+  const variationImageSet = useMemo(() => {
+    const set = new Set<string>()
+    for (const variation of product.variations ?? []) {
+      if (variation.image) set.add(variation.image)
+    }
+    return set
+  }, [product.variations])
+
+  const images = useMemo(() => {
+    const baseImages = product.images?.length ? product.images : [product.image]
+    const variationImages =
+      product.variations
+        ?.map((variation) => variation.image)
+        .filter((image): image is string => Boolean(image)) ?? []
+
+    return Array.from(new Set([...baseImages, ...variationImages]))
+  }, [product.images, product.image, product.variations])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [zoomOrigin, setZoomOrigin] = useState<{ x: number; y: number } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const mainImage = images[selectedIndex] ?? product.image
+  const variantIndex = useMemo(
+    () => (variantImage ? images.indexOf(variantImage) : -1),
+    [variantImage, images]
+  )
+  const activeIndex = variantIndex >= 0 ? variantIndex : selectedIndex
+  const selectedImage = useMemo(
+    () => images[activeIndex] ?? product.image,
+    [images, activeIndex, product.image]
+  )
   const isZoomed = zoomOrigin !== null
   const discountPercent =
     product.discountPercent ??
@@ -71,7 +102,7 @@ export function ProductGallery({ product, className }: ProductGalleryProps) {
               </Badge>
             )}
             <Image
-              src={mainImage}
+              src={selectedImage}
               alt={product.name}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -103,15 +134,22 @@ export function ProductGallery({ product, className }: ProductGalleryProps) {
 
       {/* Thumbnails: vertical on desktop, horizontal on mobile */}
       {images.length > 1 && (
-        <div className="flex flex-row sm:flex-col md:flex-row lg:flex-col gap-2 overflow-auto">
+        <div className="scrollbar max-h-[530px] flex flex-row sm:flex-col md:flex-row lg:flex-col gap-2 overflow-y-auto overflow-x-hidden">
           {images.map((src, i) => (
             <button
               key={i}
               type="button"
-              onClick={() => setSelectedIndex(i)}
+              onClick={() => {
+                setSelectedIndex(i)
+                // If the user is clicking thumbnails, also sync the "variant image"
+                // so the main image + active thumbnail stay consistent.
+                if (onVariantImageChange) {
+                  onVariantImageChange(variationImageSet.has(src) ? src : undefined)
+                }
+              }}
               className={cn(
                 "relative size-16 xl:size-24 shrink-0 overflow-hidden rounded-md border-2 transition-colors",
-                selectedIndex === i
+                activeIndex === i
                   ? "border-primary"
                   : "border-transparent hover:border-muted-foreground/30"
               )}
