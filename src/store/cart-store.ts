@@ -11,6 +11,8 @@ export type DeliveryOption = "regular" | "express";
 export interface CartItem {
   /** Cart line id from API (when synced from server) */
   lineId?: number;
+  /** Selected product variation (e.g. Color: Red) */
+  variation?: { id: number; type: string; value: string };
   product: Product;
   quantity: number;
 }

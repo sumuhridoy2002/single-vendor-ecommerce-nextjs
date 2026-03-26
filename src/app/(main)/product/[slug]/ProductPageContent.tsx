@@ -24,7 +24,7 @@ import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { toast } from "sonner"
 
 export interface ProductPageContentProps {
@@ -76,10 +76,6 @@ export function ProductPageContent({
 
   const categoryHref = getCategoryHrefById(tree, product.categoryId)
   const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
-
-  useEffect(() => {
-    setSelectedVariantImage(undefined)
-  }, [product.id])
 
   return (
     <div className="container space-y-8 min-w-full">

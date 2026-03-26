@@ -42,16 +42,21 @@ export function AddressCard({
 
   return (
     <div className="relative rounded-xl border border-border bg-card p-4 md:p-5 flex gap-3">
-      <div className="shrink-0 pt-0.5">
+      <div className="hidden md:block shrink-0 pt-0.5">
         <AddressTypeIcon type={address.addressType} />
       </div>
       <div className="min-w-0 flex-1 overflow-hidden">
         <div className="flex items-start justify-between gap-2 min-w-0">
           <div className="flex flex-wrap items-center gap-2 min-w-0">
-            <span className="font-medium truncate">
-              {ADDRESS_TYPE_LABEL[address.addressType]}
-              {address.isDefault && " (Shipping Address)"}
-            </span>
+            <div className="inline-flex items-center gap-1">
+              <span className="block md:hidden">
+                <AddressTypeIcon type={address.addressType} />
+              </span>
+              <span className="font-medium">
+                {ADDRESS_TYPE_LABEL[address.addressType]}
+                {address.isDefault && " (Shipping Address)"}
+              </span>
+            </div>
             {address.isDefault && (
               <Badge className="bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300 border-0 shrink-0">
                 Default

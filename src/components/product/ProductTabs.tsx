@@ -1,9 +1,9 @@
 "use client"
 
+import { PolicySingleLink } from "@/components/legal/PolicyLinks"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
-import { PolicySingleLink } from "@/components/legal/PolicyLinks"
 import { RatingReviews } from "./RatingReviews"
 
 /** Decode HTML entities so escaped API content (e.g. &lt; &gt; &amp;) renders as real HTML. Works in SSR and client. */
@@ -19,14 +19,13 @@ function decodeHtmlEntities(html: string): string {
 export interface ProductTabsProps {
   product: Product
   className?: string
-  onReviewSubmitted: () => void
+  onReviewSubmitted: () => Promise<void> | void
 }
 
 export function ProductTabs({ product, className, onReviewSubmitted }: ProductTabsProps) {
   const longDesc = product.longDescription ?? product.description
   const raw =
     longDesc ?? "No detailed description available for this product."
-  const specification = product.specification ?? {}
   const isEscapedHtml = raw.includes("&lt;") || raw.includes("&gt;")
   const isRawHtml = raw.includes("<") && raw.includes(">")
   const contentToRender =
@@ -38,9 +37,6 @@ export function ProductTabs({ product, className, onReviewSubmitted }: ProductTa
       <TabsList className="w-full justify-start rounded-lg border bg-muted/30 p-1">
         <TabsTrigger value="details" className="flex-1 sm:flex-none">
           Product Details
-        </TabsTrigger>
-        <TabsTrigger value="specification" className="flex-1 sm:flex-none">
-          Specification
         </TabsTrigger>
         <TabsTrigger value="reviews" className="flex-1 sm:flex-none">
           Reviews
@@ -66,27 +62,6 @@ export function ProductTabs({ product, className, onReviewSubmitted }: ProductTa
             />
           </p>
         </div>
-      </TabsContent>
-      <TabsContent value="specification" className="mt-4">
-        {Object.keys(specification).length > 0 ? (
-          <dl className="grid gap-2 sm:grid-cols-2">
-            {Object.entries(specification).map(([key, value]) => (
-              <div
-                key={key}
-                className="flex justify-between gap-4 border-b border-border py-2 last:border-0"
-              >
-                <dt className="text-sm font-medium text-muted-foreground">
-                  {key}
-                </dt>
-                <dd className="text-sm text-foreground">{value}</dd>
-              </div>
-            ))}
-          </dl>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            No specification available for this product.
-          </p>
-        )}
       </TabsContent>
       <TabsContent value="reviews" className="mt-4">
         <RatingReviews product={product} onReviewSubmitted={onReviewSubmitted} />

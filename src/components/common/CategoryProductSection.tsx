@@ -1,7 +1,6 @@
 "use client"
 
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import Link from "next/link"
 import { useRef, useState } from "react"
 import type { Swiper as SwiperType } from "swiper"
 
@@ -46,14 +45,14 @@ export function CategoryProductSection({
           {title}
         </h2>
         <div className="flex items-center gap-1">
-          {viewAllHref && (
+          {/* {viewAllHref && (
             <Link
               href={viewAllHref}
               className="text-sm font-medium text-primary hover:underline"
             >
               View All
             </Link>
-          )}
+          )} */}
           <div className="flex items-center gap-0.5">
             <Button
               variant="outline"
