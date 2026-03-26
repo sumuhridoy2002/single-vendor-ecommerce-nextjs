@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { cn } from "@/lib/utils"
 import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
@@ -24,6 +25,7 @@ import {
   FaShareAlt,
   FaTelegram
 } from "react-icons/fa"
+import { toast } from "sonner"
 
 
 
@@ -147,7 +149,10 @@ export function ProductInfo({
       : null)
   const inStock = product.inStock ?? true
   const toggleWishlist = useWishlistStore((state) => state.toggle)
+  const pendingIds = useWishlistStore((state) => state.pendingIds)
   const isInWishlist = useIsInWishlist(product.id)
+  const isWishlistPending = pendingIds.includes(product.id)
+  const whenLoggedIn = useWhenLoggedIn()
 
   const getShareUrl = () =>
     typeof window !== "undefined" ? window.location.href : ""
@@ -232,8 +237,11 @@ export function ProductInfo({
   }
 
   const handleWishlistClick = () => {
-    toggleWishlist(product)
-    onWishlist?.(product)
+    whenLoggedIn(() => {
+      toggleWishlist(product.id)
+        .then(() => onWishlist?.(product))
+        .catch((e) => toast.error(e?.message ?? "Failed to update wishlist"))
+    })
   }
 
   return (
@@ -388,6 +396,7 @@ export function ProductInfo({
           variant={"outline"}
           className="gap-2"
           onClick={handleWishlistClick}
+          disabled={isWishlistPending}
           aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart

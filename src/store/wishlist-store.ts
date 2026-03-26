@@ -1,6 +1,6 @@
+import { fetchWishlist, toggleWishlist } from "@/lib/api/wishlist";
 import type { Product } from "@/types/product";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
 
 export type WishlistItem = Pick<
   Product,
@@ -25,92 +25,64 @@ export type WishlistItem = Pick<
 
 interface WishlistState {
   items: WishlistItem[];
-  add: (product: Product) => void;
-  remove: (productId: string) => void;
-  toggle: (product: Product) => void;
+  isLoading: boolean;
+  hasLoaded: boolean;
+  pendingIds: string[];
+  load: () => Promise<void>;
+  toggle: (productId: string) => Promise<void>;
+  removeById: (productId: string) => Promise<void>;
   clear: () => void;
 }
 
-type PersistedWishlist = { items: WishlistItem[] };
+function withPendingIds(ids: string[], productId: string): string[] {
+  if (ids.includes(productId)) return ids;
+  return [...ids, productId];
+}
 
-const storage =
-  typeof window === "undefined"
-    ? undefined
-    : createJSONStorage<PersistedWishlist>(() => window.localStorage);
+function withoutPendingId(ids: string[], productId: string): string[] {
+  return ids.filter((id) => id !== productId);
+}
 
-export const useWishlistStore = create<WishlistState>()(
-  persist(
-    (set, get) => ({
-      items: [],
-      add: (product) =>
-        set((state) => {
-          if (state.items.some((item) => item.id === product.id)) {
-            return state;
-          }
-          const nextItem: WishlistItem = {
-            id: product.id,
-            name: product.name,
-            slug: product.slug,
-            image: product.image,
-            price: product.price,
-            originalPrice: product.originalPrice,
-            discountPercent: product.discountPercent,
-            badge: product.badge,
-            rating: product.rating,
-            reviewCount: product.reviewCount,
-            unit: product.unit,
-            categoryId: product.categoryId,
-            inStock: product.inStock,
-            deliveryText: product.deliveryText,
-            brand: product.brand,
-            brandId: product.brandId,
-            brandHref: product.brandHref,
-          };
-          return { items: [...state.items, nextItem] };
-        }),
-      remove: (productId) =>
-        set((state) => ({
-          items: state.items.filter((item) => item.id !== productId),
-        })),
-      toggle: (product) => {
-        const { items } = get();
-        const exists = items.some((item) => item.id === product.id);
-        if (exists) {
-          set({
-            items: items.filter((item) => item.id !== product.id),
-          });
-        } else {
-          const nextItem: WishlistItem = {
-            id: product.id,
-            name: product.name,
-            slug: product.slug,
-            image: product.image,
-            price: product.price,
-            originalPrice: product.originalPrice,
-            discountPercent: product.discountPercent,
-            badge: product.badge,
-            rating: product.rating,
-            reviewCount: product.reviewCount,
-            unit: product.unit,
-            categoryId: product.categoryId,
-            inStock: product.inStock,
-            deliveryText: product.deliveryText,
-            brand: product.brand,
-            brandId: product.brandId,
-            brandHref: product.brandHref,
-          };
-          set({ items: [...items, nextItem] });
-        }
-      },
-      clear: () => set({ items: [] }),
-    }),
-    {
-      name: "wishlist",
-      storage,
-      partialize: (state) => ({ items: state.items }),
+export const useWishlistStore = create<WishlistState>()((set, get) => ({
+  items: [],
+  isLoading: false,
+  hasLoaded: false,
+  pendingIds: [],
+  load: async () => {
+    if (get().isLoading) return;
+    set({ isLoading: true });
+    try {
+      const items = await fetchWishlist();
+      set({ items, hasLoaded: true });
+    } finally {
+      set({ isLoading: false });
     }
-  )
-);
+  },
+  toggle: async (productId) => {
+    const parsedId = Number(productId);
+    if (!Number.isFinite(parsedId)) return;
+    if (get().pendingIds.includes(productId)) return;
+
+    set((state) => ({
+      pendingIds: withPendingIds(state.pendingIds, productId),
+    }));
+
+    try {
+      await toggleWishlist(parsedId);
+      const items = await fetchWishlist();
+      set({ items, hasLoaded: true });
+    } finally {
+      set((state) => ({
+        pendingIds: withoutPendingId(state.pendingIds, productId),
+      }));
+    }
+  },
+  removeById: async (productId) => {
+    if (!get().items.some((item) => item.id === productId)) return;
+    await get().toggle(productId);
+  },
+  clear: () => set({ items: [], hasLoaded: false, pendingIds: [] }),
+}));
 
 export function useWishlistCount(): number {
   return useWishlistStore((state) => state.items.length);

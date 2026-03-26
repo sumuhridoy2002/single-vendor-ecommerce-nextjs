@@ -1,19 +1,32 @@
 "use client";
 
 import { ProductCard } from "@/components/common/ProductCard";
+import { useAuth } from "@/contexts/AuthContext";
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
 import { useCartStore } from "@/store/cart-store";
 import { useWishlistStore } from "@/store/wishlist-store";
 import type { Product } from "@/types/product";
 import { Heart } from "lucide-react";
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 export default function WishlistPage() {
   const items = useWishlistStore((state) => state.items);
-  const remove = useWishlistStore((state) => state.remove);
+  const load = useWishlistStore((state) => state.load);
+  const removeById = useWishlistStore((state) => state.removeById);
+  const isLoading = useWishlistStore((state) => state.isLoading);
+  const hasLoaded = useWishlistStore((state) => state.hasLoaded);
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
   const whenLoggedIn = useWhenLoggedIn();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    load().catch((e) =>
+      toast.error(e?.message ?? "Failed to load wishlist products")
+    );
+  }, [isAuthenticated, load]);
 
   const handleAddToCart = (product: Product) => {
     whenLoggedIn(() => {
@@ -24,7 +37,9 @@ export default function WishlistPage() {
   };
 
   const handleWishlist = (product: Product) => {
-    remove(product.id);
+    removeById(product.id).catch((e) =>
+      toast.error(e?.message ?? "Failed to update wishlist")
+    );
   };
 
   const hasItems = items.length > 0;
@@ -34,7 +49,13 @@ export default function WishlistPage() {
       <h1 className="mb-6 text-2xl font-bold text-foreground">Wishlist</h1>
       <p className="mb-4 text-sm text-muted-foreground">Your saved products.</p>
 
-      {!hasItems && (
+      {isLoading && !hasLoaded && (
+        <div className="py-8 text-sm text-muted-foreground">
+          Loading wishlist products...
+        </div>
+      )}
+
+      {!hasItems && (!isLoading || hasLoaded) && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="mb-4 rounded-full bg-muted p-6">
             <Heart className="size-12 text-muted-foreground" aria-hidden />
