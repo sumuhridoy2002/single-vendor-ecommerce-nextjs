@@ -46,7 +46,7 @@ export function MobileBottomNav({ onAccountClick }: MobileBottomNavProps) {
               )}
             >
               <Icon className="size-5 shrink-0" aria-hidden />
-              <span>{label}</span>
+              <span className="text-center">{label}</span>
             </Link>
           );
         })}

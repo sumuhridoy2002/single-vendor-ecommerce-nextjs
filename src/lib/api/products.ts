@@ -165,7 +165,7 @@ export interface FetchProductsParams {
   sort?: ProductsSortParam
 }
 
-function mapProductListItemToProduct(api: ProductListItemApi): Product {
+export function mapProductListItemToProduct(api: ProductListItemApi): Product {
   return mapProductApiToProduct(api)
 }
 

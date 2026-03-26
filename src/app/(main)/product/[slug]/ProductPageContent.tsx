@@ -24,6 +24,7 @@ import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export interface ProductPageContentProps {
@@ -36,6 +37,9 @@ export function ProductPageContent({
   initialProduct,
 }: ProductPageContentProps) {
   const { product, isLoading, error, refetch } = useProductDetails(slug, initialProduct)
+  const [selectedVariantImage, setSelectedVariantImage] = useState<string | undefined>(
+    undefined
+  )
   const { products: relatedProducts } = useRelatedProducts(product?.id)
   const tree = useCategoryTree()
   const addItem = useCartStore((s) => s.addItem)
@@ -73,6 +77,10 @@ export function ProductPageContent({
   const categoryHref = getCategoryHrefById(tree, product.categoryId)
   const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
 
+  useEffect(() => {
+    setSelectedVariantImage(undefined)
+  }, [product.id])
+
   return (
     <div className="container space-y-8 min-w-full">
       <Breadcrumb>
@@ -100,8 +108,16 @@ export function ProductPageContent({
       </Breadcrumb>
 
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4 lg:gap-8 xl:gap-32">
-        <ProductGallery product={product} />
-        <ProductInfo product={product} onAddToCart={handleAddToCart} />
+        <ProductGallery
+          product={product}
+          variantImage={selectedVariantImage}
+          onVariantImageChange={setSelectedVariantImage}
+        />
+        <ProductInfo
+          product={product}
+          onAddToCart={handleAddToCart}
+          onVariantImageChange={setSelectedVariantImage}
+        />
       </div>
 
       <section className="rounded-xl border bg-card p-6">
