@@ -4,7 +4,7 @@ import type {
   CampaignListItem,
   CampaignsApiResponse,
 } from "@/types/campaign"
-import { getBaseUrl } from "./client"
+import { getBaseUrl, normalizeMediaUrl } from "./client"
 
 export async function fetchCampaigns(): Promise<CampaignListItem[]> {
   const baseUrl = getBaseUrl()
@@ -21,7 +21,10 @@ export async function fetchCampaigns(): Promise<CampaignListItem[]> {
     throw new Error(json.message ?? "Failed to load campaigns")
   }
 
-  return json.data
+  return json.data.map((campaign) => ({
+    ...campaign,
+    image: normalizeMediaUrl(campaign.image) ?? campaign.image,
+  }))
 }
 
 export async function fetchCampaignById(id: number): Promise<CampaignDetails> {
@@ -40,5 +43,8 @@ export async function fetchCampaignById(id: number): Promise<CampaignDetails> {
     throw new Error(json.message ?? "Failed to load campaign")
   }
 
-  return json.data
+  return {
+    ...json.data,
+    image: normalizeMediaUrl(json.data.image) ?? json.data.image,
+  }
 }

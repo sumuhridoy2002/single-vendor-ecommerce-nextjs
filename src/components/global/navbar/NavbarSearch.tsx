@@ -8,7 +8,9 @@ import {
 } from "@/components/ui/popover";
 import { useSearchProductSuggestions } from "@/hooks/data/useSearchProducts";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useSettingsStore } from "@/stores/settings-store";
 import { Search } from "lucide-react";
+import { useMemo } from "react";
 import { RecentSearchesPopover } from "./RecentSearchesPopover";
 
 type NavbarSearchProps = {
@@ -44,9 +46,13 @@ export function NavbarSearch({
 }: NavbarSearchProps) {
   const debouncedSearch = useDebounce(searchValue, 300);
   const { suggestions, isLoading } = useSearchProductSuggestions(debouncedSearch);
+  const settings = useSettingsStore((s) => s.settings);
 
-  const showPopoverContent =
-    variant === "desktop" ? !isMobile : isMobile;
+  const showPopoverContent = variant === "desktop" ? !isMobile : isMobile;
+
+  const searchPlaceholders = useMemo(() => {
+    return settings?.search_placeholders ?? [];
+  }, [settings]);
 
   const searchForm = (
     <form
@@ -57,11 +63,7 @@ export function NavbarSearch({
       <div className="flex-1 flex items-center gap-2 border border-border bg-muted/30 rounded-l-lg h-12">
         <div className="relative flex-1 flex min-h-12">
           <PlaceholdersAndVanishInput
-            placeholders={[
-              "Search products",
-              "Search by category",
-              "Search medicine...",
-            ]}
+            placeholders={searchPlaceholders}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             onSubmit={onSubmit}

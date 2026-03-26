@@ -2,10 +2,12 @@
 
 import { PopoverContent } from "@/components/ui/popover";
 import { clearSearchHistory } from "@/lib/search-history";
+import { useSettingsStore } from "@/stores/settings-store";
 import type { Product } from "@/types/product";
 import { Loader2, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo } from "react";
 
 type RecentSearchesPopoverProps = {
   recentSearches: string[];
@@ -35,6 +37,10 @@ export function RecentSearchesPopover({
 
   const hasQuery = searchValue.trim().length > 0;
   const showSuggestions = hasQuery;
+  const settings = useSettingsStore((s) => s.settings);
+  const trendingProducts = useMemo(() => {
+    return settings?.trending_products ?? [];
+  }, [settings]);
 
   return (
     <PopoverContent
@@ -106,9 +112,11 @@ export function RecentSearchesPopover({
         ) : (
           <>
             <div className="flex items-center justify-between px-3 py-1.5">
-              <p className="text-xs font-medium text-muted-foreground">
-                Recent searches
-              </p>
+              {recentSearches.length > 0 && (
+                <p className="text-xs font-medium text-muted-foreground">
+                  Recent searches
+                </p>
+              )}
               {recentSearches.length > 0 && (
                 <button
                   type="button"
@@ -145,6 +153,40 @@ export function RecentSearchesPopover({
                 </li>
               ))}
             </ul>
+            {trendingProducts.length > 0 && (
+              <>
+                <div className="mt-1 px-3 py-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Trending Products
+                  </p>
+                </div>
+                <ul role="listbox" className="max-h-60 overflow-auto" aria-label="Trending products">
+                  {trendingProducts.map((product) => (
+                    <li key={product.id} role="option" aria-selected={false}>
+                      <Link
+                        href={`/product/${product.slug}`}
+                        className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-muted focus:bg-muted focus:outline-none"
+                        onClick={() => onSuggestionSelect?.()}
+                      >
+                        <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md bg-muted">
+                          <Image
+                            src={product.thumbnail || ""}
+                            alt={product.title}
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                          />
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">{product.title}</span>
+                        <span className="shrink-0 text-muted-foreground">
+                          ৳{product.final_price}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </>
         )}
       </div>

@@ -1,4 +1,12 @@
 /** Global site settings from /settings API. */
+export interface GlobalTrendingProduct {
+  id: number;
+  title: string;
+  slug: string;
+  final_price: number;
+  thumbnail: string;
+}
+
 export interface GlobalSettings {
   site_name: string;
   site_tagline: string;
@@ -20,6 +28,7 @@ export interface GlobalSettings {
   favicon: string;
   logo: string;
   tin_no: string;
+  trending_products: GlobalTrendingProduct[];
 }
 
 export interface SettingsApiResponse {

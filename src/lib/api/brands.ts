@@ -4,14 +4,7 @@ import type {
   BrandDetailDataApi,
   BrandsApiResponse,
 } from "@/types/brand"
-import { getBaseUrl } from "./client"
-
-function normalizeImageUrl(url: string | null | undefined): string | undefined {
-  if (!url) return undefined
-  if (url.startsWith("http://") || url.startsWith("https://")) return url
-  const origin = new URL(getBaseUrl()).origin
-  return url.startsWith("/") ? `${origin}${url}` : `${origin}/${url}`
-}
+import { getBaseUrl, normalizeMediaUrl } from "./client"
 
 export async function fetchBrands(): Promise<BrandApi[]> {
   const baseUrl = getBaseUrl()
@@ -30,7 +23,7 @@ export async function fetchBrands(): Promise<BrandApi[]> {
 
   return json.data.map((b) => ({
     ...b,
-    image: normalizeImageUrl((b as { logo?: string }).logo ?? b.image),
+    image: normalizeMediaUrl((b as { logo?: string }).logo ?? b.image),
   }))
 }
 
@@ -57,7 +50,7 @@ export async function fetchBrandBySlug(
 
   const data = json.data as BrandDetailDataApi
   const rawImage = (data as { logo?: string }).logo ?? data.image
-  const imageUrl = normalizeImageUrl(rawImage)
+  const imageUrl = normalizeMediaUrl(rawImage)
   const brand: BrandApi = {
     id: data.id,
     name: data.name,
