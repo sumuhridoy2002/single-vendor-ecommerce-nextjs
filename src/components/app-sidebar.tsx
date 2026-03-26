@@ -48,10 +48,29 @@ const flashSaleItem = {
   icon: Zap,
 }
 
-function CategoryIcon({ icon: Icon }: { icon: LucideIcon }) {
+function CategoryIcon({
+  icon: Icon,
+  imageSrc,
+  alt,
+}: {
+  icon: LucideIcon
+  imageSrc?: string
+  alt: string
+}) {
   return (
     <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted overflow-hidden">
-      <Icon className="size-4 text-muted-foreground" />
+      {imageSrc ? (
+        // Category icons come from external API URLs; plain img keeps this lightweight.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageSrc}
+          alt={alt}
+          loading="lazy"
+          className="size-full object-cover"
+        />
+      ) : (
+        <Icon className="size-4 text-muted-foreground" />
+      )}
     </span>
   )
 }
@@ -113,7 +132,7 @@ function CategoryTreeItem({
         }}
       >
         <span className="flex flex-1 min-w-0 items-center gap-2">
-          <CategoryIcon icon={Folder} />
+          <CategoryIcon icon={Folder} imageSrc={node.image} alt={node.title} />
           <Link
             href={href}
             className="flex min-w-0 items-center gap-2 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:underline"
@@ -169,7 +188,7 @@ function CategoryTreeItem({
 
   const linkContent = (
     <>
-      <CategoryIcon icon={Folder} />
+      <CategoryIcon icon={Folder} imageSrc={node.image} alt={node.title} />
       <span className="flex-1 truncate text-base font-medium">{node.title}</span>
     </>
   )
