@@ -23,7 +23,9 @@ import {
   SidebarMenuSubItem
 } from "@/components/ui/sidebar"
 import { useCategoryTree } from "@/hooks/data/useCategoryTree"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { usePagesStore } from "@/stores/pages-store"
 import type { CategoryTreeNode } from "@/types/product"
 
 /** Get parent category href (empty string for root). */
@@ -209,6 +211,8 @@ function CategoryTreeItem({
 export function AppSidebar() {
   const pathname = usePathname()
   const tree = useCategoryTree()
+  const isMobile = useIsMobile()
+  const pages = usePagesStore((s) => s.pages)
   const [openPath, setOpenPath] = useState<string>("")
   const prevPathnameRef = useRef(pathname)
 
@@ -278,6 +282,51 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isMobile && (
+          <SidebarGroup className="p-0">
+            <SidebarGroupContent className="p-0">
+              <div className="py-3 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Pages
+              </div>
+              <SidebarMenu>
+                {pages === null ? (
+                  <SidebarMenuItem>
+                    <div className="py-3 px-3 text-sm text-muted-foreground">
+                      Loading pages…
+                    </div>
+                  </SidebarMenuItem>
+                ) : pages.length === 0 ? (
+                  <SidebarMenuItem>
+                    <div className="py-3 px-3 text-sm text-muted-foreground">
+                      No pages available
+                    </div>
+                  </SidebarMenuItem>
+                ) : (
+                  pages.map((p) => {
+                    const href = `/page/${p.slug}`
+                    return (
+                      <SidebarMenuItem key={p.id}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === href}
+                          className="h-auto py-2.5 px-3 rounded-none"
+                        >
+                          <Link href={href} className="flex items-center gap-2">
+                            <Folder className="size-4 text-muted-foreground shrink-0" />
+                            <span className="truncate text-sm font-medium">
+                              {p.title}
+                            </span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )
+                  })
+                )}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   )

@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
+import { PolicySingleLink } from "@/components/legal/PolicyLinks"
 import { RatingReviews } from "./RatingReviews"
 
 /** Decode HTML entities so escaped API content (e.g. &lt; &gt; &amp;) renders as real HTML. Works in SSR and client. */
@@ -58,12 +59,11 @@ export function ProductTabs({ product, className, onReviewSubmitted }: ProductTa
             </p>
           )}
           <p className="mt-4">
-            <a
-              href="/return-policy"
+            <PolicySingleLink
+              kind="refund"
+              label="Return Policy"
               className="text-sm font-medium text-primary hover:underline"
-            >
-              Return Policy
-            </a>
+            />
           </p>
         </div>
       </TabsContent>

@@ -15,9 +15,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { AuthPromoSwiper } from "@/components/auth/AuthPromoSwiper";
 import { useAuth } from "@/contexts/AuthContext";
+import { PolicyConsentLinks } from "@/components/legal/PolicyLinks";
 import { X } from "lucide-react";
 import { signIn } from "next-auth/react";
-import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { toast } from "sonner";
@@ -245,17 +245,10 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
             <p className="text-xs text-muted-foreground mt-2 text-center">
               By continuing you agree to{" "}
-              <Link href="#" className="text-primary hover:underline underline-offset-2">
-                Terms & Conditions
-              </Link>
-              ,{" "}
-              <Link href="#" className="text-primary hover:underline underline-offset-2">
-                Privacy Policy
-              </Link>
-              {" "}&{" "}
-              <Link href="#" className="text-primary hover:underline underline-offset-2">
-                Refund-Return Policy
-              </Link>
+              <PolicyConsentLinks
+                enabled={open}
+                onLinkClick={() => onOpenChange(false)}
+              />
             </p>
           </div>
         </div>
