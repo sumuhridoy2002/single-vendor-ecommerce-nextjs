@@ -92,7 +92,7 @@ export function SiteFooter() {
   // ];
 
   return (
-    <footer className={cn(footerBg, "relative mt-auto text-white pb-20 md:pb-0")}>
+    <footer className={cn(footerBg, "relative text-white pb-20 md:pb-0")}>
       <div className="container py-10 lg:py-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           {/* Column 1 — Brand */}
