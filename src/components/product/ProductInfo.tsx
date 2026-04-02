@@ -127,10 +127,16 @@ export function ProductInfo({
     return Array.from(byType.entries()).map(([type, list]) => ({ type, list }))
   }, [product.variations])
 
+  /** One `product_variation_id` per cart line; multi-attribute UIs pick the last group's id (common API pattern). */
   const selectedVariationId = useMemo(() => {
-    const ids = Object.values(selectedByType).filter(Boolean)
-    return ids[0] ?? undefined
-  }, [selectedByType])
+    if (variationsByType.length === 0) return undefined
+    if (variationsByType.length === 1) {
+      const t = variationsByType[0].type
+      return selectedByType[t]
+    }
+    const lastType = variationsByType[variationsByType.length - 1].type
+    return selectedByType[lastType]
+  }, [selectedByType, variationsByType])
 
   const hasDiscount =
     product.originalPrice != null && product.originalPrice > product.price

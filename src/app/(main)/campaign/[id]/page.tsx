@@ -13,7 +13,7 @@ import { useCampaignDetails } from "@/hooks/data/useCampaignDetails"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { mapProductListItemToProduct } from "@/lib/api/products"
 import { useCartStore } from "@/store/cart-store"
-import type { Product } from "@/types/product"
+import type { AddToCartOptions, Product } from "@/types/product"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -52,9 +52,9 @@ export default function CampaignPage({ params }: Props) {
     [campaign?.products]
   )
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(product, 1, { campaignId })
+      addItem(product, 1, { campaignId, ...options })
         .then(() => openCart())
         .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
     })

@@ -130,7 +130,7 @@ export function ProductPageContent({
             title="Related Products"
             products={relatedProducts}
             viewAllHref={categoryHref ?? undefined}
-            onAddToCart={handleAddToCart}
+            onAddToCart={(p, opts) => handleAddToCart(p, 1, opts)}
           />
         )}
       </div>

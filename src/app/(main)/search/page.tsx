@@ -19,7 +19,7 @@ import {
 import { useSearchProducts } from "@/hooks/data/useSearchProducts";
 import { useCartStore } from "@/store/cart-store";
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
-import type { Product } from "@/types/product";
+import type { AddToCartOptions, Product } from "@/types/product";
 import type { ProductsSortParam } from "@/lib/api/products";
 import { Filter } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -59,9 +59,9 @@ function SearchPageContent() {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
   const whenLoggedIn = useWhenLoggedIn();
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(product)
+      addItem(product, 1, options)
         .then(() => openCart())
         .catch((e) => toast.error(e?.message ?? "Failed to add to cart"));
     });

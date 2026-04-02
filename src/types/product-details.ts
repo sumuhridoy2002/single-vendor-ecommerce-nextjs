@@ -163,6 +163,8 @@ export interface ProductListItemApi {
   campaign?: ProductDetailsCampaignApi | null
   category?: { id: number; name?: string; slug?: string } | null
   brand?: { id: number; name: string; slug: string } | null
+  /** When present, product cards can prompt for variant before add-to-cart. */
+  variations?: ProductVariationApi[]
 }
 
 export interface ProductsListApiResponse {

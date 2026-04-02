@@ -22,6 +22,22 @@ const MAX_QUANTITY = 10;
 const EXPRESS_DELIVERY_CHARGE = 59;
 const CASHBACK_AMOUNT = 10;
 
+/** Match a line when resolving string product id (line id from API is preferred and unambiguous). */
+function findItemIndex(
+  items: CartItem[],
+  productIdOrLineId: string | number,
+  variationId?: number
+): number {
+  if (typeof productIdOrLineId === "number") {
+    return items.findIndex((i) => i.lineId === productIdOrLineId);
+  }
+  return items.findIndex((i) => {
+    if (i.product.id !== productIdOrLineId) return false;
+    if (variationId === undefined) return i.variation == null;
+    return i.variation?.id === variationId;
+  });
+}
+
 function getSubtotalMRP(items: CartItem[]): number {
   return items.reduce((sum, { product, quantity }) => {
     const mrp = product.originalPrice ?? product.price;
@@ -62,15 +78,20 @@ interface CartState {
     quantity?: number,
     options?: { variationId?: number; campaignId?: number }
   ) => Promise<void>;
-  removeItem: (productIdOrLineId: string | number) => Promise<void>;
+  removeItem: (
+    productIdOrLineId: string | number,
+    variationId?: number
+  ) => Promise<void>;
   updateQuantity: (
     productIdOrLineId: string | number,
-    quantity: number
+    quantity: number,
+    variationId?: number
   ) => Promise<void>;
   /** Update quantity in store only (no API). For optimistic UI before debounced API call. */
   setQuantityOptimistic: (
     productIdOrLineId: string | number,
-    quantity: number
+    quantity: number,
+    variationId?: number
   ) => void;
   /** Replace cart with items from API (e.g. after fetchCart) */
   setItems: (items: CartItem[]) => void;
@@ -128,16 +149,14 @@ export const useCartStore = create<CartState>((set) => ({
     }));
   },
 
-  removeItem: async (productIdOrLineId) => {
+  removeItem: async (productIdOrLineId, variationId) => {
     const state = useCartStore.getState();
     let cartId: number | null = null;
     if (typeof productIdOrLineId === "number") {
       cartId = productIdOrLineId;
     } else {
-      const item = state.items.find(
-        (i) => i.product.id === productIdOrLineId
-      );
-      cartId = item?.lineId ?? null;
+      const idx = findItemIndex(state.items, productIdOrLineId, variationId);
+      cartId = idx >= 0 ? state.items[idx]?.lineId ?? null : null;
     }
     if (cartId != null) {
       const items = await removeFromCart(cartId);
@@ -146,9 +165,9 @@ export const useCartStore = create<CartState>((set) => ({
         ...computeDerived(items, s.deliveryOption),
       }));
     } else {
-      const nextItems = state.items.filter(
-        (i) => i.product.id !== productIdOrLineId
-      );
+      const idx = findItemIndex(state.items, productIdOrLineId, variationId);
+      if (idx < 0) return;
+      const nextItems = state.items.filter((_, i) => i !== idx);
       set((s) => ({
         items: nextItems,
         ...computeDerived(nextItems, s.deliveryOption),
@@ -156,17 +175,15 @@ export const useCartStore = create<CartState>((set) => ({
     }
   },
 
-  updateQuantity: async (productIdOrLineId, quantity) => {
+  updateQuantity: async (productIdOrLineId, quantity, variationId) => {
     const q = Math.max(1, Math.min(MAX_QUANTITY, quantity));
     const state = useCartStore.getState();
     let cartId: number | null = null;
     if (typeof productIdOrLineId === "number") {
       cartId = productIdOrLineId;
     } else {
-      const item = state.items.find(
-        (i) => i.product.id === productIdOrLineId
-      );
-      cartId = item?.lineId ?? null;
+      const idx = findItemIndex(state.items, productIdOrLineId, variationId);
+      cartId = idx >= 0 ? state.items[idx]?.lineId ?? null : null;
     }
     if (cartId != null) {
       const items = await updateCartQuantity(cartId, q);
@@ -175,10 +192,11 @@ export const useCartStore = create<CartState>((set) => ({
         ...computeDerived(items, s.deliveryOption),
       }));
     } else {
-      const nextItems = state.items.map((i) => {
-        const match = i.product.id === productIdOrLineId;
-        return match ? { ...i, quantity: q } : i;
-      });
+      const idx = findItemIndex(state.items, productIdOrLineId, variationId);
+      if (idx < 0) return;
+      const nextItems = state.items.map((i, iIdx) =>
+        iIdx === idx ? { ...i, quantity: q } : i
+      );
       set((s) => ({
         items: nextItems,
         ...computeDerived(nextItems, s.deliveryOption),
@@ -186,16 +204,14 @@ export const useCartStore = create<CartState>((set) => ({
     }
   },
 
-  setQuantityOptimistic: (productIdOrLineId, quantity) => {
+  setQuantityOptimistic: (productIdOrLineId, quantity, variationId) => {
     const q = Math.max(1, Math.min(MAX_QUANTITY, quantity));
     set((state) => {
-      const nextItems = state.items.map((i) => {
-        const match =
-          typeof productIdOrLineId === "number"
-            ? i.lineId === productIdOrLineId
-            : i.product.id === productIdOrLineId;
-        return match ? { ...i, quantity: q } : i;
-      });
+      const idx = findItemIndex(state.items, productIdOrLineId, variationId);
+      if (idx < 0) return state;
+      const nextItems = state.items.map((i, iIdx) =>
+        iIdx === idx ? { ...i, quantity: q } : i
+      );
       return {
         items: nextItems,
         ...computeDerived(nextItems, state.deliveryOption),

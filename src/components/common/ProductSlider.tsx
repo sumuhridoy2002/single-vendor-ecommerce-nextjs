@@ -6,7 +6,7 @@ import { Swiper, SwiperSlide } from "swiper/react"
 
 import { ProductCard } from "@/components/common/ProductCard"
 import { cn } from "@/lib/utils"
-import type { Product } from "@/types/product"
+import type { AddToCartOptions, Product } from "@/types/product"
 
 const DEFAULT_BREAKPOINTS = {
   430: { slidesPerView: 2.3, spaceBetween: 10 },
@@ -24,7 +24,7 @@ export interface ProductSliderProps {
   className?: string
   onSwiper?: (swiper: SwiperType) => void
   onSlideChange?: (swiper: SwiperType) => void
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (product: Product, options?: AddToCartOptions) => void
 }
 
 export function ProductSlider({

@@ -27,7 +27,7 @@ import {
 import { useProducts } from "@/hooks/data/useProducts";
 import { useCartStore } from "@/store/cart-store";
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
-import type { Product } from "@/types/product";
+import type { AddToCartOptions, Product } from "@/types/product";
 import { Filter } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -143,9 +143,9 @@ function FlashSalePageContent() {
   const addItem = useCartStore((s) => s.addItem);
   const openCart = useCartStore((s) => s.openCart);
   const whenLoggedIn = useWhenLoggedIn();
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(product)
+      addItem(product, 1, options)
         .then(() => openCart())
         .catch((e) => toast.error(e?.message ?? "Failed to add to cart"));
     });

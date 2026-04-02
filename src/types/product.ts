@@ -1,5 +1,10 @@
 export type ProductBadge = "new" | "sale" | "bestseller"
 
+/** Passed from product cards / PDP when adding a specific variant to the cart. */
+export interface AddToCartOptions {
+  variationId?: number
+}
+
 /** Single review (mapped from API recent_reviews / submit response). */
 export interface ProductReview {
   id: number

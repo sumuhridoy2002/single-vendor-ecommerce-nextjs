@@ -4,6 +4,7 @@ import type {
   ProductDetailsApiResponse,
   ProductDetailsCampaignApi,
   ProductListItemApi,
+  ProductVariationApi,
   ProductsListApiResponse,
   ProductsPaginatedResponse,
   RelatedProductItemApi,
@@ -60,6 +61,7 @@ function mapProductApiToProduct(api: {
   stock_qty?: number
   sold_out_qty?: number
   wishlist_count?: number
+  variations?: ProductVariationApi[]
 }): Product {
   const price =
     api.flash_sale?.is_active === true
@@ -79,6 +81,15 @@ function mapProductApiToProduct(api: {
   const thumbnail = normalizeMediaUrl(api.thumbnail) ?? api.thumbnail
   const gallery = api.gallery?.map((image) => normalizeMediaUrl(image) ?? image)
   const stockQty = api.stock_qty ?? api.stock
+  const variations =
+    api.variations?.length && api.variations.length > 0
+      ? api.variations.map((v) => ({
+          id: v.id,
+          type: v.type,
+          value: v.value,
+          image: v.image,
+        }))
+      : undefined
   return {
     id: String(api.id),
     name: api.title,
@@ -105,6 +116,7 @@ function mapProductApiToProduct(api: {
     soldOutQty: api.sold_out_qty,
     wishlistCount: api.wishlist_count,
     specification: {},
+    ...(variations ? { variations } : {}),
     ...campaign,
   }
 }

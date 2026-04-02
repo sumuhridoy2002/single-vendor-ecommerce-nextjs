@@ -26,35 +26,36 @@ function CartLineItem({ item }: { item: CartItemType }) {
   const imageSrc = imageError ? PLACEHOLDER_IMAGE : product.image;
 
   const itemId = item.lineId ?? product.id;
+  const variationIdForLine = item.variation?.id;
 
   const scheduleApiUpdate = useCallback(
     (newQuantity: number) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         debounceRef.current = null;
-        updateQuantity(itemId, newQuantity).catch(async (e) => {
+        updateQuantity(itemId, newQuantity, variationIdForLine).catch(async (e) => {
           toast.error(e?.message ?? "Failed to update quantity");
           const items = await fetchCart();
           setItems(items);
         });
       }, DEBOUNCE_MS);
     },
-    [itemId, updateQuantity, setItems]
+    [itemId, variationIdForLine, updateQuantity, setItems]
   );
 
   const handleDecrease = useCallback(() => {
     const newQty = quantity - 1;
     if (newQty < 1) return;
-    setQuantityOptimistic(itemId, newQty);
+    setQuantityOptimistic(itemId, newQty, variationIdForLine);
     scheduleApiUpdate(newQty);
-  }, [quantity, itemId, setQuantityOptimistic, scheduleApiUpdate]);
+  }, [quantity, itemId, variationIdForLine, setQuantityOptimistic, scheduleApiUpdate]);
 
   const handleIncrease = useCallback(() => {
     const newQty = quantity + 1;
     if (newQty > 10) return;
-    setQuantityOptimistic(itemId, newQty);
+    setQuantityOptimistic(itemId, newQty, variationIdForLine);
     scheduleApiUpdate(newQty);
-  }, [quantity, itemId, setQuantityOptimistic, scheduleApiUpdate]);
+  }, [quantity, itemId, variationIdForLine, setQuantityOptimistic, scheduleApiUpdate]);
 
   useEffect(() => {
     return () => {
@@ -120,7 +121,7 @@ function CartLineItem({ item }: { item: CartItemType }) {
               className="size-8 text-muted-foreground hover:text-destructive"
               aria-label="Remove from cart"
               onClick={() =>
-                removeItem(itemId).catch((e) =>
+                removeItem(itemId, variationIdForLine).catch((e) =>
                   toast.error(e?.message ?? "Failed to remove")
                 )
               }
