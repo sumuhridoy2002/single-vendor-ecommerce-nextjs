@@ -211,7 +211,10 @@ export function NestedSelect({
                 ))}
               </div>
             )}
-            <div className="max-h-64 overflow-y-auto p-1">
+            <div
+              className="min-h-0 max-h-64 overflow-y-auto overscroll-contain p-1"
+              onWheel={(e) => e.stopPropagation()}
+            >
               {filteredOptions.length === 0 ? (
                 <div className="text-muted-foreground px-3 py-2 text-sm">
                   {emptyMessage}
