@@ -122,13 +122,13 @@ export function ProductCard({
   return (
     <Card
       className={cn(
-        "flex h-full flex-col overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md",
+        "flex h-full flex-col overflow-hidden rounded-lg border-0 md:border bg-transparent md:bg-white transition-shadow md:hover:shadow-md min-w-[140px]",
         className
       )}
     >
       <CardHeader className="relative shrink-0 p-0">
         <Link href={`/product/${product?.slug}`} className="block">
-          <AspectRatio ratio={1}>
+          <AspectRatio ratio={1} className="border md:border-0 rounded-b-lg overflow-hidden md:overflow-visible md:rounded-b-none">
             <Image
               src={imageSrc}
               alt={product.name}
@@ -161,7 +161,7 @@ export function ProductCard({
         </button>
       </CardHeader>
 
-      <CardContent className="flex min-h-0 flex-1 flex-col gap-2 px-3 py-2.5">
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-1.5 md:gap-2 px-3 py-2.5">
         {/* Delivery badge */}
         {product.deliveryText && (
           <div className="flex items-center gap-1 self-start rounded-md bg-slate-700 px-2 py-1 text-xs font-medium uppercase tracking-tight text-white">
@@ -171,16 +171,16 @@ export function ProductCard({
         )}
 
         {/* Product title - bold, truncated */}
-        <div className="h-8 xs:h-10">
+        <div className="h-8 md:h-10">
           <Link
             href={`/product/${product?.slug}`}
-            className="line-clamp-2 text-xs xs:text-sm lg:text-base font-bold leading-tight text-foreground hover:underline h-auto"
+            className="line-clamp-2 text-xs md:text-sm lg:text-base font-bold leading-tight text-foreground hover:underline h-auto"
           >
             {product.name}
           </Link>
         </div>
         {/* Star rating with review count */}
-        <div className="flex min-h-3 xs:min-h-5 items-center gap-1.5">
+        <div className="flex min-h-3 md:min-h-5 items-center gap-1.5">
           <>
             <Rating
               rating={
@@ -199,14 +199,14 @@ export function ProductCard({
         </div>
       </CardContent>
 
-      <CardFooter className="shrink-0 flex items-end justify-between gap-2 border-border/50 px-3 pt-1 pb-2.5">
-        <div className="flex flex-col gap-0.5 h-8 xs:h-10 items-start justify-end">
+      <CardFooter className="shrink-0 flex items-end justify-between gap-2 border-border/50 px-3 pt-0.5 md:pt-1 pb-2.5">
+        <div className="flex flex-col gap-0.5 h-8 md:h-10 items-start justify-end">
           {hasDiscount && product.originalPrice != null && (
-            <span className="text-[10px] xs:text-xs text-muted-foreground line-through">
+            <span className="text-[10px] md:text-xs text-muted-foreground line-through">
               {formatPriceSymbol(product.originalPrice)}
             </span>
           )}
-          <span className="text-xs xs:text-base font-bold text-foreground">
+          <span className="text-xs md:text-base font-bold text-foreground">
             {formatPriceSymbol(product.price)}
           </span>
         </div>

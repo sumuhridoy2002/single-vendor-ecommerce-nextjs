@@ -27,6 +27,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { usePagesStore } from "@/stores/pages-store"
 import type { CategoryTreeNode } from "@/types/product"
+import FlashSale from "./category/FlashSale"
 
 /** Get parent category href (empty string for root). */
 function getParentHref(href: string): string {
@@ -288,10 +289,7 @@ export function AppSidebar() {
                 href={flashSaleItem.href}
                 className="flex w-full items-center gap-2"
               >
-                <flashSaleItem.icon className="size-5 shrink-0 text-warning" />
-                <span className="font-bold text-destructive text-sm xs:text-base md:text-lg">
-                  {flashSaleItem.label}
-                </span>
+                <FlashSale />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

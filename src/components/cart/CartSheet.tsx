@@ -4,7 +4,6 @@ import { PolicyConsentLinks } from "@/components/legal/PolicyLinks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
   SheetContent,
@@ -13,27 +12,21 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { placeOrder } from "@/lib/api/orders";
-import { cn, formatPriceSymbol } from "@/lib/utils";
-import { useAddressStore } from "@/store/address-store";
 import {
-  useCartStore,
-  type DeliveryOption
-} from "@/store/cart-store";
+  fetchCheckoutSummary,
+  type CheckoutSummaryData,
+} from "@/lib/api/checkout";
+import { placeOrder } from "@/lib/api/orders";
+import { formatPriceSymbol } from "@/lib/utils";
+import { useAddressStore } from "@/store/address-store";
+import { useCartStore } from "@/store/cart-store";
 import { useCouponStore } from "@/store/coupon-store";
 import { usePaymentModalStore } from "@/store/payment-modal-store";
-import {
-  Bike,
-  ChevronRight,
-  Home,
-  Info,
-  Pencil,
-  Rocket,
-  ShoppingCart,
-  Zap
-} from "lucide-react";
-import { useState } from "react";
+import { ChevronRight, Home, Pencil, ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import FlashSale from "../category/FlashSale";
 import CartLineItem from "./CartLineItem";
 
 export function CartSheet() {
@@ -47,14 +40,13 @@ export function CartSheet() {
   const cashbackAmount = useCartStore((s) => s.cashbackAmount);
   const deliveryCharge = useCartStore((s) => s.deliveryCharge);
   const amountPayable = useCartStore((s) => s.amountPayable);
-  const deliveryOption = useCartStore((s) => s.deliveryOption);
-  const setDeliveryOption = useCartStore((s) => s.setDeliveryOption);
   const additionalInfo = useCartStore((s) => s.additionalInfo);
   const setAdditionalInfo = useCartStore((s) => s.setAdditionalInfo);
   const clearCart = useCartStore((s) => s.clearCart);
 
   const selectedAddress = useAddressStore((s) => s.selectedAddress);
   const openAddressModal = useAddressStore((s) => s.openAddressModal);
+  const addressModalOpen = useAddressStore((s) => s.modalOpen);
 
   const appliedCoupon = useCouponStore((s) => s.appliedCoupon);
   const couponLoading = useCouponStore((s) => s.isLoading);
@@ -66,17 +58,81 @@ export function CartSheet() {
   const [couponInput, setCouponInput] = useState("");
   const [showCouponInput, setShowCouponInput] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
+  const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummaryData | null>(
+    null
+  );
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const prevAddressModalOpen = useRef(addressModalOpen);
+
+  const cartFingerprint = useMemo(
+    () =>
+      items
+        .map((i) => `${i.lineId ?? i.product.id}-${i.variation?.id ?? "x"}-${i.quantity}`)
+        .join("|"),
+    [items]
+  );
+
+  const loadCheckoutSummary = useCallback(async () => {
+    setSummaryLoading(true);
+    try {
+      const data = await fetchCheckoutSummary();
+      setCheckoutSummary(data);
+    } catch {
+      setCheckoutSummary(null);
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0) {
+      setCheckoutSummary(null);
+      return;
+    }
+    void loadCheckoutSummary();
+  }, [
+    isOpen,
+    cartFingerprint,
+    selectedAddress?.id,
+    loadCheckoutSummary,
+    items.length,
+  ]);
+
+  useEffect(() => {
+    if (prevAddressModalOpen.current && !addressModalOpen && isOpen && items.length > 0) {
+      void loadCheckoutSummary();
+    }
+    prevAddressModalOpen.current = addressModalOpen;
+  }, [addressModalOpen, isOpen, items.length, loadCheckoutSummary]);
 
   const afterProductDiscount = subtotalMRP - discountTotal;
+  /** Subtotal basis for coupon: API checkout subtotal when available, else cart-derived. */
+  const subtotalForCoupon = checkoutSummary?.amounts.subtotal ?? afterProductDiscount;
   const couponDiscountAmount = appliedCoupon
     ? appliedCoupon.discount_type === "percentage"
-      ? (afterProductDiscount * appliedCoupon.discount_amount) / 100
-      : Math.min(appliedCoupon.discount_amount, afterProductDiscount)
+      ? (subtotalForCoupon * appliedCoupon.discount_amount) / 100
+      : Math.min(appliedCoupon.discount_amount, subtotalForCoupon)
     : 0;
-  const afterCoupon = afterProductDiscount - couponDiscountAmount;
-  const beforeRoundingWithCoupon = afterCoupon + deliveryCharge;
+  const afterCoupon = subtotalForCoupon - couponDiscountAmount;
+  const effectiveDeliveryCharge =
+    checkoutSummary != null ? checkoutSummary.amounts.shipping_charge : deliveryCharge;
+  const beforeRoundingWithCoupon = afterCoupon + effectiveDeliveryCharge;
   const amountPayableWithCoupon = Math.round(beforeRoundingWithCoupon);
   const roundingOffWithCoupon = amountPayableWithCoupon - beforeRoundingWithCoupon;
+
+  const hasCheckoutSummary = checkoutSummary != null;
+  const displayPayable = appliedCoupon
+    ? amountPayableWithCoupon
+    : hasCheckoutSummary
+      ? checkoutSummary.amounts.payable_total
+      : amountPayable;
+  const roundingForDisplay = appliedCoupon
+    ? roundingOffWithCoupon
+    : hasCheckoutSummary
+      ? checkoutSummary.amounts.payable_total -
+      checkoutSummary.amounts.subtotal -
+      checkoutSummary.amounts.shipping_charge
+      : roundingOff;
 
   const handleOpenChange = (open: boolean) => {
     if (!open) closeCart();
@@ -84,12 +140,13 @@ export function CartSheet() {
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) return;
-    if (!selectedAddress) {
+    if (!checkoutSummary?.shipping_address && !selectedAddress) {
       toast.error("Please select a shipping address.");
       return;
     }
-    const addressId = Number(selectedAddress.id);
-    if (Number.isNaN(addressId)) {
+    const addressId =
+      checkoutSummary?.shipping_address?.id ?? Number(selectedAddress?.id);
+    if (addressId == null || Number.isNaN(addressId)) {
       toast.error("Invalid address. Please select a valid address.");
       return;
     }
@@ -129,17 +186,11 @@ export function CartSheet() {
     setShowCouponInput(true);
   };
 
-  console.log("cart >>>>>>>>>", items)
-
-
-  const expressDate = new Date();
-  expressDate.setDate(expressDate.getDate() + 1);
-
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
       <SheetContent
         side="right"
-        className="flex flex-col gap-0 p-0 sm:max-w-md"
+        className="flex flex-col gap-0 p-0 w-full sm:max-w-md"
       >
         <SheetHeader className="shrink-0 border-b px-4 py-3">
           <SheetTitle className="text-lg">Shopping Cart</SheetTitle>
@@ -177,7 +228,32 @@ export function CartSheet() {
                       Change
                     </button>
                   </div>
-                  {selectedAddress ? (
+                  {summaryLoading ? (
+                    <div
+                      className="mt-2 h-24 animate-pulse rounded-lg bg-muted"
+                      aria-hidden
+                    />
+                  ) : checkoutSummary?.shipping_address ? (
+                    <div className="mt-2 flex gap-2 rounded-lg border bg-muted/30 p-3">
+                      <Home className="size-4 shrink-0 text-muted-foreground" />
+                      <div className="min-w-0 text-sm">
+                        <p className="font-medium">
+                          {checkoutSummary.shipping_address.receiver_name}
+                        </p>
+                        <p className="text-muted-foreground">
+                          {checkoutSummary.shipping_address.receiver_phone}
+                        </p>
+                        <p className="text-muted-foreground">
+                          {[
+                            checkoutSummary.shipping_address.address_line,
+                            checkoutSummary.shipping_address.city,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+                      </div>
+                    </div>
+                  ) : selectedAddress ? (
                     <div className="mt-2 flex gap-2 rounded-lg border bg-muted/30 p-3">
                       <Home className="size-4 shrink-0 text-muted-foreground" />
                       <div className="min-w-0 text-sm">
@@ -273,112 +349,60 @@ export function CartSheet() {
                       You are saving {formatPriceSymbol(Math.round(discountTotal + couponDiscountAmount))} in
                       this order.
                     </p>
-                    <p className="mt-1 flex items-center gap-1.5 text-sm">
+                    {/* <p className="mt-1 flex items-center gap-1.5 text-sm">
                       <span className="text-primary">৳</span>
                       You will receive {formatPriceSymbol(cashbackAmount)} cashback
                       after delivery.
-                    </p>
+                    </p> */}
                   </div>
                 </section>
 
                 {/* Order summary */}
                 <section className="mt-4 space-y-1.5 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Subtotal (MRP)</span>
-                    <span>{formatPriceSymbol(subtotalMRP)}</span>
-                  </div>
-                  <div className="flex justify-between text-destructive">
-                    <span>Discount Applied</span>
-                    <span>-{formatPriceSymbol(Math.abs(discountTotal))}</span>
-                  </div>
+                  {hasCheckoutSummary ? (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{formatPriceSymbol(checkoutSummary.amounts.subtotal)}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Subtotal (MRP)</span>
+                        <span>{formatPriceSymbol(subtotalMRP)}</span>
+                      </div>
+                      <div className="flex justify-between text-destructive">
+                        <span>Discount Applied</span>
+                        <span>-{formatPriceSymbol(Math.abs(discountTotal))}</span>
+                      </div>
+                    </>
+                  )}
                   {appliedCoupon && couponDiscountAmount > 0 && (
                     <div className="flex justify-between text-destructive">
                       <span>Coupon ({appliedCoupon.code})</span>
                       <span>-{formatPriceSymbol(couponDiscountAmount)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-destructive">
-                    <span>Rounding Off</span>
-                    <span>-{formatPriceSymbol(Math.abs(appliedCoupon ? roundingOffWithCoupon : roundingOff))}</span>
-                  </div>
+                  {Math.abs(roundingForDisplay) > 0.001 && (
+                    <div className="flex justify-between text-destructive">
+                      <span>Rounding Off</span>
+                      <span>
+                        -{formatPriceSymbol(Math.abs(roundingForDisplay))}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Delivery Charge
-                      {deliveryOption === "regular" ? " (Regular Delivery)" : ""}
-                    </span>
+                    <span className="text-muted-foreground">Delivery Charge</span>
                     <span
                       className={
-                        deliveryCharge === 0 ? "text-primary" : undefined
+                        effectiveDeliveryCharge === 0 ? "text-primary" : undefined
                       }
                     >
-                      {deliveryCharge === 0 ? "Free" : formatPriceSymbol(deliveryCharge)}
+                      {effectiveDeliveryCharge === 0
+                        ? "Free"
+                        : formatPriceSymbol(effectiveDeliveryCharge)}
                     </span>
                   </div>
                 </section>
-
-                {/* Delivery options */}
-                <section className="mt-4">
-                  <p className="mb-2 text-sm font-medium">Delivery option</p>
-                  <RadioGroup
-                    value={deliveryOption}
-                    onValueChange={(v) => setDeliveryOption(v as DeliveryOption)}
-                    className="space-y-3"
-                  >
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
-                        deliveryOption === "regular" && "border-primary bg-primary/5"
-                      )}
-                    >
-                      <RadioGroupItem value="regular" className="mt-0.5" />
-                      <div className="flex-1">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
-                          <Bike className="size-3.5" />
-                          Regular Delivery
-                        </span>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Delivery Charge (First Order)
-                        </p>
-                        <p className="text-sm font-medium text-primary">Free</p>
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                          <Info className="size-3.5" />
-                          Free Delivery Above 1999 Taka Order
-                        </p>
-                      </div>
-                    </label>
-                    <label
-                      className={cn(
-                        "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
-                        deliveryOption === "express" && "border-primary bg-primary/5"
-                      )}
-                    >
-                      <RadioGroupItem value="express" className="mt-0.5" />
-                      <div className="flex-1">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                          <Rocket className="size-3.5" />
-                          Express Delivery
-                        </span>
-                        <p className="mt-1 text-sm">
-                          {formatPriceSymbol(59)} · Delivery{" "}
-                          {expressDate.toLocaleDateString("en-GB", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                          , between 8am to 12pm
-                        </p>
-                      </div>
-                    </label>
-                  </RadioGroup>
-                </section>
-
-                {/* Amount Payable */}
-                <div className="mt-4 flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
-                  <span className="text-sm font-medium">Amount Payable</span>
-                  <span className="text-lg font-semibold">
-                    {formatPriceSymbol(appliedCoupon ? amountPayableWithCoupon : amountPayable)}
-                  </span>
-                </div>
 
                 {/* Terms */}
                 <p className="mt-4 text-xs text-muted-foreground">
@@ -390,21 +414,15 @@ export function CartSheet() {
                 </p>
 
                 {/* Flash sale card */}
-                <div className="mt-4 flex items-center justify-between rounded-lg border bg-warning/10 p-3">
+                <Link href="/flash-sale" onClick={() => closeCart()} className="mt-4 flex items-center justify-between rounded-lg border p-3">
                   <div className="flex items-center gap-2">
-                    <Zap className="size-5 text-warning" />
-                    <div>
-                      <p className="text-sm font-semibold">FLASH SALE</p>
-                      <p className="text-xs text-muted-foreground">
-                        Save up to 83%
-                      </p>
-                    </div>
+                    <FlashSale />
                     <Badge variant="destructive" className="text-[10px]">
                       • Live
                     </Badge>
                   </div>
                   <ChevronRight className="size-4 text-muted-foreground" />
-                </div>
+                </Link>
               </>
             )}
           </div>
@@ -417,7 +435,7 @@ export function CartSheet() {
               <span>
                 {itemCount} item{itemCount !== 1 ? "s" : ""}
               </span>
-              <span className="font-semibold">{formatPriceSymbol(appliedCoupon ? amountPayableWithCoupon : amountPayable)}</span>
+              <span className="font-semibold">{formatPriceSymbol(displayPayable)}</span>
             </div>
             <Button
               onClick={handlePlaceOrder}
