@@ -12,11 +12,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import {
-  getCategoryHrefById,
-  getCategoryIdToTitleMap,
-  useCategoryTree,
-} from "@/hooks/data/useCategoryTree"
 import { useProductDetails } from "@/hooks/data/useProductDetails"
 import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
@@ -41,7 +36,6 @@ export function ProductPageContent({
     undefined
   )
   const { products: relatedProducts } = useRelatedProducts(product?.id)
-  const tree = useCategoryTree()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
@@ -51,13 +45,21 @@ export function ProductPageContent({
     options?: { variationId?: number }
   ) => {
     whenLoggedIn(() => {
+      if (p.inStock === false || (p.stockQty != null && p.stockQty <= 0)) {
+        toast.error("This product is currently out of stock")
+        return
+      }
+
+      if (p.stockQty != null && quantity > p.stockQty) {
+        toast.error(`You can add up to ${p.stockQty} item(s) for this product`)
+        return
+      }
+
       addItem(p, quantity, options)
         .then(() => openCart())
         .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
     })
   }
-
-  console.log(">>>>>>", product)
 
   if (error) notFound()
   if (isLoading || !product) {
@@ -76,8 +78,8 @@ export function ProductPageContent({
     )
   }
 
-  const categoryHref = getCategoryHrefById(tree, product.categoryId)
-  const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
+  const categoryHref = product.categoryHref
+  const categoryTitle = product.categoryTitle
 
   return (
     <div className="container space-y-8 min-w-full">
@@ -89,7 +91,7 @@ export function ProductPageContent({
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          {categoryTitle && (
+          {categoryTitle && categoryHref && (
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
@@ -127,7 +129,7 @@ export function ProductPageContent({
           <RelatedProductsCarousel
             title="Related Products"
             products={relatedProducts}
-            viewAllHref={categoryHref}
+            viewAllHref={categoryHref ?? undefined}
             onAddToCart={handleAddToCart}
           />
         )}

@@ -93,6 +93,9 @@ export interface ProductDetailsApi {
   discount_type: string
   final_price: number
   stock: number
+  stock_qty?: number
+  sold_out_qty?: number
+  wishlist_count?: number
   is_in_stock: boolean
   view_count: number
   reviews_count: number

@@ -12,7 +12,7 @@ import type {
   SubmitReviewRequestBody,
 } from "@/types/product-details"
 import { getProductReviewSummary } from "@/lib/reviews"
-import { getBaseUrl } from "./client"
+import { getBaseUrl, normalizeMediaUrl } from "./client"
 
 const TOKEN_KEY = "access_token"
 
@@ -54,8 +54,12 @@ function mapProductApiToProduct(api: {
   is_in_stock: boolean
   flash_sale: { is_active: boolean; flash_final_price: number }
   campaign?: ProductDetailsCampaignApi | null
-  category?: { id: number; slug?: string } | null
+  category?: { id: number; name?: string; slug?: string } | null
   brand?: { id?: number; name: string; slug: string } | null
+  stock?: number
+  stock_qty?: number
+  sold_out_qty?: number
+  wishlist_count?: number
 }): Product {
   const price =
     api.flash_sale?.is_active === true
@@ -72,11 +76,14 @@ function mapProductApiToProduct(api: {
 
   const campaign = campaignFieldsFromApi(api.campaign)
   const reviewSummary = getProductReviewSummary(api.recent_reviews, api.reviews_count)
+  const thumbnail = normalizeMediaUrl(api.thumbnail) ?? api.thumbnail
+  const gallery = api.gallery?.map((image) => normalizeMediaUrl(image) ?? image)
+  const stockQty = api.stock_qty ?? api.stock
   return {
     id: String(api.id),
     name: api.title,
     slug: api.slug,
-    image: api.thumbnail,
+    image: thumbnail,
     price,
     originalPrice,
     discountPercent,
@@ -85,16 +92,18 @@ function mapProductApiToProduct(api: {
     reviewCount: reviewSummary.reviewCount,
     recentReviews: api.recent_reviews,
     categoryId: api.category ? String(api.category.id) : "",
+    categoryTitle: api.category?.name,
+    categoryHref: api.category?.slug ? `/category/${api.category.slug}` : undefined,
     description: api.short_description || undefined,
     longDescription: api.long_description || undefined,
-    images:
-      api.gallery && api.gallery.length > 0
-        ? [api.thumbnail, ...api.gallery]
-        : [api.thumbnail],
+    images: gallery && gallery.length > 0 ? [thumbnail, ...gallery] : [thumbnail],
     brand: api.brand?.name,
     brandId: api.brand?.id != null ? String(api.brand.id) : undefined,
     brandHref: api.brand?.slug ? `/brand/${api.brand.slug}` : undefined,
     inStock: api.is_in_stock,
+    stockQty,
+    soldOutQty: api.sold_out_qty,
+    wishlistCount: api.wishlist_count,
     specification: {},
     ...campaign,
   }

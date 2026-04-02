@@ -5,6 +5,7 @@ import Navbar from "@/components/global/navbar";
 import Provider from "@/components/global/Provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { fetchSettingsSafe } from "@/lib/api/settings";
+import { getSiteOrigin, normalizeMediaUrl } from "@/lib/api/client";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import 'swiper/css';
@@ -18,6 +19,7 @@ const inter = Inter({
 });
 
 const DEFAULT_METADATA: Metadata = {
+  metadataBase: new URL(getSiteOrigin()),
   title: "স্কিন কেয়ার ও বিউটি প্রোডাক্টের বিশ্বস্ত ঠিকানা | Beauty Care BD",
   description:
     "BeautyCare.com.bd - বাংলাদেশের বিশ্বস্ত অনলাইন বিউটি শপ। এখানে পাবেন ১০০% অরিজিনাল স্কিন কেয়ার, হেয়ার কেয়ার, মেকআপ ও বডি কেয়ার প্রোডাক্ট একদম হাতের নাগালে।",
@@ -30,13 +32,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const { site_name, site_tagline, site_description, favicon } = res.data;
 
   return {
+    metadataBase: new URL(getSiteOrigin()),
     title: {
       default: `${site_name} | ${site_tagline}`,
       template: `%s | ${site_name}`,
     },
     description: site_description,
     icons: {
-      icon: favicon,
+      icon: normalizeMediaUrl(favicon) ?? favicon,
     },
   };
 }

@@ -3,13 +3,10 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { cn } from "@/lib/utils"
-import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
 import {
   ChevronRight,
-  Heart,
   Minus,
   Plus,
   ShoppingCart,
@@ -25,7 +22,6 @@ import {
   FaShareAlt,
   FaTelegram
 } from "react-icons/fa"
-import { toast } from "sonner"
 
 
 
@@ -36,7 +32,6 @@ export interface ProductInfoProps {
     quantity?: number,
     options?: { variationId?: number }
   ) => void
-  onWishlist?: (product: Product) => void
   onVariantImageChange?: (image?: string) => void
   className?: string
 }
@@ -99,7 +94,6 @@ function RatingStars({
 export function ProductInfo({
   product,
   onAddToCart,
-  onWishlist,
   onVariantImageChange,
   className,
 }: ProductInfoProps) {
@@ -148,11 +142,9 @@ export function ProductInfo({
       )
       : null)
   const inStock = product.inStock ?? true
-  const toggleWishlist = useWishlistStore((state) => state.toggle)
-  const pendingIds = useWishlistStore((state) => state.pendingIds)
-  const isInWishlist = useIsInWishlist(product.id)
-  const isWishlistPending = pendingIds.includes(product.id)
-  const whenLoggedIn = useWhenLoggedIn()
+  const stockQty = product.stockQty
+  const isOutOfStock = !inStock || (stockQty != null && stockQty <= 0)
+  const maxQuantity = stockQty != null && stockQty > 0 ? stockQty : undefined
 
   const getShareUrl = () =>
     typeof window !== "undefined" ? window.location.href : ""
@@ -224,24 +216,16 @@ export function ProductInfo({
     )
   }
 
-  function handleImoShare() {
-    // IMO doesn't have a widely documented universal share URL scheme.
-    // We use your existing Web Share/copy fallback so it still works.
-    void handleShare()
-  }
-
   async function copyToClipboard(text: string) {
     if (typeof navigator?.clipboard?.writeText === "function") {
       await navigator.clipboard.writeText(text)
     }
   }
 
-  const handleWishlistClick = () => {
-    whenLoggedIn(() => {
-      toggleWishlist(product.id)
-        .then(() => onWishlist?.(product))
-        .catch((e) => toast.error(e?.message ?? "Failed to update wishlist"))
-    })
+  const clampQuantity = (nextQuantity: number) => {
+    const safeQuantity = Math.max(1, nextQuantity)
+    if (maxQuantity == null) return safeQuantity
+    return Math.min(maxQuantity, safeQuantity)
   }
 
   return (
@@ -275,6 +259,10 @@ export function ProductInfo({
             )}
           </div>
         )}
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          <span>Sold: {product.soldOutQty ?? 0}</span>
+          {stockQty != null && <span>Available: {stockQty}</span>}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-baseline gap-2">
@@ -299,12 +287,21 @@ export function ProductInfo({
         </p>
       )}
 
-      {inStock && (
-        <div className="flex items-center gap-2 text-sm text-success">
-          <span className="size-2 rounded-full bg-success" aria-hidden />
-          In Stock
-        </div>
-      )}
+      <div
+        className={cn(
+          "flex items-center gap-2 text-sm",
+          isOutOfStock ? "text-destructive" : "text-success"
+        )}
+      >
+        <span
+          className={cn(
+            "size-2 rounded-full",
+            isOutOfStock ? "bg-destructive" : "bg-success"
+          )}
+          aria-hidden
+        />
+        {isOutOfStock ? "Out of Stock" : "In Stock"}
+      </div>
 
       {variationsByType.length > 0 && (
         <div className="space-y-4">
@@ -353,27 +350,31 @@ export function ProductInfo({
             variant="ghost"
             size="icon"
             className="h-9 w-9 rounded-r-none"
-            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            onClick={() => setQuantity((q) => clampQuantity(q - 1))}
             aria-label="Decrease quantity"
+            disabled={isOutOfStock}
           >
             <Minus className="size-4" />
           </Button>
           <Input
             type="number"
             min={1}
+            max={maxQuantity}
             value={quantity}
             onChange={(e) =>
-              setQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))
+              setQuantity(clampQuantity(parseInt(e.target.value, 10) || 1))
             }
             className="h-9 w-14 border-0 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
             aria-label="Quantity"
+            disabled={isOutOfStock}
           />
           <Button
             variant="ghost"
             size="icon"
             className="h-9 w-9 rounded-l-none"
-            onClick={() => setQuantity((q) => q + 1)}
+            onClick={() => setQuantity((q) => clampQuantity(q + 1))}
             aria-label="Increase quantity"
+            disabled={isOutOfStock || (maxQuantity != null && quantity >= maxQuantity)}
           >
             <Plus className="size-4" />
           </Button>
@@ -383,6 +384,7 @@ export function ProductInfo({
       <div className="flex gap-2 flex-row">
         <Button
           className="flex-1 gap-2 bg-primary hover:bg-primary-dark"
+          disabled={isOutOfStock}
           onClick={() =>
             onAddToCart?.(product, quantity, {
               variationId: selectedVariationId,
@@ -390,21 +392,7 @@ export function ProductInfo({
           }
         >
           <ShoppingCart className="size-4" />
-          Add To Cart
-        </Button>
-        <Button
-          variant={"outline"}
-          className="gap-2"
-          onClick={handleWishlistClick}
-          disabled={isWishlistPending}
-          aria-label={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
-        >
-          <Heart
-            className={cn(
-              "size-4",
-              isInWishlist ? "fill-red-500 text-red-500" : undefined
-            )}
-          />
+          {isOutOfStock ? "Out of Stock" : "Add To Cart"}
         </Button>
       </div>
 

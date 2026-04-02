@@ -3,11 +3,14 @@
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { cn } from "@/lib/utils"
+import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
-import { ZoomIn } from "lucide-react"
+import { Heart, ZoomIn } from "lucide-react"
 import Image from "next/image"
 import { useCallback, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
 
 const ZOOM_LEVEL = 2
 
@@ -24,6 +27,11 @@ export function ProductGallery({
   onVariantImageChange,
   className,
 }: ProductGalleryProps) {
+  const toggleWishlist = useWishlistStore((state) => state.toggle)
+  const pendingIds = useWishlistStore((state) => state.pendingIds)
+  const isInWishlist = useIsInWishlist(product.id)
+  const isWishlistPending = pendingIds.includes(product.id)
+  const whenLoggedIn = useWhenLoggedIn()
   const variationImageSet = useMemo(() => {
     const set = new Set<string>()
     for (const variation of product.variations ?? []) {
@@ -81,6 +89,14 @@ export function ProductGallery({
     setZoomOrigin(null)
   }, [])
 
+  const handleWishlistClick = () => {
+    whenLoggedIn(() => {
+      toggleWishlist(product.id).catch((e) =>
+        toast.error(e?.message ?? "Failed to update wishlist")
+      )
+    })
+  }
+
   return (
     <div className={cn("w-full flex flex-col sm:flex-row-reverse md:flex-col lg:flex-row-reverse gap-4", className)}>
       {/* Main image with hover zoom */}
@@ -101,6 +117,27 @@ export function ProductGallery({
                 {discountPercent != null ? `${discountPercent}% OFF` : "Sale"}
               </Badge>
             )}
+            <div className="absolute right-3 top-3 z-10">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="gap-2 rounded-full shadow-sm"
+                onClick={handleWishlistClick}
+                disabled={isWishlistPending}
+                aria-label={
+                  isInWishlist ? "Remove from wishlist" : "Add to wishlist"
+                }
+              >
+                <Heart
+                  className={cn(
+                    "size-4",
+                    isInWishlist ? "fill-red-500 text-red-500" : undefined
+                  )}
+                />
+                <span>{product.wishlistCount ?? 0}</span>
+              </Button>
+            </div>
             <Image
               src={selectedImage}
               alt={product.name}

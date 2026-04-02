@@ -27,6 +27,8 @@ export interface Product {
   recentReviews?: ProductReview[]
   unit?: string
   categoryId: string
+  categoryTitle?: string
+  categoryHref?: string
   description?: string
   longDescription?: string
   images?: string[]
@@ -34,6 +36,9 @@ export interface Product {
   brandId?: string
   brandHref?: string
   inStock?: boolean
+  stockQty?: number
+  soldOutQty?: number
+  wishlistCount?: number
   deliveryText?: string
   specification?: Record<string, string>
   /** From get-product-by-slug; used for size/color selectors. */
