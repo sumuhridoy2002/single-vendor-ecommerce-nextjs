@@ -57,6 +57,8 @@ export function ProductPageContent({
     })
   }
 
+  console.log(">>>>>>", product)
+
   if (error) notFound()
   if (isLoading || !product) {
     return (

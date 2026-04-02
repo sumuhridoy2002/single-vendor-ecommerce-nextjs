@@ -5,6 +5,7 @@ import {
   removeFromCart,
   updateCartQuantity,
 } from "@/lib/api/cart";
+import { getEffectiveCampaignIdForCart } from "@/lib/campaign-window";
 
 export type DeliveryOption = "regular" | "express";
 
@@ -117,7 +118,8 @@ export const useCartStore = create<CartState>((set) => ({
     const items = await addToCart({
       product_id: Number(product.id),
       product_variation_id: options?.variationId,
-      campaign_id: options?.campaignId,
+      campaign_id:
+        options?.campaignId ?? getEffectiveCampaignIdForCart(product),
       quantity,
     });
     set((state) => ({

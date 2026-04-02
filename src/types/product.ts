@@ -38,6 +38,12 @@ export interface Product {
   specification?: Record<string, string>
   /** From get-product-by-slug; used for size/color selectors. */
   variations?: { id: number; type: string; value: string; image?: string }[]
+  /** When `campaign.is_active` on product details / list; sent as `campaign_id` on add-to-cart when in window. */
+  campaignId?: number
+  /** Campaign start from API (`campaign.from`), e.g. "2026-02-26 23:54:00". */
+  campaignValidFrom?: string
+  /** Campaign end from API (`campaign.to`). */
+  campaignValidTo?: string
 }
 
 export interface ProductCategory {

@@ -8,6 +8,7 @@ import { useHomepage } from "@/hooks/data/useHomepage"
 import { useCartStore } from "@/store/cart-store"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import type { Product } from "@/types/product"
+import { useSyncExternalStore } from "react"
 import { toast } from "sonner"
 
 const SECTION_BG_CLASSES = [
@@ -19,6 +20,11 @@ const SECTION_BG_CLASSES = [
 
 export default function Home() {
   const { data, isLoading, error } = useHomepage()
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
@@ -38,7 +44,7 @@ export default function Home() {
     )
   }
 
-  if (isLoading || !data) {
+  if (!isHydrated || isLoading || !data) {
     return (
       <div className="w-full">
         <HeroBannerSlider />

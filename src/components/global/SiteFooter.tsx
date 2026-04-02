@@ -220,10 +220,18 @@ export function SiteFooter() {
             {settings?.trade_license ? (
               <>
                 Trade License: {settings.trade_license}
+                <br className="block md:hidden" />
                 {settings.bin_no ? (
                   <>
                     {" "}
                     DBID: {settings.bin_no}
+                  </>
+                ) : null}
+                <br className="block md:hidden" />
+                {settings.tin_no ? (
+                  <>
+                    {" "}
+                    TIN: {settings.tin_no}
                   </>
                 ) : null}
               </>

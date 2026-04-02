@@ -9,6 +9,8 @@ import {
   CardHeader,
 } from "@/components/ui/card"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
+import { getEffectiveCampaignIdForCart } from "@/lib/campaign-window"
+import { getProductReviewSummary } from "@/lib/reviews"
 import { cn } from "@/lib/utils"
 import { useIsInWishlist, useWishlistStore } from "@/store/wishlist-store"
 import type { Product } from "@/types/product"
@@ -45,6 +47,10 @@ export function ProductCard({
   const isInWishlist = useIsInWishlist(product.id)
   const isWishlistPending = pendingIds.includes(product.id)
   const whenLoggedIn = useWhenLoggedIn()
+  const reviewSummary = getProductReviewSummary(
+    product.recentReviews,
+    product.reviewCount
+  )
 
   const hasDiscount =
     product.originalPrice != null &&
@@ -62,6 +68,11 @@ export function ProductCard({
         .then(() => onWishlist?.(product))
         .catch((e) => toast.error(e?.message ?? "Failed to update wishlist"))
     })
+  }
+
+  function productForAddToCart(): Product {
+    const campaignId = getEffectiveCampaignIdForCart(product)
+    return { ...product, campaignId }
   }
 
   return (
@@ -133,10 +144,17 @@ export function ProductCard({
         {/* Star rating with review count */}
         <div className="flex min-h-3 xs:min-h-5 items-center gap-1.5">
           <>
-            <Rating rating={product.rating ?? 0} size="sm" />
-            {product.reviewCount != null && (
+            <Rating
+              rating={
+                product.recentReviews != null
+                  ? reviewSummary.averageRating
+                  : (product.rating ?? 0)
+              }
+              size="sm"
+            />
+            {reviewSummary.reviewCount > 0 && (
               <span className="text-xs text-muted-foreground">
-                ({product.reviewCount})
+                ({reviewSummary.reviewCount})
               </span>
             )}
           </>
@@ -158,7 +176,7 @@ export function ProductCard({
           size="sm"
           className="shrink-0 rounded-md border-2 border-primary bg-primary-light/20 font-bold uppercase text-primary hover:bg-primary-light hover:text-primary-dark"
           aria-label="Add to cart"
-          onClick={() => onAddToCart?.(product)}
+          onClick={() => onAddToCart?.(productForAddToCart())}
         >
           ADD
         </Button>

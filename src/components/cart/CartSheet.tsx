@@ -1,5 +1,6 @@
 "use client";
 
+import { PolicyConsentLinks } from "@/components/legal/PolicyLinks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +13,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
-import { cn, formatPriceSymbol } from "@/lib/utils";
 import { placeOrder } from "@/lib/api/orders";
+import { cn, formatPriceSymbol } from "@/lib/utils";
 import { useAddressStore } from "@/store/address-store";
 import {
   useCartStore,
@@ -21,7 +22,6 @@ import {
 } from "@/store/cart-store";
 import { useCouponStore } from "@/store/coupon-store";
 import { usePaymentModalStore } from "@/store/payment-modal-store";
-import { PolicyConsentLinks } from "@/components/legal/PolicyLinks";
 import {
   Bike,
   ChevronRight,
@@ -128,6 +128,9 @@ export function CartSheet() {
     resetCoupon();
     setShowCouponInput(true);
   };
+
+  console.log("cart >>>>>>>>>", items)
+
 
   const expressDate = new Date();
   expressDate.setDate(expressDate.getDate() + 1);

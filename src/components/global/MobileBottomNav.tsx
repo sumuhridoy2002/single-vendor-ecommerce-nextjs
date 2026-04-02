@@ -13,9 +13,9 @@ import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
   { label: "Home", href: "/", icon: Home },
-  { label: "Lab Test", href: "/category/lab-test", icon: FlaskConical },
-  { label: "Beauty", href: "/category/beauty", icon: Sparkles },
-  { label: "Health Care", href: "/category/healthcare", icon: Stethoscope },
+  { label: "Flash Sale", href: "/flash-sale", icon: Stethoscope },
+  { label: "My orders", href: "/account/orders", icon: FlaskConical },
+  { label: "Wishlist", href: "/account/wishlist", icon: Sparkles },
 ] as const;
 
 interface MobileBottomNavProps {

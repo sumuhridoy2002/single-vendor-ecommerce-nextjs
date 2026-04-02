@@ -9,7 +9,7 @@ import { getCategoryIdToTitleMap, useCategoryTree } from "@/hooks/data/useCatego
 import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 
 const PRICE_PRESETS = [
   { label: "Under ৳500", min: undefined, max: 500 },
@@ -40,6 +40,17 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
     [tree]
   );
 
+  /** Empty during SSR so hydration matches even if client-side caches already have search data. */
+  const filtersReady = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const resultSetForFilters = useMemo(
+    () => (filtersReady ? searchResultSet : []),
+    [filtersReady, searchResultSet]
+  );
+
   const priceMin = searchParams.get("min_price");
   const priceMax = searchParams.get("max_price");
   const categoryId = searchParams.get("category_id");
@@ -48,39 +59,39 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
   const sectionScrollHeight = embedded ? "max-h-[160px]" : SECTION_SCROLL_HEIGHT;
 
   const { minPrice, maxPrice } = useMemo(() => {
-    if (searchResultSet.length === 0) return { minPrice: 0, maxPrice: 0 };
-    const prices = searchResultSet.map((p) => p.price);
+    if (resultSetForFilters.length === 0) return { minPrice: 0, maxPrice: 0 };
+    const prices = resultSetForFilters.map((p) => p.price);
     return {
       minPrice: Math.min(...prices),
       maxPrice: Math.max(...prices),
     };
-  }, [searchResultSet]);
+  }, [resultSetForFilters]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const p of searchResultSet) {
+    for (const p of resultSetForFilters) {
       if (p.categoryId) counts[p.categoryId] = (counts[p.categoryId] ?? 0) + 1;
     }
     return counts;
-  }, [searchResultSet]);
+  }, [resultSetForFilters]);
 
   const brandCounts = useMemo(() => {
     const counts: Record<string, number> = {};
-    for (const p of searchResultSet) {
+    for (const p of resultSetForFilters) {
       const id = p.brandId ?? p.brand ?? "";
       if (id) counts[id] = (counts[id] ?? 0) + 1;
     }
     return counts;
-  }, [searchResultSet]);
+  }, [resultSetForFilters]);
 
   const brandIdToName = useMemo(() => {
     const map: Record<string, string> = {};
-    for (const p of searchResultSet) {
+    for (const p of resultSetForFilters) {
       const id = p.brandId ?? p.brand ?? "";
       if (id && p.brand) map[id] = p.brand;
     }
     return map;
-  }, [searchResultSet]);
+  }, [resultSetForFilters]);
 
   const categoryIds = useMemo(
     () => Object.keys(categoryCounts).sort((a, b) => (categoryIdToTitle[a] ?? a).localeCompare(categoryIdToTitle[b] ?? b)),
@@ -174,7 +185,7 @@ export function SearchFiltersSidebar({ searchResultSet, className, embedded, bas
                   const inRange =
                     (pr.max == null || maxPrice >= (pr.min ?? 0)) &&
                     (pr.min == null || minPrice <= (pr.max ?? Infinity));
-                  const disabled = !inRange && searchResultSet.length > 0;
+                  const disabled = !inRange && resultSetForFilters.length > 0;
                   return (
                     <div key={pr.label} className="flex items-center gap-2">
                       <RadioGroupItem

@@ -96,10 +96,10 @@ export function mapCartLineToCartItem(line: CartLineApi): CartItem {
     lineId: line.id,
     variation: line.variation
       ? {
-          id: line.variation.id,
-          type: line.variation.type,
-          value: line.variation.value,
-        }
+        id: line.variation.id,
+        type: line.variation.type,
+        value: line.variation.value,
+      }
       : undefined,
     product: mapCartProductToProduct(line.product, line.variation),
     quantity: line.quantity,
@@ -122,11 +122,23 @@ export async function fetchCart(): Promise<CartItem[]> {
   if (json.status !== 200 || !Array.isArray(json.data)) {
     return [];
   }
-
   return json.data.map(mapCartLineToCartItem);
 }
 
-/** Request body for POST /cart/add */
+/**
+ * POST /cart/add JSON body (same-origin: `/api/cart/add` → backend `cart/add`).
+ *
+ * @example
+ * ```json
+ * {
+ *   "product_id": 1,
+ *   "product_variation_id": 137,
+ *   "campaign_id": 3,
+ *   "quantity": 5
+ * }
+ * ```
+ * `product_variation_id` and `campaign_id` are omitted when not applicable.
+ */
 export interface AddToCartPayload {
   product_id: number;
   product_variation_id?: number;

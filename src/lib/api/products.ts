@@ -2,6 +2,7 @@ import type { Product, ProductReview } from "@/types/product"
 import type {
   ProductDetailsApi,
   ProductDetailsApiResponse,
+  ProductDetailsCampaignApi,
   ProductListItemApi,
   ProductsListApiResponse,
   ProductsPaginatedResponse,
@@ -10,6 +11,7 @@ import type {
   SubmitReviewApiResponse,
   SubmitReviewRequestBody,
 } from "@/types/product-details"
+import { getProductReviewSummary } from "@/lib/reviews"
 import { getBaseUrl } from "./client"
 
 const TOKEN_KEY = "access_token"
@@ -25,6 +27,17 @@ function getAuthHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}` }
 }
 
+function campaignFieldsFromApi(
+  campaign: ProductDetailsCampaignApi | null | undefined
+): Pick<Product, "campaignId" | "campaignValidFrom" | "campaignValidTo"> | undefined {
+  if (campaign?.is_active !== true || campaign.campaign_id == null) return undefined
+  return {
+    campaignId: campaign.campaign_id,
+    campaignValidFrom: campaign.from,
+    campaignValidTo: campaign.to,
+  }
+}
+
 /** Map a product API object (full or related) to app Product type. */
 function mapProductApiToProduct(api: {
   id: number
@@ -33,12 +46,14 @@ function mapProductApiToProduct(api: {
   base_price: number
   final_price: number
   reviews_count: number
+  recent_reviews?: ProductReview[]
   thumbnail: string
   gallery?: string[]
   short_description?: string
   long_description?: string
   is_in_stock: boolean
   flash_sale: { is_active: boolean; flash_final_price: number }
+  campaign?: ProductDetailsCampaignApi | null
   category?: { id: number; slug?: string } | null
   brand?: { id?: number; name: string; slug: string } | null
 }): Product {
@@ -55,6 +70,8 @@ function mapProductApiToProduct(api: {
   if (api.flash_sale?.is_active) badge = "sale"
   else if (discountPercent != null && discountPercent > 0) badge = "sale"
 
+  const campaign = campaignFieldsFromApi(api.campaign)
+  const reviewSummary = getProductReviewSummary(api.recent_reviews, api.reviews_count)
   return {
     id: String(api.id),
     name: api.title,
@@ -64,8 +81,9 @@ function mapProductApiToProduct(api: {
     originalPrice,
     discountPercent,
     badge,
-    rating: undefined,
-    reviewCount: api.reviews_count,
+    rating: reviewSummary.averageRating,
+    reviewCount: reviewSummary.reviewCount,
+    recentReviews: api.recent_reviews,
     categoryId: api.category ? String(api.category.id) : "",
     description: api.short_description || undefined,
     longDescription: api.long_description || undefined,
@@ -78,21 +96,12 @@ function mapProductApiToProduct(api: {
     brandHref: api.brand?.slug ? `/brand/${api.brand.slug}` : undefined,
     inStock: api.is_in_stock,
     specification: {},
+    ...campaign,
   }
 }
 
 /** Map /products/{id} API response to app Product type. */
 export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
-  const base = mapProductApiToProduct(api)
-  const variations =
-    api.variations?.length > 0
-      ? api.variations.map((v) => ({
-          id: v.id,
-          type: v.type,
-          value: v.value,
-          image: v.image,
-        }))
-      : undefined
   const recentReviews: ProductReview[] = Array.isArray(api.recent_reviews)
     ? api.recent_reviews.map((r) => ({
         id: r.id,
@@ -104,6 +113,16 @@ export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
         reply: r.reply ?? undefined,
       }))
     : []
+  const base = mapProductApiToProduct({ ...api, recent_reviews: recentReviews })
+  const variations =
+    api.variations?.length > 0
+      ? api.variations.map((v) => ({
+          id: v.id,
+          type: v.type,
+          value: v.value,
+          image: v.image,
+        }))
+      : undefined
   return { ...base, variations, recentReviews }
 }
 

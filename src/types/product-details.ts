@@ -60,6 +60,18 @@ export interface ProductDetailsFlashSaleApi {
   flash_final_price: number
 }
 
+/** Campaign pricing block on product details. */
+export interface ProductDetailsCampaignApi {
+  is_active: boolean
+  campaign_id: number
+  name: string | null
+  discount: number
+  type: string
+  from: string
+  to: string
+  final_price: number
+}
+
 /** Single variation as returned by GET /products/{slug}. */
 export interface ProductVariationApi {
   id: number
@@ -90,6 +102,7 @@ export interface ProductDetailsApi {
   brand: ProductDetailsBrandApi
   variations: ProductVariationApi[]
   flash_sale: ProductDetailsFlashSaleApi
+  campaign?: ProductDetailsCampaignApi | null
   status: boolean
   recent_reviews: ProductReviewApi[]
   meta: ProductDetailsMetaApi
@@ -138,11 +151,13 @@ export interface ProductListItemApi {
   base_price: number
   final_price: number
   reviews_count: number
+  recent_reviews?: ProductReviewApi[]
   thumbnail: string
   gallery?: string[]
   short_description?: string
   is_in_stock: boolean
   flash_sale: ProductDetailsFlashSaleApi
+  campaign?: ProductDetailsCampaignApi | null
   category?: { id: number; name?: string; slug?: string } | null
   brand?: { id: number; name: string; slug: string } | null
 }

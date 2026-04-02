@@ -54,7 +54,7 @@ export default function CampaignPage({ params }: Props) {
 
   const handleAddToCart = (product: Product) => {
     whenLoggedIn(() => {
-      addItem(product)
+      addItem(product, 1, { campaignId })
         .then(() => openCart())
         .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
     })

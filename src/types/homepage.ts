@@ -1,4 +1,7 @@
 /** Meta block used in category, brand, product API responses. */
+import type { ProductReviewApi } from "@/types/product-details"
+
+/** Meta block used in category, brand, product API responses. */
 export interface MetaBlock {
   title: string
   keywords: string
@@ -51,6 +54,7 @@ export interface HomepageProductApi {
   is_in_stock: boolean
   view_count: number
   reviews_count: number
+  recent_reviews?: ProductReviewApi[]
   thumbnail: string
   gallery: string[]
   category: HomepageCategoryApi
