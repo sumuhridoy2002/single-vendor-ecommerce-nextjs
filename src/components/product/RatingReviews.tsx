@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/contexts/AuthContext"
 import { normalizeMediaUrl } from "@/lib/api/client"
@@ -281,20 +282,21 @@ export function RatingReviews({
           if (!open) setPreviewImageUrl(null)
         }}
       >
-        <DialogContent className="max-h-[90dvh] w-auto max-w-[min(100vw-2rem,56rem)] gap-0 overflow-hidden p-2 sm:p-4 md:min-w-[400px] md:min-h-[400px]">
+        <DialogContent className="grid w-full max-w-[calc(100vw-1rem)] gap-0 overflow-y-auto overflow-x-hidden p-2 sm:max-w-[min(56rem,calc(100vw-2rem))] sm:p-4">
           <DialogTitle className="sr-only">Review image</DialogTitle>
           {previewImageUrl ? (
-            <div className="flex  items-center justify-center">
-              <Image
+            <div className="flex w-full min-w-0 items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element -- full-size preview; arbitrary remote hosts */}
+              <img
                 src={previewImageUrl}
-                width={500}
-                height={500}
                 alt="Review attachment"
-                className=" w-auto max-w-full rounded-md object-contain md:min-w-[400px] md:min-h-[400px]"
+                className="h-auto max-h-[min(85dvh,calc(100dvh-6rem))] w-full rounded-md object-contain"
               />
             </div>
           ) : (
-            <div className="h-full w-full flex items-center justify-center bg-muted/10" />
+            <div className="flex h-[min(85dvh,calc(100dvh-6rem))] w-full items-center justify-center bg-muted/10 p-1">
+              <Skeleton className="h-full w-full min-h-48 rounded-md" />
+            </div>
           )}
         </DialogContent>
       </Dialog>
