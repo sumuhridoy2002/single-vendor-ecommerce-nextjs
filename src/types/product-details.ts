@@ -6,14 +6,18 @@ export interface ProductReviewApi {
   user_name: string
   user_avatar: string | null
   created_at: string
+  /** Optional photo attached to the review (multipart field `image`). */
+  image?: string | null
   /** Optional admin/store reply. */
   reply?: string | null
 }
 
-/** Request body for POST /products/{id}/review */
-export interface SubmitReviewRequestBody {
+/** Payload for POST /products/{id}/review (sent as multipart/form-data). */
+export interface SubmitReviewPayload {
   rating: number
   comment: string
+  /** Optional file; form field name `image`. */
+  image?: File | null
 }
 
 /** Response from POST /products/{id}/review */

@@ -6,6 +6,7 @@ import type {
 import { getProductReviewSummary } from "@/lib/reviews"
 import type { Product, ProductReview } from "@/types/product"
 import { getBaseUrl } from "./client"
+import { mapProductReviewFromApi } from "./products"
 
 /** Map API product to app Product type for sliders/cart. */
 export function mapHomepageProductToProduct(api: HomepageProductApi): Product {
@@ -24,15 +25,7 @@ export function mapHomepageProductToProduct(api: HomepageProductApi): Product {
   else if (discountPercent != null && discountPercent > 0) badge = "sale"
 
   const recentReviews: ProductReview[] = Array.isArray(api.recent_reviews)
-    ? api.recent_reviews.map((review) => ({
-        id: review.id,
-        rating: review.rating,
-        comment: review.comment,
-        user_name: review.user_name,
-        user_avatar: review.user_avatar,
-        created_at: review.created_at,
-        reply: review.reply ?? undefined,
-      }))
+    ? api.recent_reviews.map(mapProductReviewFromApi)
     : []
   const reviewSummary = getProductReviewSummary(recentReviews, api.reviews_count)
 

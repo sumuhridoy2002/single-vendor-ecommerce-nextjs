@@ -5,10 +5,10 @@ import { CampaignsSection } from "@/components/common/CampaignsSection"
 import { EspeciallyForYouSection } from "@/components/common/EspeciallyForYouSection"
 import { HeroBannerSlider } from "@/components/common/HeroBannerSlider"
 import { useHomepage } from "@/hooks/data/useHomepage"
+import { useHasMounted } from "@/hooks/useHasMounted"
 import { useCartStore } from "@/store/cart-store"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import type { AddToCartOptions, Product } from "@/types/product"
-import { useSyncExternalStore } from "react"
 import { toast } from "sonner"
 
 const SECTION_BG_CLASSES = [
@@ -20,11 +20,7 @@ const SECTION_BG_CLASSES = [
 
 export default function Home() {
   const { data, isLoading, error } = useHomepage()
-  const isHydrated = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  )
+  const hasMounted = useHasMounted()
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
@@ -44,7 +40,7 @@ export default function Home() {
     )
   }
 
-  if (!isHydrated || isLoading || !data) {
+  if (!hasMounted || isLoading || !data) {
     return (
       <div className="w-full">
         <HeroBannerSlider />

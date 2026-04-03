@@ -13,6 +13,8 @@ export interface ProductReview {
   user_name: string
   user_avatar: string | null
   created_at: string
+  /** Optional review photo URL (from API `image`). */
+  image?: string | null
   /** Optional reply from admin/store. */
   reply?: string | null
 }

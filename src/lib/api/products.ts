@@ -1,18 +1,20 @@
+import { getProductReviewSummary } from "@/lib/reviews"
 import type { Product, ProductReview } from "@/types/product"
 import type {
   ProductDetailsApi,
   ProductDetailsApiResponse,
   ProductDetailsCampaignApi,
   ProductListItemApi,
+  ProductReviewApi,
   ProductVariationApi,
   ProductsListApiResponse,
+  ProductsPaginatedMeta,
   ProductsPaginatedResponse,
   RelatedProductItemApi,
   RelatedProductsApiResponse,
   SubmitReviewApiResponse,
-  SubmitReviewRequestBody,
+  SubmitReviewPayload,
 } from "@/types/product-details"
-import { getProductReviewSummary } from "@/lib/reviews"
 import { getBaseUrl, normalizeMediaUrl } from "./client"
 
 const TOKEN_KEY = "access_token"
@@ -28,6 +30,30 @@ function getAuthHeaders(): Record<string, string> {
   return { Authorization: `Bearer ${token}` }
 }
 
+/** API sometimes omits `meta` on error or non-standard payloads — pagination code must not crash. */
+function ensureProductsPaginatedMeta(
+  meta: ProductsPaginatedResponse["meta"] | undefined,
+  path: string
+): ProductsPaginatedMeta {
+  if (
+    meta &&
+    typeof meta.current_page === "number" &&
+    typeof meta.last_page === "number"
+  ) {
+    return meta
+  }
+  return {
+    current_page: 1,
+    from: null,
+    last_page: 1,
+    links: [],
+    path,
+    per_page: 10,
+    to: null,
+    total: 0,
+  }
+}
+
 function campaignFieldsFromApi(
   campaign: ProductDetailsCampaignApi | null | undefined
 ): Pick<Product, "campaignId" | "campaignValidFrom" | "campaignValidTo"> | undefined {
@@ -39,6 +65,20 @@ function campaignFieldsFromApi(
   }
 }
 
+/** Map API review to app model (normalizes `image` URL). */
+export function mapProductReviewFromApi(r: ProductReviewApi): ProductReview {
+  return {
+    id: r.id,
+    rating: r.rating,
+    comment: r.comment,
+    user_name: r.user_name,
+    user_avatar: r.user_avatar,
+    created_at: r.created_at,
+    image: r.image ? (normalizeMediaUrl(r.image) ?? r.image) : undefined,
+    reply: r.reply ?? undefined,
+  }
+}
+
 /** Map a product API object (full or related) to app Product type. */
 function mapProductApiToProduct(api: {
   id: number
@@ -47,7 +87,7 @@ function mapProductApiToProduct(api: {
   base_price: number
   final_price: number
   reviews_count: number
-  recent_reviews?: ProductReview[]
+  recent_reviews?: ProductReviewApi[]
   thumbnail: string
   gallery?: string[]
   short_description?: string
@@ -77,18 +117,19 @@ function mapProductApiToProduct(api: {
   else if (discountPercent != null && discountPercent > 0) badge = "sale"
 
   const campaign = campaignFieldsFromApi(api.campaign)
-  const reviewSummary = getProductReviewSummary(api.recent_reviews, api.reviews_count)
+  const recentReviews = api.recent_reviews?.map(mapProductReviewFromApi)
+  const reviewSummary = getProductReviewSummary(recentReviews, api.reviews_count)
   const thumbnail = normalizeMediaUrl(api.thumbnail) ?? api.thumbnail
   const gallery = api.gallery?.map((image) => normalizeMediaUrl(image) ?? image)
   const stockQty = api.stock_qty ?? api.stock
   const variations =
     api.variations?.length && api.variations.length > 0
       ? api.variations.map((v) => ({
-          id: v.id,
-          type: v.type,
-          value: v.value,
-          image: v.image,
-        }))
+        id: v.id,
+        type: v.type,
+        value: v.value,
+        image: v.image,
+      }))
       : undefined
   return {
     id: String(api.id),
@@ -101,7 +142,7 @@ function mapProductApiToProduct(api: {
     badge,
     rating: reviewSummary.averageRating,
     reviewCount: reviewSummary.reviewCount,
-    recentReviews: api.recent_reviews,
+    recentReviews,
     categoryId: api.category ? String(api.category.id) : "",
     categoryTitle: api.category?.name,
     categoryHref: api.category?.slug ? `/category/${api.category.slug}` : undefined,
@@ -123,28 +164,17 @@ function mapProductApiToProduct(api: {
 
 /** Map /products/{id} API response to app Product type. */
 export function mapProductDetailsToProduct(api: ProductDetailsApi): Product {
-  const recentReviews: ProductReview[] = Array.isArray(api.recent_reviews)
-    ? api.recent_reviews.map((r) => ({
-        id: r.id,
-        rating: r.rating,
-        comment: r.comment,
-        user_name: r.user_name,
-        user_avatar: r.user_avatar,
-        created_at: r.created_at,
-        reply: r.reply ?? undefined,
-      }))
-    : []
-  const base = mapProductApiToProduct({ ...api, recent_reviews: recentReviews })
+  const base = mapProductApiToProduct(api)
   const variations =
     api.variations?.length > 0
       ? api.variations.map((v) => ({
-          id: v.id,
-          type: v.type,
-          value: v.value,
-          image: v.image,
-        }))
+        id: v.id,
+        type: v.type,
+        value: v.value,
+        image: v.image,
+      }))
       : undefined
-  return { ...base, variations, recentReviews }
+  return { ...base, variations }
 }
 
 export async function fetchProductBySlug(
@@ -200,6 +230,15 @@ export interface FetchProductsParams {
   search?: string
   category_id?: string | number
   brand_id?: string | number
+  min_price?: number
+  max_price?: number
+  sort?: ProductsSortParam
+}
+
+/** Filters for GET /products?flash_sale=1&… */
+export interface FlashSaleProductsParams {
+  brand_id?: string | number
+  category_id?: string | number
   min_price?: number
   max_price?: number
   sort?: ProductsSortParam
@@ -353,20 +392,113 @@ export async function fetchProductsByBrandPaginated(
   }
 }
 
-/** Submit a review for a product. POST /products/{id}/review */
+/** GET /products?flash_sale=1&brand_id=&category_id=&min_price=&max_price=&sort=&page= */
+export async function fetchFlashSaleProductsPaginated(
+  page = 1,
+  params: FlashSaleProductsParams = {}
+): Promise<FetchProductsByCategoryPaginatedResult> {
+  const baseUrl = getBaseUrl()
+  const searchParams = new URLSearchParams()
+  searchParams.set("flash_sale", "1")
+  if (params.brand_id != null) searchParams.set("brand_id", String(params.brand_id))
+  if (params.category_id != null) searchParams.set("category_id", String(params.category_id))
+  if (params.min_price != null) searchParams.set("min_price", String(params.min_price))
+  if (params.max_price != null) searchParams.set("max_price", String(params.max_price))
+  if (params.sort) searchParams.set("sort", params.sort)
+  if (page > 1) searchParams.set("page", String(page))
+
+  const url = `${baseUrl}/products?${searchParams.toString()}`
+  const res = await fetch(url, { headers: { Accept: "application/json" } })
+
+  if (!res.ok) {
+    if (res.status === 404) {
+      return {
+        products: [],
+        meta: {
+          current_page: 1,
+          from: null,
+          last_page: 1,
+          links: [],
+          path: `${baseUrl}/products`,
+          per_page: 10,
+          to: null,
+          total: 0,
+        },
+        links: {
+          first: url,
+          last: url,
+          prev: null,
+          next: null,
+        },
+      }
+    }
+    throw new Error(`Flash sale products fetch failed: ${res.status}`)
+  }
+
+  const json = (await res.json()) as ProductsPaginatedResponse
+  const metaPath = `${baseUrl}/products`
+  if (json.status !== 200 || !Array.isArray(json.data)) {
+    return {
+      products: [],
+      meta: ensureProductsPaginatedMeta(json.meta, metaPath),
+      links: json.links ?? {
+        first: url,
+        last: url,
+        prev: null,
+        next: null,
+      },
+    }
+  }
+
+  const products = json.data.map(mapProductListItemToProduct)
+  return {
+    products,
+    meta: ensureProductsPaginatedMeta(json.meta, metaPath),
+    links: json.links ?? {
+      first: url,
+      last: url,
+      prev: null,
+      next: null,
+    },
+  }
+}
+
+/** Fetch every page of flash sale products for the given API filters. */
+export async function fetchAllFlashSaleProducts(
+  params: FlashSaleProductsParams = {}
+): Promise<Product[]> {
+  const first = await fetchFlashSaleProductsPaginated(1, params)
+  const all = [...first.products]
+  const m = first.meta
+  const lastPage = m.last_page >= 1 ? m.last_page : 1
+  let page = m.current_page + 1
+  while (page <= lastPage) {
+    const next = await fetchFlashSaleProductsPaginated(page, params)
+    all.push(...next.products)
+    page += 1
+  }
+  return all
+}
+
+/** Submit a review for a product. POST /products/{id}/review (multipart/form-data: rating, comment, image?) */
 export async function submitProductReview(
   productId: string | number,
-  body: SubmitReviewRequestBody
+  body: SubmitReviewPayload
 ): Promise<SubmitReviewApiResponse> {
   const baseUrl = getBaseUrl()
+  const formData = new FormData()
+  formData.append("rating", String(body.rating))
+  formData.append("comment", body.comment)
+  if (body.image) {
+    formData.append("image", body.image)
+  }
   const res = await fetch(`${baseUrl}/products/${productId}/review`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Accept: "application/json",
       ...getAuthHeaders(),
     },
-    body: JSON.stringify(body),
+    body: formData,
   })
 
   const json = (await res.json()) as SubmitReviewApiResponse & { message?: string }

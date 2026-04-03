@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { submitProductReview } from "@/lib/api/products"
+import { normalizeMediaUrl } from "@/lib/api/client"
 import type { Product, ProductReview } from "@/types/product"
 import { useAuth } from "@/contexts/AuthContext"
-import { Loader2, Star } from "lucide-react"
+import { ImagePlus, Loader2, Star, X } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -72,8 +73,16 @@ export function RatingReviews({
 
   const [formRating, setFormRating] = useState(0)
   const [formComment, setFormComment] = useState("")
+  const [reviewImage, setReviewImage] = useState<File | null>(null)
+  const [reviewImagePreview, setReviewImagePreview] = useState<string | null>(null)
   const [hoverRating, setHoverRating] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      if (reviewImagePreview) URL.revokeObjectURL(reviewImagePreview)
+    }
+  }, [reviewImagePreview])
 
   useEffect(() => {
     setReviews(product.recentReviews ?? [])
@@ -96,7 +105,11 @@ export function RatingReviews({
         const res = await submitProductReview(product.id, {
           rating: formRating,
           comment,
+          image: reviewImage,
         })
+        const imageUrl = res.data.image
+          ? (normalizeMediaUrl(res.data.image) ?? res.data.image)
+          : undefined
         const newReview: ProductReview = {
           id: res.data.id,
           rating: res.data.rating,
@@ -104,19 +117,23 @@ export function RatingReviews({
           user_name: res.data.user_name,
           user_avatar: res.data.user_avatar,
           created_at: res.data.created_at,
+          image: imageUrl,
           reply: res.data.reply ?? undefined,
         }
         setReviews((prev) => [newReview, ...prev.filter((r) => r.id !== newReview.id)])
         toast.success(res.message ?? "Review submitted successfully!")
         setFormRating(0)
         setFormComment("")
+        if (reviewImagePreview) URL.revokeObjectURL(reviewImagePreview)
+        setReviewImage(null)
+        setReviewImagePreview(null)
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to submit review")
       } finally {
         setIsSubmitting(false)
       }
     },
-    [product.id, formRating, formComment]
+    [product.id, formRating, formComment, reviewImage, reviewImagePreview]
   )
 
   return (
@@ -212,6 +229,69 @@ export function RatingReviews({
               disabled={isSubmitting}
             />
           </div>
+          <div>
+            <Label htmlFor="review-image" className="text-muted-foreground">
+              Photo (optional)
+            </Label>
+            <div className="mt-1 flex flex-wrap items-start gap-3">
+              <label
+                htmlFor="review-image"
+                className={cn(
+                  "inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50",
+                  isSubmitting && "pointer-events-none opacity-50"
+                )}
+              >
+                <ImagePlus className="size-4 shrink-0" />
+                Add image
+                <input
+                  id="review-image"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={isSubmitting}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (reviewImagePreview) URL.revokeObjectURL(reviewImagePreview)
+                    if (!file) {
+                      setReviewImage(null)
+                      setReviewImagePreview(null)
+                      e.target.value = ""
+                      return
+                    }
+                    if (!file.type.startsWith("image/")) {
+                      toast.error("Please choose an image file.")
+                      e.target.value = ""
+                      return
+                    }
+                    setReviewImage(file)
+                    setReviewImagePreview(URL.createObjectURL(file))
+                  }}
+                />
+              </label>
+              {reviewImagePreview ? (
+                <div className="relative inline-block">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- user-uploaded blob or remote URL */}
+                  <img
+                    src={reviewImagePreview}
+                    alt="Review preview"
+                    className="max-h-32 max-w-[200px] rounded-md border border-border object-cover"
+                  />
+                  <button
+                    type="button"
+                    className="absolute -right-2 -top-2 flex size-7 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-muted"
+                    onClick={() => {
+                      if (reviewImagePreview) URL.revokeObjectURL(reviewImagePreview)
+                      setReviewImage(null)
+                      setReviewImagePreview(null)
+                    }}
+                    aria-label="Remove image"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
           <Button type="submit" disabled={isSubmitting} className="gap-2">
             {isSubmitting ? (
               <>
@@ -257,6 +337,16 @@ export function RatingReviews({
                 <p className="mt-1 text-sm text-muted-foreground">
                   {review.comment}
                 </p>
+                {review.image ? (
+                  <div className="mt-3">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- API URLs may use arbitrary hosts */}
+                    <img
+                      src={review.image}
+                      alt=""
+                      className="max-h-48 max-w-full rounded-md border border-border object-contain sm:max-w-md"
+                    />
+                  </div>
+                ) : null}
                 {review.reply ? (
                   <div className="mt-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
                     <p className="text-xs font-medium text-muted-foreground">
