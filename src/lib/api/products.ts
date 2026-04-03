@@ -484,6 +484,44 @@ export async function fetchAllFlashSaleProducts(
   return all
 }
 
+/**
+ * Every product slug from paginated GET /products (for sitemap).
+ * Uses server-side backend URL from getBaseUrl().
+ */
+export async function fetchAllProductSlugs(): Promise<string[]> {
+  const baseUrl = getBaseUrl()
+  const slugs = new Set<string>()
+  let page = 1
+  let lastPage = 1
+
+  while (page <= lastPage) {
+    const searchParams = new URLSearchParams()
+    searchParams.set("sort", "latest")
+    if (page > 1) searchParams.set("page", String(page))
+
+    const url = `${baseUrl}/products?${searchParams.toString()}`
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 3600 },
+    })
+
+    if (!res.ok) break
+
+    const json = (await res.json()) as ProductsPaginatedResponse
+    if (json.status !== 200 || !Array.isArray(json.data)) break
+
+    for (const item of json.data) {
+      if (item.slug) slugs.add(item.slug)
+    }
+
+    const meta = ensureProductsPaginatedMeta(json.meta, `${baseUrl}/products`)
+    lastPage = meta.last_page >= 1 ? meta.last_page : 1
+    page += 1
+  }
+
+  return [...slugs]
+}
+
 /** Submit a review for a product. POST /products/{id}/review (multipart/form-data: rating, comment, image?) */
 export async function submitProductReview(
   productId: string | number,

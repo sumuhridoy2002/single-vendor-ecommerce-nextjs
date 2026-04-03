@@ -59,3 +59,19 @@ export function getCategoryHrefById(
   const path = findPath(tree, [])
   return path ? `/category/${path.join("/")}` : `/category/${categoryId}`
 }
+
+/** Every category URL as `/category/a` or `/category/a/b` for SEO sitemaps. */
+export function collectCategoryPaths(nodes: CategoryTreeNode[]): string[] {
+  const out: string[] = []
+
+  function walk(list: CategoryTreeNode[], ancestors: string[]) {
+    for (const n of list) {
+      const segs = [...ancestors, n.slug]
+      out.push(`/category/${segs.join("/")}`)
+      if (n.children?.length) walk(n.children, segs)
+    }
+  }
+
+  walk(nodes, [])
+  return out
+}

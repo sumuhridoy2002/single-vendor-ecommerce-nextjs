@@ -48,6 +48,20 @@ export async function fetchBlogs(
   return json as BlogsListApiResponse;
 }
 
+/** All blog post slugs across paginated GET /blogs (for sitemap). */
+export async function fetchAllBlogSlugs(): Promise<string[]> {
+  const first = await fetchBlogs(1);
+  const slugs = first.data.map((b) => b.slug);
+  const lastPage = first.meta?.last_page ?? 1;
+  let page = 2;
+  while (page <= lastPage) {
+    const res = await fetchBlogs(page);
+    slugs.push(...res.data.map((b) => b.slug));
+    page += 1;
+  }
+  return slugs;
+}
+
 /**
  * Blog by slug: GET /blogs/{slug}
  * Server-safe (no auth).
