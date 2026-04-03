@@ -17,17 +17,43 @@ import {
   type CheckoutSummaryData,
 } from "@/lib/api/checkout";
 import { placeOrder } from "@/lib/api/orders";
-import { formatPriceSymbol } from "@/lib/utils";
+import { cn, formatPriceSymbol } from "@/lib/utils";
 import { useAddressStore } from "@/store/address-store";
 import { useCartStore } from "@/store/cart-store";
 import { useCouponStore } from "@/store/coupon-store";
 import { usePaymentModalStore } from "@/store/payment-modal-store";
 import { ChevronRight, Home, Pencil, ShoppingCart } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import FlashSale from "../category/FlashSale";
 import CartLineItem from "./CartLineItem";
+
+type PaymentMethodOption = "cod" | "bkash";
+
+const PAYMENT_OPTIONS: {
+  id: PaymentMethodOption;
+  title: string;
+  subtitle: string;
+  imageSrc: string;
+  imageAlt: string;
+}[] = [
+  {
+    id: "cod",
+    title: "Cash on Delivery",
+    subtitle: "Pay when you receive your order",
+    imageSrc: "/assets/images/cash-on-delivery.png",
+    imageAlt: "Cash on delivery",
+  },
+  {
+    id: "bkash",
+    title: "bKash",
+    subtitle: "Mobile payment — you will be redirected to pay",
+    imageSrc: "/assets/images/bKash-icon-logo.png",
+    imageAlt: "bKash",
+  },
+];
 
 export function CartSheet() {
   const isOpen = useCartStore((s) => s.isOpen);
@@ -57,6 +83,7 @@ export function CartSheet() {
 
   const [couponInput, setCouponInput] = useState("");
   const [showCouponInput, setShowCouponInput] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethodOption>("cod");
   const [placingOrder, setPlacingOrder] = useState(false);
   const [checkoutSummary, setCheckoutSummary] = useState<CheckoutSummaryData | null>(
     null
@@ -155,14 +182,32 @@ export function CartSheet() {
     try {
       const res = await placeOrder({
         address_id: addressId,
-        payment_method: "cod",
+        payment_method: paymentMethod,
         coupon_code: appliedCoupon?.code,
       });
+
+      const redirectUrl = res.redirect_url?.trim();
+      if (paymentMethod === "bkash" && redirectUrl) {
+        resetCoupon();
+        clearCart();
+        closeCart();
+        toast.success(res.message ?? "Redirecting to bKash…");
+        window.location.assign(redirectUrl);
+        return;
+      }
+
       openPaymentModal(res.data);
       resetCoupon();
       clearCart();
       closeCart();
-      toast.success(res.message ?? "Order placed successfully.");
+      if (paymentMethod === "bkash" && !redirectUrl) {
+        toast.success(res.message ?? "Order placed successfully.", {
+          description:
+            "No redirect URL was returned. Complete bKash payment from your order or contact support if needed.",
+        });
+      } else {
+        toast.success(res.message ?? "Order placed successfully.");
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to place order.");
     } finally {
@@ -272,6 +317,59 @@ export function CartSheet() {
                     value={additionalInfo}
                     onChange={(e) => setAdditionalInfo(e.target.value)}
                   />
+                </section>
+
+                {/* Payment method */}
+                <section className="mt-6">
+                  <h3 className="text-sm font-medium">Payment Method</h3>
+                  <div className="mt-2 space-y-3">
+                    {PAYMENT_OPTIONS.map((opt) => {
+                      const selected = paymentMethod === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          aria-pressed={selected}
+                          aria-label={`${opt.title}. ${selected ? "Selected" : "Not selected"}.`}
+                          onClick={() => setPaymentMethod(opt.id)}
+                          className={cn(
+                            "relative w-full rounded-xl border border-border bg-card p-4 text-left flex gap-3 transition-colors",
+                            "hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            selected && "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          )}
+                        >
+                          <div className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted/50">
+                            <Image
+                              src={opt.imageSrc}
+                              alt={opt.imageAlt}
+                              fill
+                              className="object-contain p-1"
+                              sizes="56px"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium">{opt.title}</p>
+                            <p className="text-sm text-muted-foreground">{opt.subtitle}</p>
+                          </div>
+                          <div className="shrink-0 flex items-center self-center">
+                            <span
+                              className={cn(
+                                "rounded-full border-2 w-5 h-5 flex items-center justify-center transition-colors",
+                                selected
+                                  ? "border-primary"
+                                  : "border-muted-foreground/40 hover:border-primary"
+                              )}
+                              aria-hidden
+                            >
+                              {selected && (
+                                <span className="rounded-full bg-primary w-2.5 h-2.5 block" />
+                              )}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </section>
 
                 {/* Coupon & Savings */}

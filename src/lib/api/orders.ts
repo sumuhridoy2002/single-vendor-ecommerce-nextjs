@@ -16,7 +16,7 @@ function getAuthHeaders(): Record<string, string> {
 /** Request body for POST /orders/place */
 export interface PlaceOrderPayload {
   address_id: number;
-  payment_method: "cod";
+  payment_method: "cod" | "bkash";
   coupon_code?: string;
 }
 
@@ -132,6 +132,8 @@ export interface PlaceOrderApiResponse {
   data: PlacedOrderData;
   status: number;
   message: string;
+  /** Present when `payment_method` is `bkash` — redirect user to complete payment. */
+  redirect_url?: string;
 }
 
 /**
@@ -162,6 +164,7 @@ export async function placeOrder(
 
   const json = (await res.json().catch(() => ({}))) as PlaceOrderApiResponse & {
     message?: string;
+    redirect_url?: string;
   };
 
   if (!res.ok) {
@@ -170,7 +173,21 @@ export async function placeOrder(
     );
   }
 
-  return json as PlaceOrderApiResponse;
+  const top = json as PlaceOrderApiResponse & {
+    redirect_url?: string;
+    payment_url?: string;
+  };
+  const dataExtra = top.data as PlacedOrderData & {
+    redirect_url?: string;
+    payment_url?: string;
+  };
+  const redirect_url =
+    top.redirect_url?.trim() ||
+    top.payment_url?.trim() ||
+    dataExtra?.redirect_url?.trim() ||
+    dataExtra?.payment_url?.trim();
+
+  return { ...top, redirect_url: redirect_url || undefined };
 }
 
 /**

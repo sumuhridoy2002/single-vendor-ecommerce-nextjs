@@ -29,6 +29,7 @@ interface AuthContextType {
   sendOtp: (phone: string) => Promise<void>;
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   loginAsGuest: () => Promise<void>;
+  loginWithSocial: (token: string, user: User) => void;
   logout: () => Promise<void>;
   refetchUser: () => void;
   updateUser: (partial: Partial<User>) => void;
@@ -241,6 +242,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await logoutMutation.mutateAsync();
   };
 
+  const loginWithSocial = useCallback((token: string, socialUser: User) => {
+    setAccessToken(token);
+    setStoredUser(socialUser);
+    setAccountSessionCookie();
+    queryClient.setQueryData(authKeys.user(), socialUser);
+  }, [setAccessToken, queryClient]);
+
   const updateUser = useCallback((partial: Partial<User>) => {
     const current = getStoredUser();
     if (!current) return;
@@ -256,6 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     sendOtp,
     verifyOtp,
     loginAsGuest,
+    loginWithSocial,
     logout,
     refetchUser: () => {
       refetchUser();

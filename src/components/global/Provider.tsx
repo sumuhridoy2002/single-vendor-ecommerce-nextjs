@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SocialAuthSync } from "@/components/auth/SocialAuthSync";
 import { SessionProvider } from "next-auth/react";
 import {
   QueryClient,
@@ -42,6 +43,7 @@ const Provider = ({ children }: { children: React.ReactNode }) => {
         persistOptions={{ persister }}
       >
         <AuthProvider>
+          <SocialAuthSync />
           <GlobalDataHydrator />
           {children}
           <Toaster />
