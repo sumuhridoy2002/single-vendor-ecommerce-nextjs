@@ -119,7 +119,7 @@ export function ProductPageContent({
         />
       </div>
 
-      <section className="rounded-xl border bg-card p-6">
+      <section className="rounded-xl sm:border sm:bg-card sm:p-6">
         <ProductTabs product={product} onReviewSubmitted={refetch} />
       </section>
 
