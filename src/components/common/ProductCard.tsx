@@ -23,7 +23,7 @@ import type { AddToCartOptions, Product } from "@/types/product"
 import { Heart, Rocket, Zap } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { useMemo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { Rating } from "../ui/rating"
 
@@ -40,7 +40,7 @@ function formatPriceSymbol(amount: number): string {
 
 const PLACEHOLDER_IMAGE = "/assets/images/placeholder-image.png"
 
-export function ProductCard({
+function ProductCardInner({
   product,
   onAddToCart,
   onWishlist,
@@ -55,9 +55,9 @@ export function ProductCard({
   const isInWishlist = useIsInWishlist(product.id)
   const isWishlistPending = pendingIds.includes(product.id)
   const whenLoggedIn = useWhenLoggedIn()
-  const reviewSummary = getProductReviewSummary(
-    product.recentReviews,
-    product.reviewCount
+  const reviewSummary = useMemo(
+    () => getProductReviewSummary(product.recentReviews, product.reviewCount),
+    [product.recentReviews, product.reviewCount]
   )
 
   const variantMenuItems: SelectMenuItem[] = useMemo(() => {
@@ -272,3 +272,5 @@ export function ProductCard({
     </Card>
   )
 }
+
+export const ProductCard = memo(ProductCardInner)

@@ -5,6 +5,8 @@ import Link from "next/link"
 import { useSyncExternalStore } from "react"
 import { Autoplay, Pagination } from "swiper/modules"
 import { Swiper, SwiperSlide } from "swiper/react"
+import "swiper/css"
+import "swiper/css/pagination"
 
 import { useHeroSliders } from "@/hooks/data/useHeroSliders"
 import { cn } from "@/lib/utils"

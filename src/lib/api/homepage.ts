@@ -50,6 +50,7 @@ export async function fetchHomepage(): Promise<HomepageDataApi> {
   const baseUrl = getBaseUrl()
   const res = await fetch(`${baseUrl}/products/homepage`, {
     headers: { Accept: "application/json" },
+    next: { revalidate: 900 },
   })
 
   if (!res.ok) {

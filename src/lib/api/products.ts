@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { getProductReviewSummary } from "@/lib/reviews"
 import type { Product, ProductReview } from "@/types/product"
 import type {
@@ -197,6 +198,9 @@ export async function fetchProductBySlug(
 
   return json.data
 }
+
+/** Per-request deduplicated version — use in Server Components (generateMetadata + page body share one fetch). */
+export const getCachedProductBySlug = cache(fetchProductBySlug)
 
 export function mapRelatedProductToProduct(api: RelatedProductItemApi): Product {
   return mapProductApiToProduct(api)

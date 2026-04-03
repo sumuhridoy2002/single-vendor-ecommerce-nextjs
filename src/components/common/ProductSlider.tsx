@@ -3,6 +3,8 @@
 import type { Swiper as SwiperType } from "swiper"
 import { Navigation } from "swiper/modules"
 import { Swiper, SwiperSlide } from "swiper/react"
+import "swiper/css"
+import "swiper/css/navigation"
 
 import { ProductCard } from "@/components/common/ProductCard"
 import { cn } from "@/lib/utils"

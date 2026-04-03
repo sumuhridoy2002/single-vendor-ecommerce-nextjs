@@ -5,6 +5,7 @@ export async function fetchSettings(): Promise<SettingsApiResponse> {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/settings`, {
     headers: { Accept: "application/json" },
+    next: { revalidate: 3600 },
   });
 
   if (!res.ok) {

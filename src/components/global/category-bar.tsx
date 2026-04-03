@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MdPhoneInTalk } from "react-icons/md";
 import { RiLayoutMasonryFill } from "react-icons/ri";
 
@@ -26,11 +26,14 @@ export function CategoryBar() {
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
 
-  const categoryLinks = [
-    ...STATIC_LINKS,
-    ...tree.map((c) => ({ label: c.title, href: `/category/${c.slug}` })),
-    ...pages.map((p) => ({ label: p.title, href: `/page/${p.slug}` })),
-  ];
+  const categoryLinks = useMemo(
+    () => [
+      ...STATIC_LINKS,
+      ...tree.map((c) => ({ label: c.title, href: `/category/${c.slug}` })),
+      ...pages.map((p) => ({ label: p.title, href: `/page/${p.slug}` })),
+    ],
+    [tree, pages]
+  );
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current;

@@ -1,9 +1,18 @@
 "use client"
 
+import { useCallback, useMemo } from "react"
+import dynamic from "next/dynamic"
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
-import { CampaignsSection } from "@/components/common/CampaignsSection"
-import { EspeciallyForYouSection } from "@/components/common/EspeciallyForYouSection"
 import { HeroBannerSlider } from "@/components/common/HeroBannerSlider"
+
+const CampaignsSection = dynamic(
+  () => import("@/components/common/CampaignsSection").then((m) => m.CampaignsSection),
+  { ssr: false }
+)
+const EspeciallyForYouSection = dynamic(
+  () => import("@/components/common/EspeciallyForYouSection").then((m) => m.EspeciallyForYouSection),
+  { ssr: false }
+)
 import { useHomepage } from "@/hooks/data/useHomepage"
 import { useHasMounted } from "@/hooks/useHasMounted"
 import { useCartStore } from "@/store/cart-store"
@@ -24,13 +33,29 @@ export default function Home() {
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
-  const handleAddToCart = (product: Product, options?: AddToCartOptions) => {
-    whenLoggedIn(() => {
-      addItem(product, 1, options)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
-    })
-  }
+  const handleAddToCart = useCallback(
+    (product: Product, options?: AddToCartOptions) => {
+      whenLoggedIn(() => {
+        addItem(product, 1, options)
+          .then(() => openCart())
+          .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+      })
+    },
+    [whenLoggedIn, addItem, openCart]
+  )
+
+  const sections = useMemo(
+    () =>
+      data
+        ? [
+            { title: "New Arrivals", products: data.newArrivals, viewAllHref: "/category/new-arrivals" },
+            { title: "Popular", products: data.popular, viewAllHref: "/category/popular" },
+            { title: "Discounted", products: data.discounted, viewAllHref: "/search?q=discount" },
+            { title: "Flash Sale", products: data.flashSale, viewAllHref: "/flash-sale" },
+          ]
+        : [],
+    [data]
+  )
 
   if (error) {
     return (
@@ -52,13 +77,6 @@ export default function Home() {
       </div>
     )
   }
-
-  const sections = [
-    { title: "New Arrivals", products: data.newArrivals, viewAllHref: "/category/new-arrivals" },
-    { title: "Popular", products: data.popular, viewAllHref: "/category/popular" },
-    { title: "Discounted", products: data.discounted, viewAllHref: "/search?q=discount" },
-    { title: "Flash Sale", products: data.flashSale, viewAllHref: "/flash-sale" },
-  ]
 
   return (
     <div className="w-full">

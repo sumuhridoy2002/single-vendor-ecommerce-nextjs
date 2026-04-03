@@ -1,5 +1,5 @@
 import {
-  fetchProductBySlug,
+  getCachedProductBySlug,
   mapProductDetailsToProduct,
 } from "@/lib/api/products"
 import { getSiteOrigin, normalizeMediaUrl } from "@/lib/api/client"
@@ -7,6 +7,8 @@ import { fetchSettingsSafe } from "@/lib/api/settings"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { ProductPageContent } from "./ProductPageContent"
+
+export const revalidate = 900;
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -36,7 +38,7 @@ function truncateText(value: string | undefined, maxLength: number): string | un
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   try {
-    const data = await fetchProductBySlug(slug)
+    const data = await getCachedProductBySlug(slug)
     const settings = await fetchSettingsSafe()
     const title = data.meta?.title ?? data.title
     const description = truncateText(
@@ -83,7 +85,7 @@ export default async function ProductPage({ params }: Props) {
   const { slug } = await params
   let initialProduct = null
   try {
-    const data = await fetchProductBySlug(slug)
+    const data = await getCachedProductBySlug(slug)
     initialProduct = mapProductDetailsToProduct(data)
   } catch {
     notFound()

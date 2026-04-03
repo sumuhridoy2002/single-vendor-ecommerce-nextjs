@@ -1,14 +1,25 @@
-import { fetchBlogBySlug, fetchRelatedBlogs } from "@/lib/api/blogs";
+import { getCachedBlogBySlug, fetchBlogs, fetchRelatedBlogs } from "@/lib/api/blogs";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogPostContent } from "./BlogPostContent";
 
+export const revalidate = 3600;
+
 type Props = { params: Promise<{ slug: string }> };
+
+export async function generateStaticParams() {
+  try {
+    const res = await fetchBlogs(1);
+    return (res.data ?? []).map((blog) => ({ slug: blog.slug }));
+  } catch {
+    return [];
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
-    const data = await fetchBlogBySlug(slug);
+    const data = await getCachedBlogBySlug(slug);
     const title = data.meta?.title ?? data.title;
     const description =
       data.meta?.description ?? data.short_description ?? undefined;
@@ -48,7 +59,7 @@ export default async function BlogSlugPage({ params }: Props) {
   const { slug } = await params;
   let blog;
   try {
-    blog = await fetchBlogBySlug(slug);
+    blog = await getCachedBlogBySlug(slug);
   } catch {
     notFound();
   }
