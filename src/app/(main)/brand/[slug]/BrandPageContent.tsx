@@ -67,13 +67,12 @@ export function BrandPageContent({ brand }: BrandPageContentProps) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (p: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(p, 1, options)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+      addItem(p, 1, options).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      )
     })
   }
 

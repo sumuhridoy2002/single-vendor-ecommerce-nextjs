@@ -31,17 +31,16 @@ export default function Home() {
   const { data, isLoading, error } = useHomepage()
   const hasMounted = useHasMounted()
   const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = useCallback(
     (product: Product, options?: AddToCartOptions) => {
       whenLoggedIn(() => {
-        addItem(product, 1, options)
-          .then(() => openCart())
-          .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+        addItem(product, 1, options).catch((e) =>
+          toast.error(e?.message ?? "Failed to add to cart")
+        )
       })
     },
-    [whenLoggedIn, addItem, openCart]
+    [whenLoggedIn, addItem]
   )
 
   const sections = useMemo(

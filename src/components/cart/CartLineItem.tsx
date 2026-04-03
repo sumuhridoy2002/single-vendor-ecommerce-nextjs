@@ -3,7 +3,6 @@ import {
   type CartItem as CartItemType
 } from "@/store/cart-store";
 
-import { fetchCart } from "@/lib/api/cart";
 import { formatPriceSymbol } from "@/lib/utils";
 import { Minus, Plus, Trash2, Zap } from "lucide-react";
 import Image from "next/image";
@@ -20,7 +19,6 @@ function CartLineItem({ item }: { item: CartItemType }) {
   const removeItem = useCartStore((s) => s.removeItem);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
   const setQuantityOptimistic = useCartStore((s) => s.setQuantityOptimistic);
-  const setItems = useCartStore((s) => s.setItems);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [imageError, setImageError] = useState(false);
   const imageSrc = imageError ? PLACEHOLDER_IMAGE : product.image;
@@ -33,14 +31,12 @@ function CartLineItem({ item }: { item: CartItemType }) {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         debounceRef.current = null;
-        updateQuantity(itemId, newQuantity, variationIdForLine).catch(async (e) => {
+        updateQuantity(itemId, newQuantity, variationIdForLine).catch((e) => {
           toast.error(e?.message ?? "Failed to update quantity");
-          const items = await fetchCart();
-          setItems(items);
         });
       }, DEBOUNCE_MS);
     },
-    [itemId, variationIdForLine, updateQuantity, setItems]
+    [itemId, variationIdForLine, updateQuantity]
   );
 
   const handleDecrease = useCallback(() => {

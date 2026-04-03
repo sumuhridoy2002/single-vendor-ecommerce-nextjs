@@ -30,16 +30,15 @@ export function CategoryPageContent({
   const tree = useCategoryTree()
   const { isLoading } = useCategories()
   const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (
     product: import("@/types/product").Product,
     options?: import("@/types/product").AddToCartOptions
   ) => {
     whenLoggedIn(() => {
-      addItem(product, 1, options)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+      addItem(product, 1, options).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      )
     })
   }
 

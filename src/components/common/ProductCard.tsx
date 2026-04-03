@@ -13,7 +13,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { SelectMenu, type SelectMenuItem } from "@/components/ui/select-menu"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { getEffectiveCampaignIdForCart } from "@/lib/campaign-window"
 import { getProductReviewSummary } from "@/lib/reviews"
@@ -48,7 +47,6 @@ function ProductCardInner({
 }: ProductCardProps) {
   const [imageError, setImageError] = useState(false)
   const [variantPopoverOpen, setVariantPopoverOpen] = useState(false)
-  const [selectedVariantId, setSelectedVariantId] = useState("")
   const imageSrc = imageError ? PLACEHOLDER_IMAGE : product.image
   const toggleWishlist = useWishlistStore((state) => state.toggle)
   const pendingIds = useWishlistStore((state) => state.pendingIds)
@@ -60,14 +58,7 @@ function ProductCardInner({
     [product.recentReviews, product.reviewCount]
   )
 
-  const variantMenuItems: SelectMenuItem[] = useMemo(() => {
-    const v = product.variations
-    if (!v?.length) return []
-    return v.map((row) => ({
-      value: String(row.id),
-      label: `${row.type}: ${row.value}`,
-    }))
-  }, [product.variations])
+  const variationRows = useMemo(() => product.variations ?? [], [product.variations])
 
   const hasDiscount =
     product.originalPrice != null &&
@@ -92,23 +83,15 @@ function ProductCardInner({
     return { ...p, campaignId }
   }
 
-  const hasVariants = variantMenuItems.length > 0
+  const hasVariants = variationRows.length > 0
 
   function handleVariantPopoverOpenChange(open: boolean) {
     setVariantPopoverOpen(open)
-    if (open && product.variations?.length) {
-      setSelectedVariantId(String(product.variations[0].id))
-    }
   }
 
-  function confirmVariantAddToCart() {
-    const id = Number.parseInt(selectedVariantId, 10)
-    if (!Number.isFinite(id)) {
-      toast.error("Please select a variant")
-      return
-    }
+  function addVariationToCart(variationId: number) {
     whenLoggedIn(() => {
-      onAddToCart?.(productForAddToCart(product), { variationId: id })
+      onAddToCart?.(productForAddToCart(product), { variationId: variationId })
       setVariantPopoverOpen(false)
     })
   }
@@ -219,8 +202,8 @@ function ProductCardInner({
               <Button
                 type="button"
                 size="sm"
-                className="shrink-0 rounded-md border-2 border-primary bg-primary-light/20 font-bold uppercase text-primary hover:bg-primary-light hover:text-primary-dark"
-                aria-label="Choose variant and add to cart"
+                className="h-auto min-h-8 max-w-[min(100%,9rem)] shrink-0 whitespace-normal rounded-md border-2 border-primary bg-primary-light/20 px-2 py-1 text-[10px] font-bold uppercase leading-tight text-primary hover:bg-primary-light hover:text-primary-dark xs:max-w-none xs:text-xs"
+                aria-label="Add to cart — choose a variant"
                 aria-expanded={variantPopoverOpen}
                 aria-haspopup="dialog"
               >
@@ -231,37 +214,49 @@ function ProductCardInner({
               align="end"
               side="top"
               sideOffset={8}
-              className="w-[min(100vw-2rem,20rem)] p-3"
+              className="w-[min(100vw-2rem,20rem)] p-2"
             >
-              <p className="mb-2 text-sm font-medium text-foreground line-clamp-2">
-                {product.name}
-              </p>
-              <p className="mb-2 text-xs text-muted-foreground">
-                Select a variant, then add to cart.
-              </p>
-              <SelectMenu
-                items={variantMenuItems}
-                value={selectedVariantId}
-                onValueChange={setSelectedVariantId}
-                placeholder="Select variant…"
-                searchPlaceholder="Search variants"
-                emptyMessage="No variants found."
-              />
-              <Button
-                type="button"
-                className="mt-3 w-full"
-                size="sm"
-                onClick={confirmVariantAddToCart}
+              <ul
+                className="max-h-64 overflow-y-auto overscroll-contain divide-y scrollbar"
+                aria-label="Product variants"
               >
-                Add to cart
-              </Button>
+                {variationRows.map((row) => (
+                  <li key={row.id}>
+                    <button
+                      type="button"
+                      className="flex w-full py-1 items-center gap-2 rounded-md border border-transparent text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      onClick={() => addVariationToCart(row.id)}
+                    >
+                      {row.image ? (
+                        <span className="relative size-10 shrink-0 overflow-hidden rounded border bg-muted">
+                          <Image
+                            src={row.image}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="40px"
+                          />
+                        </span>
+                      ) : null}
+                      <span className="min-w-0 flex-1 leading-snug">
+                        <span className="text-muted-foreground text-xs">
+                          {row.type}
+                        </span>
+                        <span className="block font-medium text-foreground">
+                          {row.value}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </PopoverContent>
           </Popover>
         ) : (
           <Button
             type="button"
             size="sm"
-            className="shrink-0 rounded-md border-2 border-primary bg-primary-light/20 font-bold uppercase text-primary hover:bg-primary-light hover:text-primary-dark"
+            className="h-auto min-h-8 max-w-[min(100%,9rem)] shrink-0 whitespace-normal rounded-md border-2 border-primary bg-primary-light/20 px-2 py-1 text-[10px] font-bold uppercase leading-tight text-primary hover:bg-primary-light hover:text-primary-dark xs:max-w-none xs:text-xs"
             aria-label="Add to cart"
             onClick={handleAddNoVariants}
           >

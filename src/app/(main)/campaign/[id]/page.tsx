@@ -44,7 +44,6 @@ export default function CampaignPage({ params }: Props) {
 
   const { campaign, isLoading, error } = useCampaignDetails(campaignId)
   const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
 
   const products = useMemo(
@@ -54,9 +53,9 @@ export default function CampaignPage({ params }: Props) {
 
   const handleAddToCart = (product: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(product, 1, { campaignId, ...options })
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+      addItem(product, 1, { campaignId, ...options }).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      )
     })
   }
 

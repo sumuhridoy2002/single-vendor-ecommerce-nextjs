@@ -17,7 +17,6 @@ export default function WishlistPage() {
   const isLoading = useWishlistStore((state) => state.isLoading);
   const hasLoaded = useWishlistStore((state) => state.hasLoaded);
   const addItem = useCartStore((s) => s.addItem);
-  const openCart = useCartStore((s) => s.openCart);
   const whenLoggedIn = useWhenLoggedIn();
   const { isAuthenticated } = useAuth();
 
@@ -30,9 +29,9 @@ export default function WishlistPage() {
 
   const handleAddToCart = (product: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(product, 1, options)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"));
+      addItem(product, 1, options).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      );
     });
   };
 

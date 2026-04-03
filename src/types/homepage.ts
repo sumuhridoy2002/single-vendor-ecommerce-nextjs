@@ -1,5 +1,5 @@
 /** Meta block used in category, brand, product API responses. */
-import type { ProductReviewApi } from "@/types/product-details"
+import type { ProductReviewApi, ProductVariationApi } from "@/types/product-details"
 
 /** Meta block used in category, brand, product API responses. */
 export interface MetaBlock {
@@ -59,6 +59,7 @@ export interface HomepageProductApi {
   gallery: string[]
   category: HomepageCategoryApi
   brand: HomepageBrandApi
+  variations?: ProductVariationApi[]
   flash_sale: FlashSaleBlock
   status: boolean
   meta: MetaBlock

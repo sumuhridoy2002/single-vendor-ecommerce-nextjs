@@ -37,7 +37,6 @@ export function ProductPageContent({
   )
   const { products: relatedProducts } = useRelatedProducts(product?.id)
   const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (
     p: Product,
@@ -55,9 +54,9 @@ export function ProductPageContent({
         return
       }
 
-      addItem(p, quantity, options)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+      addItem(p, quantity, options).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      )
     })
   }
 

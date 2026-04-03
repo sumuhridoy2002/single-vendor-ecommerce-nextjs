@@ -206,7 +206,7 @@ export function CartSheet() {
               <div className="space-y-3 py-2">
                 {items.map((item) => (
                   <CartLineItem
-                    key={item.lineId ?? item.product.id}
+                    key={`${item.lineId ?? "local"}-${item.product.id}-${item.variation?.id ?? "default"}`}
                     item={item}
                   />
                 ))}
@@ -228,12 +228,7 @@ export function CartSheet() {
                       Change
                     </button>
                   </div>
-                  {summaryLoading ? (
-                    <div
-                      className="mt-2 h-24 animate-pulse rounded-lg bg-muted"
-                      aria-hidden
-                    />
-                  ) : checkoutSummary?.shipping_address ? (
+                  {checkoutSummary?.shipping_address ? (
                     <div className="mt-2 flex gap-2 rounded-lg border bg-muted/30 p-3">
                       <Home className="size-4 shrink-0 text-muted-foreground" />
                       <div className="min-w-0 text-sm">

@@ -5,7 +5,7 @@ import type {
 } from "@/types/homepage"
 import { getProductReviewSummary } from "@/lib/reviews"
 import type { Product, ProductReview } from "@/types/product"
-import { getBaseUrl } from "./client"
+import { getBaseUrl, normalizeMediaUrl } from "./client"
 import { mapProductReviewFromApi } from "./products"
 
 /** Map API product to app Product type for sliders/cart. */
@@ -29,6 +29,16 @@ export function mapHomepageProductToProduct(api: HomepageProductApi): Product {
     : []
   const reviewSummary = getProductReviewSummary(recentReviews, api.reviews_count)
 
+  const variations =
+    api.variations?.length && api.variations.length > 0
+      ? api.variations.map((v) => ({
+          id: v.id,
+          type: v.type,
+          value: v.value,
+          image: v.image ? (normalizeMediaUrl(v.image) ?? v.image) : undefined,
+        }))
+      : undefined
+
   return {
     id: String(api.id),
     name: api.title,
@@ -43,6 +53,7 @@ export function mapHomepageProductToProduct(api: HomepageProductApi): Product {
     recentReviews,
     categoryId: api.category ? String(api.category.id) : "",
     inStock: api.is_in_stock,
+    ...(variations ? { variations } : {}),
   }
 }
 
