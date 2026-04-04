@@ -1,7 +1,7 @@
+import type { User } from "@/contexts/AuthContext";
 import type { NextAuthOptions } from "next-auth";
 import FacebookProvider from "next-auth/providers/facebook";
 import GoogleProvider from "next-auth/providers/google";
-import type { User } from "@/contexts/AuthContext";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://admin.beautycareskin.com/api/v1";
