@@ -46,6 +46,7 @@ export interface Product {
   stockQty?: number
   soldOutQty?: number
   wishlistCount?: number
+  viewCount?: number
   deliveryText?: string
   specification?: Record<string, string>
   /** From get-product-by-slug; used for size/color selectors. */

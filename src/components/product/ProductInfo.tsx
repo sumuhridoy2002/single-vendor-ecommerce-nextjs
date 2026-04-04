@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import type { Product } from "@/types/product"
 import {
   ChevronRight,
+  Eye,
   Minus,
   Plus,
   ShoppingCart,
@@ -268,6 +269,12 @@ export function ProductInfo({
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
           <span>Sold: {product.soldOutQty ?? 0}</span>
           {stockQty != null && <span>Available: {stockQty}</span>}
+          {product.viewCount != null && (
+            <span className="flex items-center gap-1">
+              <Eye className="size-3.5" aria-hidden />
+              {product.viewCount.toLocaleString()} views
+            </span>
+          )}
         </div>
       </div>
 

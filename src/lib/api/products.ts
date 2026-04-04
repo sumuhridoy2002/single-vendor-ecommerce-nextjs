@@ -102,6 +102,7 @@ function mapProductApiToProduct(api: {
   stock_qty?: number
   sold_out_qty?: number
   wishlist_count?: number
+  view_count?: number
   variations?: ProductVariationApi[]
 }): Product {
   const price =
@@ -157,6 +158,7 @@ function mapProductApiToProduct(api: {
     stockQty,
     soldOutQty: api.sold_out_qty,
     wishlistCount: api.wishlist_count,
+    viewCount: api.view_count,
     specification: {},
     ...(variations ? { variations } : {}),
     ...campaign,
