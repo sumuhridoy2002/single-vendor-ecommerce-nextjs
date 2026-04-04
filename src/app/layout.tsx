@@ -6,6 +6,7 @@ import Provider from "@/components/global/Provider";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { fetchSettingsSafe } from "@/lib/api/settings";
 import { getSiteOrigin, normalizeMediaUrl } from "@/lib/api/client";
+import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/lib/seo/jsonld";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -41,16 +42,41 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await fetchSettingsSafe();
+  const siteUrl = getSiteOrigin();
+  const logoUrl = settings?.data.logo
+    ? normalizeMediaUrl(settings.data.logo) ?? settings.data.logo
+    : undefined;
+
+  const organizationJsonLd = settings?.data
+    ? buildOrganizationJsonLd(settings.data, siteUrl, logoUrl)
+    : null;
+  const webSiteJsonLd = settings?.data
+    ? buildWebSiteJsonLd(settings.data, siteUrl)
+    : null;
+
   return (
     <html lang="en">
       <body
         className={`${inter.variable} antialiased font-sans`}
       >
+        {organizationJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          />
+        )}
+        {webSiteJsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+          />
+        )}
         <Provider>
           <DynamicHeadSync />
           <SidebarProvider>

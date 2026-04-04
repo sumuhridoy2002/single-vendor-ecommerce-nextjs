@@ -4,6 +4,7 @@ import {
 } from "@/lib/api/products"
 import { getSiteOrigin, normalizeMediaUrl } from "@/lib/api/client"
 import { fetchSettingsSafe } from "@/lib/api/settings"
+import { buildProductJsonLd } from "@/lib/seo/jsonld"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { ProductPageContent } from "./ProductPageContent"
@@ -103,85 +104,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-function buildProductJsonLd(
-  data: Awaited<ReturnType<typeof getCachedProductBySlug>>,
-  siteName: string,
-  productUrl: string,
-  imageCandidates: string[]
-) {
-  const price = data.flash_sale?.is_active
-    ? data.flash_sale.flash_final_price
-    : data.campaign?.is_active
-      ? data.campaign.final_price
-      : data.final_price
-
-  const averageRating =
-    data.recent_reviews?.length
-      ? data.recent_reviews.reduce((sum, r) => sum + r.rating, 0) / data.recent_reviews.length
-      : undefined
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: data.title,
-    description: stripHtml(data.short_description) ?? undefined,
-    sku: data.sku,
-    url: productUrl,
-    image: imageCandidates,
-    brand: {
-      "@type": "Brand",
-      name: data.brand?.name ?? siteName,
-    },
-    offers: {
-      "@type": "Offer",
-      url: productUrl,
-      priceCurrency: "BDT",
-      price: price,
-      priceValidUntil: data.campaign?.to
-        ? data.campaign.to.split(" ")[0]
-        : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      availability: data.is_in_stock
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      seller: {
-        "@type": "Organization",
-        name: siteName,
-      },
-    },
-    ...(data.reviews_count > 0 && averageRating != null
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: averageRating.toFixed(1),
-            reviewCount: data.reviews_count,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
-      : {}),
-    ...(data.recent_reviews?.length
-      ? {
-          review: data.recent_reviews.map((r) => ({
-            "@type": "Review",
-            author: { "@type": "Person", name: r.user_name },
-            reviewRating: {
-              "@type": "Rating",
-              ratingValue: r.rating,
-              bestRating: 5,
-              worstRating: 1,
-            },
-            reviewBody: r.comment,
-            datePublished: r.created_at,
-          })),
-        }
-      : {}),
-  }
-}
-
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params
   let initialProduct = null
-  let jsonLd: ReturnType<typeof buildProductJsonLd> | null = null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let jsonLd: Record<string, any> | null = null
 
   try {
     const data = await getCachedProductBySlug(slug)

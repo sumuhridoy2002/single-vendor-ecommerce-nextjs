@@ -1,4 +1,7 @@
 import { getCachedBlogBySlug, fetchBlogs, fetchRelatedBlogs } from "@/lib/api/blogs";
+import { fetchSettingsSafe } from "@/lib/api/settings";
+import { getSiteOrigin } from "@/lib/api/client";
+import { buildArticleJsonLd } from "@/lib/seo/jsonld";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BlogPostContent } from "./BlogPostContent";
@@ -71,5 +74,18 @@ export default async function BlogSlugPage({ params }: Props) {
     // non-fatal
   }
 
-  return <BlogPostContent blog={blog} relatedBlogs={related} />;
+  const settings = await fetchSettingsSafe();
+  const siteUrl = getSiteOrigin();
+  const siteName = settings?.data.site_name ?? "Beauty Care BD";
+  const jsonLd = buildArticleJsonLd(blog, siteUrl, siteName);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <BlogPostContent blog={blog} relatedBlogs={related} />
+    </>
+  );
 }
