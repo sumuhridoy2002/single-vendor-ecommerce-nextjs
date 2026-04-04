@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight, Folder, Zap, type LucideIcon } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
@@ -47,6 +48,7 @@ interface SidebarPageLink {
   id: string | number
   title: string
   href: string
+  image?: string | null
 }
 
 const STATIC_LINKS: SidebarPageLink[] = [
@@ -254,6 +256,7 @@ export function AppSidebar() {
         id: page.id,
         title: page.title,
         href: `/page/${page.slug}`,
+        image: page?.image ?? null,
       })),
     ]
   }, [pages])
@@ -353,7 +356,17 @@ export function AppSidebar() {
                           className="h-auto py-2.5 px-3 rounded-none"
                         >
                           <Link href={href} className="flex items-center gap-2">
-                            <Folder className="size-4 text-muted-foreground shrink-0" />
+                            {p.image ? (
+                              <Image
+                                src={p.image}
+                                alt={p.title}
+                                width={16}
+                                height={16}
+                                className="size-4 shrink-0 rounded-sm object-cover"
+                              />
+                            ) : (
+                              <Folder className="size-4 text-muted-foreground shrink-0" />
+                            )}
                             <span className="truncate text-sm font-medium">
                               {p.title}
                             </span>
