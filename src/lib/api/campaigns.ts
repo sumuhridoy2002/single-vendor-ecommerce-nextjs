@@ -10,6 +10,7 @@ export async function fetchCampaigns(): Promise<CampaignListItem[]> {
   const baseUrl = getBaseUrl()
   const res = await fetch(`${baseUrl}/campaigns`, {
     headers: { Accept: "application/json" },
+    next: { revalidate: 1800 },
   })
 
   if (!res.ok) {

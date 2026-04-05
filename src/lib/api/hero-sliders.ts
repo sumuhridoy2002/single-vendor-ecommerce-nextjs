@@ -8,6 +8,7 @@ export async function fetchHeroSliders(): Promise<HeroSliderItem[]> {
   const baseUrl = getBaseUrl()
   const res = await fetch(`${baseUrl}/sliders`, {
     headers: { Accept: "application/json" },
+    next: { revalidate: 1800 },
   })
 
   if (!res.ok) {

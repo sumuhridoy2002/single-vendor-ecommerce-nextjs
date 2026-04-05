@@ -2,10 +2,12 @@
 
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Menu } from "lucide-react"
+import { Menu, X } from "lucide-react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import * as React from "react"
 
+import LogoSvg from "@/components/svg/logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
@@ -190,14 +192,35 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div
-            className="flex h-full w-full flex-col"
-            onClick={(e) => {
-              const target = e.target as HTMLElement
-              if (target.closest("a")) setOpenMobile(false)
-            }}
-          >
-            {children}
+          <div className="flex h-full min-h-0 w-full flex-col">
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-3 py-2.5">
+              <Link
+                href="/"
+                className="min-w-0 shrink"
+                onClick={() => setOpenMobile(false)}
+              >
+                <LogoSvg />
+              </Link>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                aria-label="Close menu"
+                onClick={() => setOpenMobile(false)}
+              >
+                <X className="size-5" />
+              </Button>
+            </div>
+            <div
+              className="flex min-h-0 flex-1 flex-col overflow-hidden"
+              onClick={(e) => {
+                const target = e.target as HTMLElement
+                if (target.closest("a")) setOpenMobile(false)
+              }}
+            >
+              {children}
+            </div>
           </div>
         </SheetContent>
       </Sheet>

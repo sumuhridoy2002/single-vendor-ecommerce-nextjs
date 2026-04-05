@@ -1,9 +1,10 @@
 "use client"
 
 import { ChevronRight, Folder, Zap, type LucideIcon } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   Collapsible,
@@ -27,6 +28,7 @@ import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
 import { usePagesStore } from "@/stores/pages-store"
 import type { CategoryTreeNode } from "@/types/product"
+import FlashSale from "./category/FlashSale"
 
 /** Get parent category href (empty string for root). */
 function getParentHref(href: string): string {
@@ -41,6 +43,17 @@ function getCategoryHref(pathSlugs: string[]): string {
   if (pathSlugs.length === 0) return "/category"
   return `/category/${pathSlugs.join("/")}`
 }
+
+interface SidebarPageLink {
+  id: string | number
+  title: string
+  href: string
+  image?: string | null
+}
+
+const STATIC_LINKS: SidebarPageLink[] = [
+  { id: "blogs", title: "Blogs", href: "/blogs" },
+]
 
 const flashSaleItem = {
   label: "FLASH SALE",
@@ -235,6 +248,19 @@ export function AppSidebar() {
   const [openPath, setOpenPath] = useState<string>("")
   const prevPathnameRef = useRef(pathname)
 
+  const allPages = useMemo<SidebarPageLink[] | null>(() => {
+    if (pages === null) return null
+    return [
+      ...STATIC_LINKS,
+      ...pages.map((page) => ({
+        id: page.id,
+        title: page.title,
+        href: `/page/${page.slug}`,
+        image: page?.image ?? null,
+      })),
+    ]
+  }, [pages])
+
   // Sync expansion to current category URL when user navigates (pathname is external source)
   useEffect(() => {
     if (pathname === prevPathnameRef.current) return
@@ -266,10 +292,7 @@ export function AppSidebar() {
                 href={flashSaleItem.href}
                 className="flex w-full items-center gap-2"
               >
-                <flashSaleItem.icon className="size-5 shrink-0 text-warning" />
-                <span className="font-bold text-destructive text-sm xs:text-base md:text-lg">
-                  {flashSaleItem.label}
-                </span>
+                <FlashSale />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -280,6 +303,7 @@ export function AppSidebar() {
         <SidebarGroup className="p-0">
           <SidebarGroupContent className="p-0">
             <SidebarMenu>
+
               {tree.length === 0 ? (
                 <SidebarMenuItem>
                   <div className="py-3 px-3 text-sm text-muted-foreground">
@@ -309,21 +333,21 @@ export function AppSidebar() {
                 Pages
               </div>
               <SidebarMenu>
-                {pages === null ? (
+                {allPages === null ? (
                   <SidebarMenuItem>
                     <div className="py-3 px-3 text-sm text-muted-foreground">
                       Loading pages…
                     </div>
                   </SidebarMenuItem>
-                ) : pages.length === 0 ? (
+                ) : allPages.length === 0 ? (
                   <SidebarMenuItem>
                     <div className="py-3 px-3 text-sm text-muted-foreground">
                       No pages available
                     </div>
                   </SidebarMenuItem>
                 ) : (
-                  pages.map((p) => {
-                    const href = `/page/${p.slug}`
+                  allPages.map((p) => {
+                    const href = p.href
                     return (
                       <SidebarMenuItem key={p.id}>
                         <SidebarMenuButton
@@ -332,7 +356,17 @@ export function AppSidebar() {
                           className="h-auto py-2.5 px-3 rounded-none"
                         >
                           <Link href={href} className="flex items-center gap-2">
-                            <Folder className="size-4 text-muted-foreground shrink-0" />
+                            {p.image ? (
+                              <Image
+                                src={p.image}
+                                alt={p.title}
+                                width={16}
+                                height={16}
+                                className="size-4 shrink-0 rounded-sm object-cover"
+                              />
+                            ) : (
+                              <Folder className="size-4 text-muted-foreground shrink-0" />
+                            )}
                             <span className="truncate text-sm font-medium">
                               {p.title}
                             </span>

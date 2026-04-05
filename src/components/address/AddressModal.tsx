@@ -17,13 +17,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { NestedSelect, type NestedSelectOption } from "@/components/ui/nested-select";
+import { NestedSelect } from "@/components/ui/nested-select";
 import { Switch } from "@/components/ui/switch";
 import {
   apiAddressToStore,
   formToCreatePayload,
-  getCityAreaFromTree,
+  getCityAreaFromDeliveryPath,
 } from "@/lib/api/address-mappers";
+import {
+  deliveryZonesToNestedOptions,
+  fetchDeliveryZones,
+  findDeliveryPathForAddress,
+} from "@/lib/api/delivery-zones";
 import {
   addAddress,
   deleteAddressApi,
@@ -46,70 +51,12 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { AddressCard } from "@/components/address/AddressCard";
-
-/** Hierarchical delivery areas (Division > District > Area) for NestedSelect */
-const DELIVERY_AREAS_TREE: NestedSelectOption[] = [
-  {
-    value: "barishal",
-    label: "Barishal",
-    children: [
-      {
-        value: "barguna",
-        label: "Barguna",
-        children: [
-          { value: "amtali", label: "Amtali" },
-          { value: "ayala-patakata", label: "Ayala Patakata (Barguna Sadar)" },
-          { value: "badarkhali", label: "Badarkhali (Barguna Sadar)" },
-          { value: "bamna", label: "Bamna" },
-          { value: "betagi", label: "Betagi" },
-          { value: "patharghata", label: "Patharghata" },
-        ],
-      },
-      {
-        value: "barishal-sadar",
-        label: "Barishal Sadar",
-        children: [
-          { value: "barishal-sadar-1", label: "Barishal Sadar 1" },
-          { value: "barishal-sadar-2", label: "Barishal Sadar 2" },
-        ],
-      },
-    ],
-  },
-  {
-    value: "chittagong-div",
-    label: "Chittagong",
-    children: [
-      { value: "chittagong-city", label: "Chittagong City" },
-      { value: "cox-bazar", label: "Cox's Bazar" },
-      { value: "comilla", label: "Comilla" },
-    ],
-  },
-  {
-    value: "dhaka-div",
-    label: "Dhaka",
-    children: [
-      { value: "dhaka-city", label: "Dhaka City" },
-      { value: "gazipur", label: "Gazipur" },
-      { value: "narayanganj", label: "Narayanganj" },
-    ],
-  },
-  {
-    value: "sylhet-div",
-    label: "Sylhet",
-    children: [
-      { value: "sylhet-city", label: "Sylhet City" },
-      { value: "moulvibazar", label: "Moulvibazar" },
-    ],
-  },
-  { value: "outside_dhaka", label: "Outside Dhaka" },
-  { value: "other", label: "Other" },
-];
 
 const addressFormSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -169,6 +116,22 @@ export function AddressModal() {
     enabled: modalOpen && isAuthenticated,
   });
 
+  const {
+    data: zonesData,
+    isLoading: zonesLoading,
+    error: zonesError,
+  } = useQuery({
+    queryKey: globalQueryKeys.deliveryZones,
+    queryFn: fetchDeliveryZones,
+    enabled: modalOpen && isAuthenticated,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const deliveryTree = useMemo(
+    () => (zonesData ? deliveryZonesToNestedOptions(zonesData) : []),
+    [zonesData]
+  );
+
   // Use store first, then query cache so we don't show loading when we have cached data on reload
   const addressesToShow = addresses.length > 0 ? addresses : (queryAddresses ?? []);
 
@@ -185,6 +148,13 @@ export function AddressModal() {
       closeAddressModal();
     }
   }, [modalOpen, addressesError, closeAddressModal]);
+
+  useEffect(() => {
+    if (!modalOpen || !zonesError) return;
+    const message =
+      zonesError instanceof Error ? zonesError.message : "Failed to load delivery areas";
+    toast.error(message);
+  }, [modalOpen, zonesError]);
 
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressFormSchema),
@@ -205,10 +175,18 @@ export function AddressModal() {
   useEffect(() => {
     if (!formOpen) return;
     if (editingAddressId && editingAddress) {
+      const path =
+        zonesData && editingAddress.city
+          ? findDeliveryPathForAddress(
+              zonesData,
+              editingAddress.city,
+              editingAddress.deliveryArea
+            )
+          : null;
       form.reset({
         fullName: editingAddress.fullName,
         phone: editingAddress.phone,
-        deliveryArea: editingAddress.deliveryArea,
+        deliveryArea: path ?? editingAddress.deliveryArea,
         address: editingAddress.address,
         addressType: editingAddress.addressType,
         isDefault: editingAddress.isDefault,
@@ -225,10 +203,10 @@ export function AddressModal() {
     }
     // Intentionally omit editingAddress to avoid resetting when store reference changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formOpen, editingAddressId, editingAddress?.id, form]);
+  }, [formOpen, editingAddressId, editingAddress?.id, form, zonesData]);
 
   const onSubmit = async (data: AddressFormValues) => {
-    const { city, area } = getCityAreaFromTree(DELIVERY_AREAS_TREE, data.deliveryArea);
+    const { city, area } = getCityAreaFromDeliveryPath(data.deliveryArea);
     const payload = formToCreatePayload(data, city, area);
 
     if (editingAddressId) {
@@ -382,12 +360,23 @@ export function AddressModal() {
                         <FormLabel>Select Delivery Area *</FormLabel>
                         <FormControl>
                           <NestedSelect
-                            options={DELIVERY_AREAS_TREE}
+                            options={deliveryTree}
                             value={field.value}
                             onValueChange={field.onChange}
-                            placeholder="Select delivery area"
+                            placeholder={
+                              zonesLoading
+                                ? "Loading delivery areas…"
+                                : "Select delivery area"
+                            }
                             searchPlaceholder="Search…"
-                            emptyMessage="No area found."
+                            emptyMessage={
+                              zonesLoading
+                                ? "Loading…"
+                                : zonesError
+                                  ? "Could not load areas."
+                                  : "No area found."
+                            }
+                            disabled={zonesLoading || Boolean(zonesError)}
                           />
                         </FormControl>
                         <FormMessage />

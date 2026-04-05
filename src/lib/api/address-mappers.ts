@@ -30,6 +30,7 @@ export function apiAddressToStore(api: ApiAddress): StoreAddress {
     fullName: api.receiver_name,
     phone: api.receiver_phone,
     address: api.address_line,
+    city: api.city,
     deliveryArea: api.area,
     addressType: normalizeAddressType(api.address_type),
     isDefault: api.is_default,
@@ -93,4 +94,31 @@ export function getCityAreaFromTree(
   const found = find(options, value, null);
   if (found) return found;
   return { city: value, area: value };
+}
+
+/** Same separator as NestedSelect: " > " between labels. */
+const DELIVERY_PATH_SEP = " > ";
+
+/**
+ * Derive API city + area from the NestedSelect path (district > city > area name).
+ */
+export function getCityAreaFromDeliveryPath(path: string): {
+  city: string;
+  area: string;
+} {
+  const parts = path
+    .split(DELIVERY_PATH_SEP)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) {
+    return {
+      city: parts[parts.length - 2]!,
+      area: parts[parts.length - 1]!,
+    };
+  }
+  if (parts.length === 1) {
+    const only = parts[0]!;
+    return { city: only, area: only };
+  }
+  return { city: "", area: "" };
 }

@@ -6,14 +6,18 @@ export interface ProductReviewApi {
   user_name: string
   user_avatar: string | null
   created_at: string
+  /** Optional photo attached to the review (multipart field `image`). */
+  image?: string | null
   /** Optional admin/store reply. */
   reply?: string | null
 }
 
-/** Request body for POST /products/{id}/review */
-export interface SubmitReviewRequestBody {
+/** Payload for POST /products/{id}/review (sent as multipart/form-data). */
+export interface SubmitReviewPayload {
   rating: number
   comment: string
+  /** Optional file; form field name `image`. */
+  image?: File | null
 }
 
 /** Response from POST /products/{id}/review */
@@ -60,6 +64,18 @@ export interface ProductDetailsFlashSaleApi {
   flash_final_price: number
 }
 
+/** Campaign pricing block on product details. */
+export interface ProductDetailsCampaignApi {
+  is_active: boolean
+  campaign_id: number
+  name: string | null
+  discount: number
+  type: string
+  from: string
+  to: string
+  final_price: number
+}
+
 /** Single variation as returned by GET /products/{slug}. */
 export interface ProductVariationApi {
   id: number
@@ -81,6 +97,9 @@ export interface ProductDetailsApi {
   discount_type: string
   final_price: number
   stock: number
+  stock_qty?: number
+  sold_out_qty?: number
+  wishlist_count?: number
   is_in_stock: boolean
   view_count: number
   reviews_count: number
@@ -90,6 +109,7 @@ export interface ProductDetailsApi {
   brand: ProductDetailsBrandApi
   variations: ProductVariationApi[]
   flash_sale: ProductDetailsFlashSaleApi
+  campaign?: ProductDetailsCampaignApi | null
   status: boolean
   recent_reviews: ProductReviewApi[]
   meta: ProductDetailsMetaApi
@@ -138,13 +158,17 @@ export interface ProductListItemApi {
   base_price: number
   final_price: number
   reviews_count: number
+  recent_reviews?: ProductReviewApi[]
   thumbnail: string
   gallery?: string[]
   short_description?: string
   is_in_stock: boolean
   flash_sale: ProductDetailsFlashSaleApi
+  campaign?: ProductDetailsCampaignApi | null
   category?: { id: number; name?: string; slug?: string } | null
   brand?: { id: number; name: string; slug: string } | null
+  /** When present, product cards can prompt for variant before add-to-cart. */
+  variations?: ProductVariationApi[]
 }
 
 export interface ProductsListApiResponse {

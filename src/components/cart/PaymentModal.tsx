@@ -73,16 +73,6 @@ export function PaymentModal() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Order placed successfully by &quot;{status.payment_method}&quot;
               </p>
-              <div className="mt-4 flex items-center gap-4 text-sm">
-                <span className="flex items-center gap-1.5 font-medium text-primary">
-                  <Check className="size-4" />
-                  {status.order.charAt(0).toUpperCase() + status.order.slice(1)}
-                </span>
-                <span className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="size-4 rounded-full border-2 border-primary bg-primary/20" />
-                  {status.payment.charAt(0).toUpperCase() + status.payment.slice(1)}
-                </span>
-              </div>
               <button
                 type="button"
                 className="mt-2 flex items-center gap-1 text-sm text-primary hover:underline"
@@ -190,15 +180,7 @@ export function PaymentModal() {
         </div>
 
         {/* Footer actions */}
-        <div className="shrink-0 flex flex-col gap-2 border-t bg-background p-4">
-          <Button
-            className="w-full bg-primary hover:bg-primary/90"
-            onClick={() => {
-              /* Wire to payment gateway */
-            }}
-          >
-            Pay Online: {formatPriceSymbol(amounts.grand_total)}
-          </Button>
+        <div className="border-t bg-background p-4">
           <Button variant="outline" className="w-full" asChild>
             <Link
               href={`/account/orders/track/${encodeURIComponent(tracking_no)}`}

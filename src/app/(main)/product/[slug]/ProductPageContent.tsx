@@ -2,6 +2,7 @@
 
 import { ProductGallery } from "@/components/product/ProductGallery"
 import { ProductInfo } from "@/components/product/ProductInfo"
+import { ProductStickyBar } from "@/components/product/ProductStickyBar"
 import { ProductTabs } from "@/components/product/ProductTabs"
 import { RelatedProductsCarousel } from "@/components/product/RelatedProductsCarousel"
 import {
@@ -12,19 +13,15 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import {
-  getCategoryHrefById,
-  getCategoryIdToTitleMap,
-  useCategoryTree,
-} from "@/hooks/data/useCategoryTree"
 import { useProductDetails } from "@/hooks/data/useProductDetails"
 import { useRelatedProducts } from "@/hooks/data/useRelatedProducts"
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import { useCartStore } from "@/store/cart-store"
 import type { Product } from "@/types/product"
+import { AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 export interface ProductPageContentProps {
@@ -40,10 +37,24 @@ export function ProductPageContent({
   const [selectedVariantImage, setSelectedVariantImage] = useState<string | undefined>(
     undefined
   )
+  const productHeroRef = useRef<HTMLDivElement>(null)
+  const [showStickyBar, setShowStickyBar] = useState(false)
+
+  useEffect(() => {
+    const el = productHeroRef.current
+    if (!el) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyBar(!entry.isIntersecting)
+      },
+      { threshold: 0, rootMargin: "0px" }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [product?.id])
   const { products: relatedProducts } = useRelatedProducts(product?.id)
-  const tree = useCategoryTree()
   const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
   const handleAddToCart = (
     p: Product,
@@ -51,9 +62,19 @@ export function ProductPageContent({
     options?: { variationId?: number }
   ) => {
     whenLoggedIn(() => {
-      addItem(p, quantity, options)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+      if (p.inStock === false || (p.stockQty != null && p.stockQty <= 0)) {
+        toast.error("This product is currently out of stock")
+        return
+      }
+
+      if (p.stockQty != null && quantity > p.stockQty) {
+        toast.error(`You can add up to ${p.stockQty} item(s) for this product`)
+        return
+      }
+
+      addItem(p, quantity, options).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      )
     })
   }
 
@@ -74,8 +95,16 @@ export function ProductPageContent({
     )
   }
 
-  const categoryHref = getCategoryHrefById(tree, product.categoryId)
-  const categoryTitle = getCategoryIdToTitleMap(tree)[product.categoryId]
+  const categoryHref = product.categoryHref
+  const categoryTitle = product.categoryTitle
+
+  const LOW_STOCK_THRESHOLD = 10
+  const stockQty = product.stockQty
+  const showLowStockAlert =
+    product.inStock !== false &&
+    stockQty != null &&
+    stockQty > 0 &&
+    stockQty <= LOW_STOCK_THRESHOLD
 
   return (
     <div className="container space-y-8 min-w-full">
@@ -87,7 +116,7 @@ export function ProductPageContent({
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
-          {categoryTitle && (
+          {categoryTitle && categoryHref && (
             <>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
@@ -103,20 +132,38 @@ export function ProductPageContent({
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4 lg:gap-8 xl:gap-32">
+      <div
+        ref={productHeroRef}
+        id="product-hero"
+        className="w-full scroll-mt-24 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-4 lg:gap-8 xl:gap-32"
+      >
         <ProductGallery
           product={product}
           variantImage={selectedVariantImage}
           onVariantImageChange={setSelectedVariantImage}
         />
-        <ProductInfo
-          product={product}
-          onAddToCart={handleAddToCart}
-          onVariantImageChange={setSelectedVariantImage}
-        />
+        <div className="flex min-w-0 flex-col gap-4">
+          {showLowStockAlert && (
+            <div
+              role="status"
+              className="flex items-center gap-2 rounded-lg border border-warning/50 bg-warning/10 px-3 py-2.5 text-sm font-medium text-warning"
+            >
+              <AlertTriangle
+                className="size-5 shrink-0"
+                aria-hidden
+              />
+              <span>Low stock — Only {stockQty} left</span>
+            </div>
+          )}
+          <ProductInfo
+            product={product}
+            onAddToCart={handleAddToCart}
+            onVariantImageChange={setSelectedVariantImage}
+          />
+        </div>
       </div>
 
-      <section className="rounded-xl border bg-card p-6">
+      <section className="rounded-xl sm:border sm:bg-card sm:p-6">
         <ProductTabs product={product} onReviewSubmitted={refetch} />
       </section>
 
@@ -125,11 +172,19 @@ export function ProductPageContent({
           <RelatedProductsCarousel
             title="Related Products"
             products={relatedProducts}
-            viewAllHref={categoryHref}
-            onAddToCart={handleAddToCart}
+            viewAllHref={categoryHref ?? undefined}
+            onAddToCart={(p, opts) => handleAddToCart(p, 1, opts)}
           />
         )}
       </div>
+
+      <ProductStickyBar
+        product={product}
+        thumbnailSrc={selectedVariantImage ?? product.image}
+        visible={showStickyBar}
+        scrollTargetRef={productHeroRef}
+        onAddToCart={handleAddToCart}
+      />
     </div>
   )
 }

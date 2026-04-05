@@ -7,7 +7,7 @@ import type { Swiper as SwiperType } from "swiper"
 import { ProductSlider } from "@/components/common/ProductSlider"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { Product } from "@/types/product"
+import type { AddToCartOptions, Product } from "@/types/product"
 
 export interface CategoryProductSectionProps {
   title: string
@@ -15,7 +15,7 @@ export interface CategoryProductSectionProps {
   viewAllHref?: string
   className?: string
   sectionBgClassName?: string
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (product: Product, options?: AddToCartOptions) => void
 }
 
 export function CategoryProductSection({

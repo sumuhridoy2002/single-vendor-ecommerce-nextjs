@@ -1,9 +1,6 @@
 "use client";
 
-import { AddressModal } from "@/components/address/AddressModal";
-import { AuthModal } from "@/components/auth/AuthModal";
-import { CartSheet } from "@/components/cart/CartSheet";
-import { PaymentModal } from "@/components/cart/PaymentModal";
+import dynamic from "next/dynamic";
 import LogoSvg from "@/components/svg/logo";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +13,11 @@ import { useAuthModalStore } from "@/store/auth-modal-store";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
+
+const AuthModal = dynamic(() => import("@/components/auth/AuthModal").then((m) => m.AuthModal), { ssr: false });
+const AddressModal = dynamic(() => import("@/components/address/AddressModal").then((m) => m.AddressModal), { ssr: false });
+const CartSheet = dynamic(() => import("@/components/cart/CartSheet").then((m) => m.CartSheet), { ssr: false });
+const PaymentModal = dynamic(() => import("@/components/cart/PaymentModal").then((m) => m.PaymentModal), { ssr: false });
 import { NavbarDelivery } from "./NavbarDelivery";
 import { NavbarDesktopActions } from "./NavbarDesktopActions";
 import { NavbarMobileActions } from "./NavbarMobileActions";
@@ -46,40 +48,46 @@ const Navbar = () => {
     setShowRecentSearches(false);
   }, [refreshHistory]);
 
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const q = searchValue.trim();
-    if (!q) return;
-    addToSearchHistory(q);
-    refreshHistory();
-    setShowRecentSearches(false);
-    const params = new URLSearchParams({ q });
-    if (searchCategory && searchCategory !== "all") {
-      params.set("scope", searchCategory);
-    }
-    router.push(`/search?${params.toString()}`);
-  };
+  const handleSearchSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const q = searchValue.trim();
+      if (!q) return;
+      addToSearchHistory(q);
+      refreshHistory();
+      setShowRecentSearches(false);
+      const params = new URLSearchParams({ q });
+      if (searchCategory && searchCategory !== "all") {
+        params.set("scope", searchCategory);
+      }
+      router.push(`/search?${params.toString()}`);
+    },
+    [searchValue, searchCategory, refreshHistory, router]
+  );
 
-  const handleRecentSelect = (query: string) => {
-    addToSearchHistory(query);
-    refreshHistory();
-    setShowRecentSearches(false);
-    const params = new URLSearchParams({ q: query });
-    if (searchCategory && searchCategory !== "all") {
-      params.set("scope", searchCategory);
-    }
-    router.push(`/search?${params.toString()}`);
-  };
+  const handleRecentSelect = useCallback(
+    (query: string) => {
+      addToSearchHistory(query);
+      refreshHistory();
+      setShowRecentSearches(false);
+      const params = new URLSearchParams({ q: query });
+      if (searchCategory && searchCategory !== "all") {
+        params.set("scope", searchCategory);
+      }
+      router.push(`/search?${params.toString()}`);
+    },
+    [searchCategory, refreshHistory, router]
+  );
 
-  const handleSearchFocus = () => {
+  const handleSearchFocus = useCallback(() => {
     refreshHistory();
     setShowRecentSearches(true);
-  };
+  }, [refreshHistory]);
 
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearchValue(value);
     if (value.trim().length > 0) setShowRecentSearches(true);
-  };
+  }, []);
 
   return (
     <nav className="flex flex-col gap-2 border-b border-border bg-background px-4 py-3 sticky top-0 z-50 md:flex-row md:items-center md:justify-between md:gap-6">

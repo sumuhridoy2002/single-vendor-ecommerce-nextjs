@@ -8,6 +8,7 @@ export async function fetchCategories(): Promise<CategoryApiNode[]> {
   const baseUrl = getBaseUrl()
   const res = await fetch(`${baseUrl}/categories`, {
     headers: { Accept: "application/json" },
+    next: { revalidate: 1800 },
   })
 
   if (!res.ok) {

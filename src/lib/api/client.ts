@@ -1,4 +1,5 @@
 const BACKEND_BASE = "https://admin.beautycareskin.com/api/v1";
+const DEFAULT_SITE_ORIGIN = "https://beautycare.com.bd";
 
 /**
  * In the browser, returns same-origin /api/v1 so requests are proxied by Next.js (avoids CORS).
@@ -13,6 +14,17 @@ function getBaseUrl(): string {
 
 function getBackendOrigin(): string {
   return new URL(BACKEND_BASE).origin
+}
+
+function getSiteOrigin(): string {
+  const envOrigin =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    process.env.NEXT_PUBLIC_APP_URL ??
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined)
+
+  return (envOrigin ?? DEFAULT_SITE_ORIGIN).replace(/\/$/, "")
 }
 
 function normalizeMediaUrl(url: string | null | undefined): string | undefined {
@@ -32,4 +44,4 @@ function normalizeMediaUrl(url: string | null | undefined): string | undefined {
   return url.startsWith("/") ? `${origin}${url}` : `${origin}/${url}`
 }
 
-export { getBaseUrl, normalizeMediaUrl };
+export { getBaseUrl, getSiteOrigin, normalizeMediaUrl };

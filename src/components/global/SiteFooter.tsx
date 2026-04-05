@@ -1,14 +1,15 @@
 "use client";
 
 import LogoSvg from "@/components/svg/logo";
+import { ScrollToTopButton } from "@/components/global/ScrollToTopButton";
 import { useCategories } from "@/hooks/data/useCategories";
 import { cn } from "@/lib/utils";
 import { usePagesStore } from "@/stores/pages-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import type { CmsPageListItem } from "@/types/cms-page";
-import { ArrowUp, Facebook, MapPin, Phone, Youtube } from "lucide-react";
+import { Facebook, MapPin, Phone, Youtube } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useMemo } from "react";
 import { FaWhatsapp } from "react-icons/fa6";
 import { SiTiktok } from "react-icons/si";
 
@@ -26,19 +27,6 @@ export function SiteFooter() {
   const pages = usePagesStore((s) => s.pages);
   const { categories } = useCategories();
 
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setShowScrollTop(window.scrollY > 400);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const scrollToTop = useCallback(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
-
   const year = new Date().getFullYear();
   const siteName = settings?.site_name ?? "Store";
   const tagline = settings?.site_tagline || settings?.site_description || "";
@@ -46,40 +34,50 @@ export function SiteFooter() {
   const hotline = settings?.support_phone ?? "";
   const wa = settings?.social_wa ?? "";
 
-  const rootCategories = categories.slice(0, 4);
+  const rootCategories = useMemo(() => categories.slice(0, 4), [categories]);
 
-  const quickLinks: { label: string; href: string }[] = [
-    ...(pageHref("careers", pages) ? [{ label: "Careers", href: pageHref("careers", pages)! }] : []),
-    { label: "Privacy Policy", href: "/account/privacy" },
-    { label: "Terms and Conditions", href: "/account/terms" },
-    { label: "Return and Refund Policy", href: "/account/refund-policy" },
-  ];
+  const quickLinks = useMemo<{ label: string; href: string }[]>(
+    () => [
+      ...(pageHref("careers", pages) ? [{ label: "Careers", href: pageHref("careers", pages)! }] : []),
+      { label: "Privacy Policy", href: "/account/privacy" },
+      { label: "Terms and Conditions", href: "/account/terms" },
+      { label: "Return and Refund Policy", href: "/account/refund-policy" },
+    ],
+    [pages]
+  );
 
-  const serviceLinks = rootCategories.map((c) => ({
-    label: c.name,
-    href: `/category/${c.slug}`,
-  }));
+  const serviceLinks = useMemo(
+    () => rootCategories.map((c) => ({ label: c.name, href: `/category/${c.slug}` })),
+    [rootCategories]
+  );
 
-  const usefulLinks: { label: string; href: string }[] = [
-    { label: "FAQ", href: "/account/faq" },
-    { label: "Account", href: "/account" },
-    ...(pageHref("register-pharmacy", pages)
-      ? [{ label: "Register the Pharmacy", href: pageHref("register-pharmacy", pages)! }]
-      : pageHref("register-the-pharmacy", pages)
-        ? [{ label: "Register the Pharmacy", href: pageHref("register-the-pharmacy", pages)! }]
-        : []),
-    { label: "Special Offers", href: "/account/offers" },
-  ];
+  const usefulLinks = useMemo<{ label: string; href: string }[]>(
+    () => [
+      { label: "FAQ", href: "/account/faq" },
+      { label: "Account", href: "/account" },
+      ...(pageHref("register-pharmacy", pages)
+        ? [{ label: "Register the Pharmacy", href: pageHref("register-pharmacy", pages)! }]
+        : pageHref("register-the-pharmacy", pages)
+          ? [{ label: "Register the Pharmacy", href: pageHref("register-the-pharmacy", pages)! }]
+          : []),
+      { label: "Special Offers", href: "/account/offers" },
+    ],
+    [pages]
+  );
 
-  const socialItems: { href: string; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [];
-  if (settings?.social_fb)
-    socialItems.push({ href: settings.social_fb, label: "Facebook", Icon: Facebook });
-  // if (settings?.social_ig)
-  //   socialItems.push({ href: settings.social_ig, label: "Instagram", Icon: Instagram });
-  if (settings?.social_yt)
-    socialItems.push({ href: settings.social_yt, label: "YouTube", Icon: Youtube });
-  if (settings?.social_tiktok)
-    socialItems.push({ href: settings.social_tiktok, label: "TikTok", Icon: SiTiktok });
+  const socialItems = useMemo<{ href: string; label: string; Icon: React.ComponentType<{ className?: string }> }[]>(
+    () => {
+      const items: { href: string; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [];
+      if (settings?.social_fb)
+        items.push({ href: settings.social_fb, label: "Facebook", Icon: Facebook });
+      if (settings?.social_yt)
+        items.push({ href: settings.social_yt, label: "YouTube", Icon: Youtube });
+      if (settings?.social_tiktok)
+        items.push({ href: settings.social_tiktok, label: "TikTok", Icon: SiTiktok });
+      return items;
+    },
+    [settings]
+  );
 
   // const paymentChips: { key: string; label: string; show: boolean }[] = [
   //   { key: "bkash", label: "bKash", show: settings?.bkash_status === true },
@@ -92,7 +90,7 @@ export function SiteFooter() {
   // ];
 
   return (
-    <footer className={cn(footerBg, "relative mt-auto text-white pb-20 md:pb-0")}>
+    <footer className={cn(footerBg, "relative text-white pb-20 md:pb-0")}>
       <div className="container py-10 lg:py-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           {/* Column 1 — Brand */}
@@ -220,10 +218,18 @@ export function SiteFooter() {
             {settings?.trade_license ? (
               <>
                 Trade License: {settings.trade_license}
+                <br className="block md:hidden" />
                 {settings.bin_no ? (
                   <>
                     {" "}
                     DBID: {settings.bin_no}
+                  </>
+                ) : null}
+                <br className="block md:hidden" />
+                {settings.tin_no ? (
+                  <>
+                    {" "}
+                    TIN: {settings.tin_no}
                   </>
                 ) : null}
               </>
@@ -237,34 +243,7 @@ export function SiteFooter() {
         </div>
       </div>
 
-      {/* Scroll to top */}
-      <button
-        type="button"
-        onClick={scrollToTop}
-        aria-label="Scroll to top"
-        className={cn(
-          "fixed bottom-24 right-4 z-40 flex size-11 items-center justify-center rounded-full border border-white/20 bg-white text-[#0a1628] shadow-lg transition-all hover:bg-white/95 md:bottom-8",
-          showScrollTop ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
-        )}
-      >
-        <ArrowUp className="size-5" />
-      </button>
-
-      {/* Chat hint — optional floating action; uses support WhatsApp if set */}
-      {wa ? (
-        <a
-          href={wa.startsWith("http") ? wa : `https://wa.me/${wa.replace(/\D/g, "")}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            "fixed right-4 z-40 flex size-12 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition-all hover:scale-105",
-            showScrollTop ? "bottom-40 md:bottom-24" : "bottom-24 md:bottom-8"
-          )}
-          aria-label="Chat on WhatsApp"
-        >
-          <FaWhatsapp className="size-6" />
-        </a>
-      ) : null}
+      <ScrollToTopButton wa={wa || undefined} />
     </footer>
   );
 }

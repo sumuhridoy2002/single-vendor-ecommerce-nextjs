@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { getBaseUrl } from "./client";
 import type {
   BlogDetailApiResponse,
@@ -31,6 +32,7 @@ export async function fetchBlogs(
 
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
+    next: { revalidate: 900 },
   });
 
   const json = (await res.json().catch(() => ({}))) as BlogsListApiResponse & {
@@ -46,6 +48,20 @@ export async function fetchBlogs(
   return json as BlogsListApiResponse;
 }
 
+/** All blog post slugs across paginated GET /blogs (for sitemap). */
+export async function fetchAllBlogSlugs(): Promise<string[]> {
+  const first = await fetchBlogs(1);
+  const slugs = first.data.map((b) => b.slug);
+  const lastPage = first.meta?.last_page ?? 1;
+  let page = 2;
+  while (page <= lastPage) {
+    const res = await fetchBlogs(page);
+    slugs.push(...res.data.map((b) => b.slug));
+    page += 1;
+  }
+  return slugs;
+}
+
 /**
  * Blog by slug: GET /blogs/{slug}
  * Server-safe (no auth).
@@ -54,7 +70,7 @@ export async function fetchBlogBySlug(slug: string): Promise<BlogDetailApiRespon
   const baseUrl = getBaseUrl();
   const res = await fetch(
     `${baseUrl}/blogs/${encodeURIComponent(slug)}`,
-    { headers: { Accept: "application/json" } }
+    { headers: { Accept: "application/json" }, next: { revalidate: 3600 } }
   );
 
   const json = (await res.json().catch(() => ({}))) as BlogDetailApiResponse & {
@@ -73,6 +89,9 @@ export async function fetchBlogBySlug(slug: string): Promise<BlogDetailApiRespon
 
   return json.data;
 }
+
+/** Per-request deduplicated version — use in Server Components (generateMetadata + page body share one fetch). */
+export const getCachedBlogBySlug = cache(fetchBlogBySlug);
 
 /**
  * Related blogs: GET /blogs/{id}/related

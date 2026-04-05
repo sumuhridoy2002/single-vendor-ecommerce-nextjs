@@ -10,6 +10,7 @@ export async function fetchPages(): Promise<CmsPageListItem[]> {
   const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/pages`, {
     headers: { Accept: "application/json" },
+    next: { revalidate: 1800 },
   });
 
   if (!res.ok) {

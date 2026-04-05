@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select"
 import { useInfiniteProductsByCategory } from "@/hooks/data/useProducts"
 import type { ProductsSortParam } from "@/lib/api/products"
-import type { CategoryTreeNode, Product } from "@/types/product"
+import type { AddToCartOptions, CategoryTreeNode, Product } from "@/types/product"
 import { useEffect, useRef, useState } from "react"
 
 const SORT_OPTIONS: { value: ProductsSortParam; label: string }[] = [
@@ -27,7 +27,7 @@ export function SubcategoryProductGrid({
   onAddToCart,
 }: {
   sub: CategoryTreeNode
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (product: Product, options?: AddToCartOptions) => void
 }) {
   const [sort, setSort] = useState<ProductsSortParam | "">("")
   const sortParam = sort || undefined

@@ -1,4 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar"
+import { FooterBenefitsStrip } from "@/components/global/FooterBenefitsStrip"
 import { SiteFooter } from "@/components/global/SiteFooter"
 
 interface DefaultLayoutProps {
@@ -13,7 +14,10 @@ const DefaultLayout = ({ children }: DefaultLayoutProps) => {
       </div>
       <main className="flex min-w-0 flex-1 flex-col pt-3 xs:pt-6 md:pt-8">
         {children}
-        <SiteFooter />
+        <div className="mt-auto">
+          <FooterBenefitsStrip />
+          <SiteFooter />
+        </div>
       </main>
     </>
   )

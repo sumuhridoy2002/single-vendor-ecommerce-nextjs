@@ -6,6 +6,8 @@ export interface Address {
   id: string;
   fullName: string;
   phone: string;
+  /** API city (Thana / district city); used to resolve NestedSelect path when editing. */
+  city?: string;
   deliveryArea: string;
   address: string;
   addressType: AddressType;

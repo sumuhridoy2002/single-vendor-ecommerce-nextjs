@@ -72,9 +72,13 @@ async function proxy(
       headers: { ...headers, Accept: "application/json" },
       cache: "no-store",
     };
+    // Use ArrayBuffer for request bodies. `request.text()` corrupts multipart/binary
+    // uploads (e.g. review images) by decoding bytes as UTF-8.
     if (request.method !== "GET" && request.method !== "HEAD") {
-      const body = await request.text();
-      if (body) init.body = body;
+      const buf = await request.arrayBuffer();
+      if (buf.byteLength > 0) {
+        init.body = buf;
+      }
     }
     const res = await fetch(url, init);
     const contentType = res.headers.get("content-type") ?? "application/json";

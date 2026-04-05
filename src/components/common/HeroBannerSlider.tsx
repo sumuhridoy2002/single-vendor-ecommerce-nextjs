@@ -2,8 +2,11 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { useSyncExternalStore } from "react"
 import { Autoplay, Pagination } from "swiper/modules"
 import { Swiper, SwiperSlide } from "swiper/react"
+import "swiper/css"
+import "swiper/css/pagination"
 
 import { useHeroSliders } from "@/hooks/data/useHeroSliders"
 import { cn } from "@/lib/utils"
@@ -11,10 +14,8 @@ import { cn } from "@/lib/utils"
 function getLinkProps(href: string): { href: string; external: boolean } {
   if (href.startsWith("/")) return { href, external: false }
   try {
-    const url = new URL(href)
-    const external =
-      typeof window !== "undefined" && url.origin !== window.location.origin
-    return { href: external ? href : url.pathname + url.search, external }
+    new URL(href)
+    return { href, external: true }
   } catch {
     return { href, external: true }
   }
@@ -22,6 +23,11 @@ function getLinkProps(href: string): { href: string; external: boolean } {
 
 export function HeroBannerSlider() {
   const { heroSliders, isLoading, error } = useHeroSliders()
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   if (error) {
     return (
@@ -33,7 +39,7 @@ export function HeroBannerSlider() {
     )
   }
 
-  if (isLoading || heroSliders.length === 0) {
+  if (!isHydrated || isLoading || heroSliders.length === 0) {
     return (
       <section className="hero-banner-slider w-full min-w-0 overflow-hidden container pb-0 xs:pb-4 md:pb-6">
         <div

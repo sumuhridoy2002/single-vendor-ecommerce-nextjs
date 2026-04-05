@@ -1,4 +1,6 @@
 import { fetchBrandBySlug } from "@/lib/api/brands"
+import { getSiteOrigin } from "@/lib/api/client"
+import { buildBrandJsonLd } from "@/lib/seo/jsonld"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { BrandPageContent } from "./BrandPageContent"
@@ -36,7 +38,16 @@ export default async function BrandPage({ params }: Props) {
     notFound()
   }
 
+  const siteUrl = getSiteOrigin()
+  const jsonLd = buildBrandJsonLd(result.brand, siteUrl)
+
   return (
-    <BrandPageContent brand={result.brand} />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <BrandPageContent brand={result.brand} />
+    </>
   )
 }

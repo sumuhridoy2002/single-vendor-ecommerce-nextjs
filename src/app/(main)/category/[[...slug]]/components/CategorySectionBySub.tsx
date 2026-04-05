@@ -2,7 +2,7 @@
 
 import { CategoryProductSection } from "@/components/common/CategoryProductSection"
 import { useInfiniteProductsByCategory } from "@/hooks/data/useProducts"
-import type { CategoryTreeNode, Product } from "@/types/product"
+import type { AddToCartOptions, CategoryTreeNode, Product } from "@/types/product"
 
 export function CategorySectionBySub({
   sub,
@@ -13,7 +13,7 @@ export function CategorySectionBySub({
   sub: CategoryTreeNode
   parentPathSlug: string
   sectionBgClassName: string
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (product: Product, options?: AddToCartOptions) => void
 }) {
   const { data } = useInfiniteProductsByCategory(sub.id)
   const products = data?.pages[0]?.products ?? []

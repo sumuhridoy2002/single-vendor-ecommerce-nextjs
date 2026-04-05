@@ -1,113 +1,114 @@
-"use client"
+import type { Metadata } from "next"
+import { fetchCategories } from "@/lib/api/categories"
+import type { CategoryApiNode } from "@/types/category"
+import { getSiteOrigin } from "@/lib/api/client"
+import { buildCollectionPageJsonLd } from "@/lib/seo/jsonld"
+import { CategoryPageContent } from "./CategoryPageContent"
 
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Fragment, use } from "react"
+type Props = { params: Promise<{ slug?: string[] }> }
 
-import { CategoryHero } from "@/components/category/CategoryHero"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { useCategories } from "@/hooks/data/useCategories"
-import { getCategoryBySlugPath, useCategoryTree } from "@/hooks/data/useCategoryTree"
-import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
-import { useCartStore } from "@/store/cart-store"
+function findCategoryBySlug(
+  nodes: CategoryApiNode[],
+  slug: string
+): CategoryApiNode | undefined {
+  for (const node of nodes) {
+    if (node.slug === slug) return node
+    const found = findCategoryBySlug(node.children, slug)
+    if (found) return found
+  }
+  return undefined
+}
 
-import { toast } from "sonner"
-import { SubcategoryProductGrid } from "./components/SubcategoryProductGrid"
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  if (!slug?.length) return { title: "Category" }
 
-export default function CategoryPage({
-  params,
-}: {
-  params: Promise<{ slug?: string[] }>
-}) {
-  const { slug } = use(params)
-  const tree = useCategoryTree()
-  const { isLoading } = useCategories()
-  const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
-  const whenLoggedIn = useWhenLoggedIn()
-  const handleAddToCart = (product: import("@/types/product").Product) => {
-    whenLoggedIn(() => {
-      addItem(product)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
-    })
+  try {
+    const categories = await fetchCategories()
+    const lastSlug = slug[slug.length - 1]
+    const category = findCategoryBySlug(categories, lastSlug)
+
+    if (!category) return { title: "Category" }
+
+    const title = category.meta?.title ?? category.name
+    const description =
+      category.meta?.description ??
+      category.description ??
+      `Browse ${category.name} products`
+
+    return {
+      title,
+      description: description?.slice(0, 160) ?? undefined,
+      keywords: category.meta?.keywords ?? undefined,
+    }
+  } catch {
+    return { title: "Category" }
+  }
+}
+
+/**
+ * Resolve all ancestors of a target slug, returning an ordered path from root
+ * to the matched node. Returns empty array if not found.
+ */
+function resolveCategoryPath(
+  nodes: CategoryApiNode[],
+  targetSlug: string,
+  ancestors: CategoryApiNode[] = []
+): CategoryApiNode[] {
+  for (const node of nodes) {
+    const path = [...ancestors, node]
+    if (node.slug === targetSlug) return path
+    const found = resolveCategoryPath(node.children, targetSlug, path)
+    if (found.length) return found
+  }
+  return []
+}
+
+export default async function CategoryPage({ params }: Props) {
+  const { slug } = await params
+
+  let schemas: ReturnType<typeof buildCollectionPageJsonLd> = []
+
+  if (slug?.length) {
+    try {
+      const siteUrl = getSiteOrigin()
+      const categories = await fetchCategories()
+      const lastSlug = slug[slug.length - 1]
+      const categoryPath = resolveCategoryPath(categories, lastSlug)
+
+      if (categoryPath.length) {
+        const leaf = categoryPath[categoryPath.length - 1]
+        const breadcrumbs = [
+          { name: "Home", url: siteUrl },
+          ...categoryPath.map((node) => ({
+            name: node.name,
+            url: `${siteUrl}/category/${node.slug}`,
+          })),
+        ]
+
+        schemas = buildCollectionPageJsonLd({
+          name: leaf.name,
+          description: leaf.description,
+          url: `${siteUrl}/category/${lastSlug}`,
+          imageUrl: leaf.image ?? leaf.banner,
+          breadcrumbs,
+        })
+      }
+    } catch {
+      // non-fatal — skip JSON-LD on error
+    }
   }
 
-  if (!slug || slug.length === 0) notFound()
-
-  if (isLoading || tree.length === 0) {
-    return (
-      <div className="container w-full space-y-6 py-8">
-        <div className="h-6 w-48 animate-pulse rounded bg-muted" />
-        <div className="h-32 animate-pulse rounded bg-muted" />
-      </div>
-    )
-  }
-
-  const resolved = getCategoryBySlugPath(slug, tree)
-  if (!resolved) notFound()
-
-  const { main, breadcrumb } = resolved
-
-  // Subcategory page: breadcrumb + page title + sort + grid of all products
-  if (resolved.type === "sub") {
-    return (
-      <div className="container w-full space-y-6">
-        <Breadcrumb>
-          <BreadcrumbList>
-            {breadcrumb.map((item, i) => (
-              <Fragment key={item.href}>
-                {i > 0 && <BreadcrumbSeparator />}
-                <BreadcrumbItem>
-                  {i === breadcrumb.length - 1 ? (
-                    <BreadcrumbPage>{item.title}</BreadcrumbPage>
-                  ) : (
-                    <BreadcrumbLink asChild>
-                      <Link href={item.href}>{item.title}</Link>
-                    </BreadcrumbLink>
-                  )}
-                </BreadcrumbItem>
-              </Fragment>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
-        <SubcategoryProductGrid sub={resolved.current} onAddToCart={handleAddToCart} />
-      </div>
-    )
-  }
-
-  // Main category page: hero, subcategory cards, product sections
   return (
-    <div className="container w-full space-y-6 xs:space-y-8 min-w-full">
-      <Breadcrumb>
-        <BreadcrumbList>
-          {breadcrumb.map((item, i) => (
-            <Fragment key={item.href}>
-              {i > 0 && <BreadcrumbSeparator />}
-              <BreadcrumbItem>
-                {i === breadcrumb.length - 1 ? (
-                  <BreadcrumbPage>{item.title}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link href={item.href}>{item.title}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-            </Fragment>
-          ))}
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <CategoryHero title={main.title} />
-
-      <SubcategoryProductGrid sub={main} onAddToCart={handleAddToCart} />
-    </div>
+    <>
+      {schemas.map((schema, i) => (
+        <script
+          key={i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        />
+      ))}
+      <CategoryPageContent params={params} />
+    </>
   )
 }

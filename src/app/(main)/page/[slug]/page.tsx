@@ -1,4 +1,6 @@
 import { fetchPageBySlug } from "@/lib/api/pages";
+import { getSiteOrigin } from "@/lib/api/client";
+import { buildCmsPageJsonLd } from "@/lib/seo/jsonld";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CmsPageContent } from "./CmsPageContent";
@@ -53,5 +55,16 @@ export default async function CmsPageRoute({ params }: Props) {
     notFound();
   }
 
-  return <CmsPageContent page={page} />;
+  const siteUrl = getSiteOrigin();
+  const jsonLd = buildCmsPageJsonLd(page, siteUrl);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <CmsPageContent page={page} />
+    </>
+  );
 }

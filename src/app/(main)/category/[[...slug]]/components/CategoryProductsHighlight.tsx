@@ -4,7 +4,7 @@ import { CategoryProductSection } from "@/components/common/CategoryProductSecti
 import { Button } from "@/components/ui/button"
 import type { ResolvedCategory } from "@/hooks/data/useCategoryTree"
 import { useInfiniteProductsByCategory } from "@/hooks/data/useProducts"
-import type { Product } from "@/types/product"
+import type { AddToCartOptions, Product } from "@/types/product"
 
 /** Top product section for current category (main page only; same style as home page). */
 export function CategoryProductsHighlight({
@@ -14,7 +14,7 @@ export function CategoryProductsHighlight({
 }: {
   resolved: ResolvedCategory
   sectionBgClassName: string
-  onAddToCart?: (product: Product) => void
+  onAddToCart?: (product: Product, options?: AddToCartOptions) => void
 }) {
   const { main } = resolved
   const {

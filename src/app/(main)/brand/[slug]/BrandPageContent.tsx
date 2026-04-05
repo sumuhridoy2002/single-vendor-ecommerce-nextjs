@@ -22,7 +22,7 @@ import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn"
 import type { ProductsSortParam } from "@/lib/api/products"
 import { useCartStore } from "@/store/cart-store"
 import type { BrandApi } from "@/types/brand"
-import type { Product } from "@/types/product"
+import type { AddToCartOptions, Product } from "@/types/product"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
@@ -67,13 +67,12 @@ export function BrandPageContent({ brand }: BrandPageContentProps) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const addItem = useCartStore((s) => s.addItem)
-  const openCart = useCartStore((s) => s.openCart)
   const whenLoggedIn = useWhenLoggedIn()
-  const handleAddToCart = (p: Product) => {
+  const handleAddToCart = (p: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(p)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"))
+      addItem(p, 1, options).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      )
     })
   }
 

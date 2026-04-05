@@ -2,6 +2,7 @@ export interface CmsPageListItem {
   id: number;
   title: string;
   slug: string;
+  image?: string | null;
 }
 
 export interface CmsPageMeta {
@@ -20,6 +21,7 @@ export interface CmsPageDetail extends CmsPageListItem {
 export interface PagesListApiResponse {
   data: CmsPageListItem[];
   status: number;
+  image?: string;
   message: string;
 }
 

@@ -5,6 +5,7 @@
 export const globalQueryKeys = {
   settings: ["settings"] as const,
   categories: ["categories"] as const,
+  deliveryZones: ["delivery-zones"] as const,
   customerAddresses: ["customer", "addresses"] as const,
   productsHomepage: ["products", "homepage"] as const,
   campaigns: ["campaigns"] as const,

@@ -1,35 +1,21 @@
 "use client"
 
 import { useBrands } from "@/hooks/data/useBrands"
-import { useOffers } from "@/hooks/data/useOffers"
 import Image from "next/image"
 import Link from "next/link"
 import { Navigation } from "swiper/modules"
 import { Swiper, SwiperSlide } from "swiper/react"
+import "swiper/css"
+import "swiper/css/navigation"
 
 export function EspeciallyForYouSection() {
-  const { offers, isLoading, error } = useOffers()
   const { brands, isLoading: brandsLoading } = useBrands()
 
-  if (isLoading) {
-    return (
-      <section className="px-4 py-6 md:px-6 md:py-8">
-        {/* <h2 className="mb-4 text-lg font-semibold text-foreground md:text-xl">
-          Especially For You
-        </h2>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div
-              key={i}
-              className="h-[160px] min-w-[140px] w-full animate-pulse rounded-l-xl rounded-br-xl rounded-tr-[50%] bg-muted"
-            />
-          ))}
-        </div> */}
-      </section>
-    )
+  if (brandsLoading) {
+    return null
   }
 
-  if (error || offers.length === 0) {
+  if (brands.length === 0) {
     return null
   }
 
@@ -43,25 +29,7 @@ export function EspeciallyForYouSection() {
 
   return (
     <section className="py-3 xs:py-6 md:py-8 px-4 2xl:px-0 max-w-7xl mx-auto">
-      {/* <h2 className="mb-8 font-semibold text-foreground text-lg md:text-3xl text-center">
-        Especially For You
-      </h2>
-      <div className="min-w-0 w-full overflow-hidden">
-        <Swiper
-          modules={[Navigation]}
-          spaceBetween={20}
-          slidesPerView={2}
-          breakpoints={breakpoints}
-          className="especially-for-you-swiper"
-        >
-          {offers.map((offer) => (
-            <SwiperSlide key={offer.id}>
-              <OfferCard offer={offer} />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div> */}
-      {!brandsLoading && brands.length > 0 && (
+      {brands.length > 0 && (
         <>
           <h2 className="mb-2 xs:mb-4 md:mb-8 font-semibold text-foreground text-lg md:text-3xl text-center">
             Shop by Brand

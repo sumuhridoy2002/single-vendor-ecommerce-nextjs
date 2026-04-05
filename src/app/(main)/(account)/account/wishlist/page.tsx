@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useWhenLoggedIn } from "@/hooks/useWhenLoggedIn";
 import { useCartStore } from "@/store/cart-store";
 import { useWishlistStore } from "@/store/wishlist-store";
-import type { Product } from "@/types/product";
+import type { AddToCartOptions, Product } from "@/types/product";
 import { Heart } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
@@ -17,7 +17,6 @@ export default function WishlistPage() {
   const isLoading = useWishlistStore((state) => state.isLoading);
   const hasLoaded = useWishlistStore((state) => state.hasLoaded);
   const addItem = useCartStore((s) => s.addItem);
-  const openCart = useCartStore((s) => s.openCart);
   const whenLoggedIn = useWhenLoggedIn();
   const { isAuthenticated } = useAuth();
 
@@ -28,11 +27,11 @@ export default function WishlistPage() {
     );
   }, [isAuthenticated, load]);
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = (product: Product, options?: AddToCartOptions) => {
     whenLoggedIn(() => {
-      addItem(product)
-        .then(() => openCart())
-        .catch((e) => toast.error(e?.message ?? "Failed to add to cart"));
+      addItem(product, 1, options).catch((e) =>
+        toast.error(e?.message ?? "Failed to add to cart")
+      );
     });
   };
 
